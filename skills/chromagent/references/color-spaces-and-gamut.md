@@ -37,7 +37,7 @@ Source: colorandcontrast.com/srgb/
 
 A wide-gamut RGB space used by most modern phones, tablets, and laptop displays. It holds more vivid colors than sRGB. In CSS, use `color(display-p3 r g b)`.
 
-- Always provide an sRGB fallback, since not every browser or display supports it.
+- Browsers that support `color()` and `oklch()` map colors to the screen automatically. Add an sRGB hex fallback only when older browsers must be supported.
 - Do not convert P3 channel values to sRGB one-to-one. The result will look much less colorful than intended.
 
 Source: colorandcontrast.com/display-p3/
@@ -103,7 +103,7 @@ A color from OKLCH or P3 can fall outside sRGB. There are two main ways to fix t
 - **Clamping** cuts each channel to its allowed range and rounds values. It is fast, but it can shift hue and lightness.
 - **Gamut mapping** finds the closest in-gamut color, usually by lowering chroma while keeping lightness and hue. It looks more faithful. CSS Color 4 uses this approach in OKLCH.
 
-In UI: Design in a wide space, then map to sRGB (and P3 where supported). Recheck contrast after mapping, since lightness can change slightly.
+In UI: Modern web CSS can keep wide-gamut OKLCH colors, and the browser maps them to each screen. Map to Display P3 only for platforms bound to it (such as iOS), and to sRGB only for older tech. Lightness can shift slightly after mapping, so contrast must be measured on the mapped color (Chromagent does this).
 
 Source: colorandcontrast.com/gamut/, colorandcontrast.com/clamping/
 
@@ -132,12 +132,14 @@ Source: colorandcontrast.com/color-interpolation/
 
 | Task | Recommended space | Why |
 |---|---|---|
-| Define final CSS colors | sRGB (hex or `rgb()`), plus optional P3 | Widest support |
+| Define final web CSS colors | OKLCH (wide gamut) | Supported by modern browsers, which map to each screen |
+| Colors for iOS, macOS, or Android | Display P3 | The platform's color space |
+| Colors for email or older tech | sRGB (hex) | Widest support |
 | Pick or adjust a color by lightness, chroma, hue | OKLCH | Steady hue, perceptual lightness |
 | One-hue scale (tints and shades) | OKLab or OKLCH | Even steps, steady hue |
 | Multi-hue scale or gradient | OKLCH | Keeps chroma steady as hue changes |
 | Mix or blend two colors | OKLab | Even, natural-looking midpoints |
-| Vivid colors on modern screens | Display P3 with sRGB fallback | Larger gamut |
+| Vivid colors on modern screens | OKLCH or Display P3 | Larger gamut |
 | WCAG 2 contrast | sRGB to relative luminance (XYZ Y) | Required by the standard |
 | Simulate color vision deficiency | LMS | Models cone responses |
 | Precise perceptual matching | CAM16 | Accounts for viewing conditions |

@@ -93,7 +93,7 @@ Chromagent can turn mood words into candidate colors and describe colors in word
 ```js
 suggestColors("calm and earthy", { count: 6 })
 // {
-//   colors: [{ css, hex, oklch: [l, c, h], score, matched: string[], name }],
+//   colors: [{ css, hex, oklch: [l, c, h], score, matched: string[], summary }],
 //   matchedWords: string[],
 //   unmatchedWords: string[]
 // }
@@ -105,7 +105,7 @@ It returns candidate key colors whose descriptive words, names, meanings, effect
 
 ```js
 describeColor("#e0b830")
-// { name, summary, words, nouns, meanings, effects, usage, temperature }
+// { summary, words, nouns, meanings, effects, usage, temperature }
 // summary: "rich, golden and warm"
 ```
 
