@@ -137,6 +137,13 @@ describe("code-graded checks", () => {
     expect(byName(runChecks(context({ ...goodProject, "package.json": pkg }, { transcript: npm })))["used-engine"]).toBe("pass");
   });
 
+  it("counts a script the agent wrote and ran that calls the engine, but not one it never ran", () => {
+    const script = `execFileSync("node", [".github/skills/chromagent/scripts/chromagent.mjs", "generate", "chromagent.theme.json"]);`;
+    const project = { ...goodProject, "scripts/gen.mjs": script };
+    expect(byName(runChecks(context(project, { transcript: { ...ran, commands: ["node scripts/gen.mjs"] } })))["used-engine"]).toBe("pass");
+    expect(byName(runChecks(context(project, { transcript: { ...ran, commands: ["ls"] } })))["used-engine"]).toBe("fail");
+  });
+
   it("fails sRGB hex output for a web project", () => {
     const hexCss = toCss(generateTheme({ ...settings, output: { gamut: "srgb", format: "hex" } }));
     const results = byName(runChecks(context({ ...goodProject, "colors.css": hexCss })));

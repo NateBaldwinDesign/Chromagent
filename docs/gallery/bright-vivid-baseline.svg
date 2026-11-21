@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="876" height="392" viewBox="0 0 876 392" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+<style>.title{font-size:16px;font-weight:600;fill:#111}.mode{font-size:13px;font-weight:600;fill:#444;text-transform:uppercase;letter-spacing:.05em}.aa{font-size:26px;font-weight:600}.role{font-size:11px;fill:#333}.ratio{font-size:11px;fill:#555}.pass{fill:#137333;font-weight:700}.fail{fill:#c5221f;font-weight:700}.none{font-size:12px;fill:#888;font-style:italic}</style>
+<rect width="100%" height="100%" fill="#fff"/>
+<text x="12" y="22" class="title">Without skill</text>
+<text x="12" y="50" class="mode">light</text>
+<rect x="12" y="62" width="132" height="64" rx="8" fill="#faf9f6" stroke="#0002"/>
+<text x="78" y="103" text-anchor="middle" class="aa" fill="#89828e">Aa</text>
+<text x="14" y="139" class="role">Keep it simple. Ke</text>
+<text x="14" y="152" class="ratio"><tspan class="fail">✗</tspan> 3.53:1 (needs 4.5)</text>
+<rect x="156" y="62" width="132" height="64" rx="8" fill="#faf9f6" stroke="#0002"/>
+<text x="222" y="103" text-anchor="middle" class="aa" fill="#86808c">Aa</text>
+<text x="158" y="139" class="role">YOUR PERSONAL BRAI</text>
+<text x="158" y="152" class="ratio"><tspan class="fail">✗</tspan> 3.64:1 (needs 4.5)</text>
+<rect x="300" y="62" width="132" height="64" rx="8" fill="#7041eb" stroke="#0002"/>
+<text x="366" y="103" text-anchor="middle" class="aa" fill="#e5dafb">Aa</text>
+<text x="302" y="139" class="role">Your ideas, saved </text>
+<text x="302" y="152" class="ratio"><tspan class="fail">✗</tspan> 4.32:1 (needs 4.5)</text>
+<rect x="444" y="62" width="132" height="64" rx="8" fill="#faf9f6" stroke="#0002"/>
+<text x="510" y="103" text-anchor="middle" class="aa" fill="#77717e">Aa</text>
+<text x="446" y="139" class="role">Less noise. More b</text>
+<text x="446" y="152" class="ratio"><tspan class="fail">✗</tspan> 4.48:1 (needs 4.5)</text>
+<rect x="588" y="62" width="132" height="64" rx="8" fill="#faf9f6" stroke="#0002"/>
+<rect x="610" y="76" width="88" height="36" rx="5" fill="none" stroke="#e7e3eb" stroke-width="2"/>
+<text x="590" y="139" class="role">line</text>
+<text x="590" y="152" class="ratio"><tspan class="pass">✓</tspan> 1.20:1 (needs 1.2)</text>
+<rect x="732" y="62" width="132" height="64" rx="8" fill="#7041eb" stroke="#0002"/>
+<text x="798" y="103" text-anchor="middle" class="aa" fill="#eee4ff">Aa</text>
+<text x="734" y="139" class="role">Small notes. Endle</text>
+<text x="734" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.71:1 (needs 4.5)</text>
+<rect x="12" y="168" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<rect x="34" y="182" width="88" height="36" rx="5" fill="none" stroke="#e7e3eb" stroke-width="2"/>
+<text x="14" y="245" class="role">line</text>
+<text x="14" y="258" class="ratio"><tspan class="pass">✓</tspan> 1.27:1 (needs 1.2)</text>
+<rect x="156" y="168" width="132" height="64" rx="8" fill="#faf9f6" stroke="#0002"/>
+<text x="222" y="209" text-anchor="middle" class="aa" fill="#716b78">Aa</text>
+<text x="158" y="245" class="role">No notes found. Tr</text>
+<text x="158" y="258" class="ratio"><tspan class="pass">✓</tspan> 4.89:1 (needs 4.5)</text>
+<rect x="300" y="168" width="132" height="64" rx="8" fill="#eee9f7" stroke="#0002"/>
+<text x="366" y="209" text-anchor="middle" class="aa" fill="#7354a8">Aa</text>
+<text x="302" y="245" class="role">03</text>
+<text x="302" y="258" class="ratio"><tspan class="pass">✓</tspan> 4.95:1 (needs 4.5)</text>
+<rect x="444" y="168" width="132" height="64" rx="8" fill="#7041eb" stroke="#0002"/>
+<text x="510" y="209" text-anchor="middle" class="aa" fill="#deff82">Aa</text>
+<text x="446" y="245" class="role">a note.</text>
+<text x="446" y="258" class="ratio"><tspan class="pass">✓</tspan> 5.14:1 (needs 4.5)</text>
+<rect x="588" y="168" width="132" height="64" rx="8" fill="#7041eb" stroke="#0002"/>
+<text x="654" y="209" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="590" y="245" class="role">A LITTLE SPACE FOR</text>
+<text x="590" y="258" class="ratio"><tspan class="pass">✓</tspan> 5.76:1 (needs 4.5)</text>
+<rect x="732" y="168" width="132" height="64" rx="8" fill="#ffacda" stroke="#0002"/>
+<text x="798" y="209" text-anchor="middle" class="aa" fill="#573246">Aa</text>
+<text x="734" y="245" class="role">What if…</text>
+<text x="734" y="258" class="ratio"><tspan class="pass">✓</tspan> 6.24:1 (needs 4.5)</text>
+<rect x="12" y="274" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="78" y="315" text-anchor="middle" class="aa" fill="#5e5861">Aa</text>
+<text x="14" y="351" class="role">Ready when you are</text>
+<text x="14" y="364" class="ratio"><tspan class="pass">✓</tspan> 6.90:1 (needs 4.5)</text>
+<rect x="156" y="274" width="132" height="64" rx="8" fill="#7041eb" stroke="#0002"/>
+<text x="222" y="315" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="158" y="351" class="role">Good things start </text>
+<text x="158" y="364" class="ratio"><tspan class="pass">✓</tspan> 5.76:1 (needs 3)</text>
+<rect x="300" y="274" width="132" height="64" rx="8" fill="#ffacda" stroke="#0002"/>
+<rect x="322" y="288" width="88" height="36" rx="5" fill="none" stroke="#b84a86" stroke-width="2"/>
+<text x="302" y="351" class="role"></text>
+<text x="302" y="364" class="ratio"><tspan class="pass">✓</tspan> 2.79:1 (needs 1.2)</text>
+<rect x="444" y="274" width="132" height="64" rx="8" fill="#deff82" stroke="#0002"/>
+<text x="510" y="315" text-anchor="middle" class="aa" fill="#35392a">Aa</text>
+<text x="446" y="351" class="role">more joy.</text>
+<text x="446" y="364" class="ratio"><tspan class="pass">✓</tspan> 10.58:1 (needs 4.5)</text>
+<rect x="588" y="274" width="132" height="64" rx="8" fill="#deff82" stroke="#0002"/>
+<text x="654" y="315" text-anchor="middle" class="aa" fill="#282231">Aa</text>
+<text x="590" y="351" class="role">Create a note</text>
+<text x="590" y="364" class="ratio"><tspan class="pass">✓</tspan> 13.74:1 (needs 4.5)</text>
+<rect x="732" y="274" width="132" height="64" rx="8" fill="#faf9f6" stroke="#0002"/>
+<text x="798" y="315" text-anchor="middle" class="aa" fill="#26212e">Aa</text>
+<text x="734" y="351" class="role">text</text>
+<text x="734" y="364" class="ratio"><tspan class="pass">✓</tspan> 14.89:1 (needs 4.5)</text>
+</svg>

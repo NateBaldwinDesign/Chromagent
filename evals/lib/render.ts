@@ -412,7 +412,8 @@ export function pairs(site: Site, mode: Mode): Pair[] {
     } else if (el.tag === "svg") {
       out.push({ key: `${el.key}:icon`, kind: "icon", fg: c.color, bg: c.backdrop, target: 3 });
     }
-    if (c.border) {
+    // A border the same color as the element's own fill is invisible on purpose; the fill makes the edge.
+    if (c.border && !(c.bg && c.border.color.deltaE(c.bg.color, "OK") < 0.01)) {
       const control = CONTROLS.has(el.tag);
       out.push({ key: `${el.key}:border`, kind: control ? "control-border" : "border", fg: c.border, bg: c.backdrop, target: control ? 3 : 1.2 });
     }

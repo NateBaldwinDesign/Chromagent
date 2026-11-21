@@ -28,7 +28,7 @@ function baseOf(name: string, all: Set<string>): string | undefined {
   const w = words(name);
   const target = /^on-(.+)$/.exec(w)?.[1] ?? /^(.+)-(foreground|fg)$/.exec(w)?.[1] ?? /(?:^|-)(?:text|content|label)-on-(.+)$/.exec(w)?.[1];
   if (!target) return undefined;
-  return [...all].find((n) => words(n) === target || words(n).endsWith(`-${target}`) || words(n).endsWith(`${target}-background`));
+  return [...all].find((n) => n !== name && words(n) === target) ?? [...all].find((n) => n !== name && !/^on-/.test(words(n)) && (words(n).endsWith(`-${target}`) || words(n).endsWith(`${target}-background`)));
 }
 
 function lightness(c: Color) {
@@ -60,7 +60,8 @@ export function namedPairs(mode: NamedMode): Pair[] {
     let target = 0;
     if (BORDER.test(w)) [kind, target] = STRONG.test(w) ? ["control-border", 3] : /variant|subtle/.test(w) ? ["border", 1.2] : /outline/.test(w) ? ["control-border", 3] : ["border", 1.2];
     else if (ICON.test(w)) [kind, target] = ["icon", 3];
-    else if (TEXT.test(w)) [kind, target] = ["text", 4.5];
+    // Text roles, and "on" colors whose own background isn't defined, are read on the surfaces.
+    else if (TEXT.test(w) || /^on-|-(foreground|fg)$/.test(w)) [kind, target] = ["text", 4.5];
     else if (FILL.test(w) && !BACKGROUND.test(w)) [kind, target] = ["icon", 3];
     if (!kind) continue;
     for (const s of surfaces) out.push({ key: `${name}:${s}`, kind, fg: paint(name), bg: paint(s), target });
@@ -138,31 +139,88 @@ function balanced(text: string, open: number): string {
   return text.slice(open + 1);
 }
 
+/** Splits call arguments at commas that aren't inside brackets. */
+function splitTop(args: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < args.length; i++) {
+    const ch = args[i];
+    if (ch === "(" || ch === "[" || ch === "{") depth++;
+    else if (ch === ")" || ch === "]" || ch === "}") depth--;
+    else if (ch === "," && depth === 0) {
+      out.push(args.slice(start, i));
+      start = i + 1;
+    }
+  }
+  out.push(args.slice(start));
+  return out;
+}
+
 /** Jetpack Compose: `lightColorScheme(...)` and `darkColorScheme(...)` arguments, with `val` colors resolved. */
 export function composeModes(files: Map<string, string>): NamedMode[] {
   const vals = new Map<string, Color>();
   const kotlin = [...files].filter(([p]) => p.endsWith(".kt"));
+  // `object Palette { val text = ... }` is stored as both `Palette.text` and `text`, so light and dark objects don't collide.
+  const owner = (text: string, at: number) => {
+    let found: string | undefined;
+    for (const o of text.matchAll(/\bobject\s+(\w+)[^{]*\{/g)) {
+      if (o.index! > at) break;
+      let depth = 0;
+      let end = text.length;
+      for (let i = o.index! + o[0].length - 1; i < text.length; i++) {
+        if (text[i] === "{") depth++;
+        else if (text[i] === "}" && --depth === 0) {
+          end = i;
+          break;
+        }
+      }
+      if (at < end) found = o[1];
+    }
+    return found;
+  };
+  const store = (text: string, at: number, name: string, c: Color) => {
+    const obj = owner(text, at);
+    if (obj) vals.set(`${obj}.${name}`, c);
+    if (!obj || !vals.has(name)) vals.set(name, c);
+  };
+  const lookup = (value: string) => vals.get(value) ?? vals.get(value.split(".").pop()!);
   for (const [, text] of kotlin) {
     for (const m of text.matchAll(/\bval\s+(\w+)\s*(?::\s*Color\s*)?=\s*(Color\s*\()/g)) {
       const c = firstColor(m[2] + balanced(text, m.index! + m[0].length - 1) + ")");
-      if (c) vals.set(m[1], c);
+      if (c) store(text, m.index!, m[1], c);
     }
   }
+  // Aliases like `val Purple40 = AcmeColors.accent`, a few rounds deep.
+  for (let round = 0; round < 3; round++)
+    for (const [, text] of kotlin)
+      for (const m of text.matchAll(/\bval\s+(\w+)\s*(?::\s*Color\s*)?=\s*([A-Za-z_][\w.]*)\s*$/gm)) {
+        const c = lookup(m[2]);
+        if (c && !vals.has(m[1])) store(text, m.index!, m[1], c);
+      }
   const out: NamedMode[] = [];
   for (const [, text] of kotlin) {
-    for (const m of text.matchAll(/(?:val\s+(\w+)\s*=\s*)?\b(light|dark)ColorScheme\s*\(/g)) {
+    // Material `lightColorScheme(...)`, or the project's own colors class: `val DarkAppColors = AppColors(text = ..., ...)`.
+    for (const m of text.matchAll(/(?:val\s+(\w+)\s*(?::\s*\w+\s*)?=\s*)?\b((?:light|dark)ColorScheme|[A-Z]\w*(?:Colors|Palette|Scheme))\s*\(/g)) {
+      const material = /ColorScheme$/.test(m[2]) && /^(light|dark)/.test(m[2]);
+      if (!material && !/light|dark|contrast/i.test(m[1] ?? "")) continue;
       const args = balanced(text, m.index! + m[0].length - 1);
       const colors = new Map<string, Color>();
-      for (const a of args.matchAll(/(\w+)\s*=\s*([^,]+(?:\([^()]*\))?)/g)) {
+      for (const arg of splitTop(args)) {
+        const a = /^\s*(\w+)\s*=\s*([\s\S]+)$/.exec(arg);
+        if (!a) continue;
         const value = a[2].trim();
         const named = /^Color\.(White|Black)$/.exec(value)?.[1];
-        const c = vals.get(value) ?? (named ? new Color(named === "White" ? "#fff" : "#000") : firstColor(value));
+        const c = lookup(value) ?? (named ? new Color(named === "White" ? "#fff" : "#000") : firstColor(value));
         if (c) colors.set(a[1], c);
       }
-      if (colors.size) out.push({ name: modeName(`${m[1] ?? ""} ${m[2]}`, colors), colors });
+      if (colors.size >= (material ? 1 : 3)) out.push({ name: modeName(`${m[1] ?? ""} ${m[2]}`, colors), colors });
     }
   }
-  return out;
+  // One set per mode: the fullest one wins (a project may have both a Material scheme and its own class).
+  const best = new Map<string, NamedMode>();
+  for (const m of out) if ((best.get(m.name)?.colors.size ?? 0) < m.colors.size) best.set(m.name, m);
+  return [...best.values()];
 }
 
 /** SwiftUI: named colors in Swift code (with `light:`/`dark:` pairs), and asset catalog color sets. */

@@ -74,6 +74,8 @@ describe("web renderer", () => {
     expect(hex(all["div>p|Body text:text"].fg.color)).toBe("#222222");
     expect(all["body>div.card|:border"]).toMatchObject({ kind: "border", target: 1.2 });
     expect(all["body>input|:border"]).toMatchObject({ kind: "control-border", target: 3 });
+    const button = site({ "a.css": "button { background: #2563eb; border: 1px solid #2563eb; color: #fff; }", "index.html": "<body><button>Go</button></body>" });
+    expect(pairs(button, light).map((p) => p.kind)).toEqual(["text"]);
   });
 
   it("keeps element keys when an agent adds dark: or swaps color classes", () => {
@@ -112,6 +114,20 @@ describe("named palettes", () => {
     expect(hex(lp["onPrimary:on"].bg.color)).toBe("#2563eb");
     expect(lp["onBackground:on"].target).toBe(4.5);
     expect(lp["outline:background"]).toMatchObject({ kind: "control-border", target: 3 });
+    // An "on" color without its own background is checked against the page, not against itself.
+    const variant = byKey(namedPairs({ name: "light", colors: new Map([["background", new Color("#fff")], ["onSurfaceVariant", new Color("#666")]]) }));
+    expect(hex(variant["onSurfaceVariant:background"].bg.color)).toBe("#ffffff");
+
+    const objects = composeModes(new Map([["Color.kt", `object LightPalette {\n  val text = Color(0.1f, 0.1f, 0.1f, colorSpace = ColorSpaces.DisplayP3)\n  val bg = Color(1f, 1f, 1f, colorSpace = ColorSpaces.DisplayP3)\n}\nobject DarkPalette {\n  val text = Color(0.9f, 0.9f, 0.9f, colorSpace = ColorSpaces.DisplayP3)\n}\nval Ink = LightPalette.text`], ["Theme.kt", `val L = lightColorScheme(background = LightPalette.bg, onBackground = Ink)\nval D = darkColorScheme(onBackground = DarkPalette.text)`]]));
+    expect(objects.map((m) => hex(m.colors.get("onBackground")))).toEqual(["#1a1a1a", "#e6e6e6"]);
+    expect(hex(objects[0].colors.get("background"))).toBe("#ffffff");
+
+    const own = composeModes(new Map([["Color.kt", `data class AcmeColors(val text: Color, val background: Color, val accent: Color)
+      val LightAcmeColors = AcmeColors(\n  text = Color(0.1f, 0.1f, 0.1f, colorSpace = ColorSpaces.DisplayP3),\n  background = Color(1f, 1f, 1f, colorSpace = ColorSpaces.DisplayP3),\n  accent = Color(0.2f, 0.3f, 0.8f, colorSpace = ColorSpaces.DisplayP3),\n)
+      val DarkAcmeColors = AcmeColors(\n  text = Color(0.9f, 0.9f, 0.9f, colorSpace = ColorSpaces.DisplayP3),\n  background = Color(0f, 0f, 0f, colorSpace = ColorSpaces.DisplayP3),\n  accent = Color(0.5f, 0.6f, 1f, colorSpace = ColorSpaces.DisplayP3),\n)
+      val Pressed = ButtonColors(container = Color.Black, content = Color.White, border = Color.Black)`]]));
+    expect(own.map((m) => m.name)).toEqual(["light", "dark"]);
+    expect(hex(own[1].colors.get("background"))).toBe("#000000");
 
     const swift = swiftModes(new Map([["Colors.swift", `static let background = Color(light: Color(red: 1, green: 1, blue: 1), dark: Color(red: 0, green: 0, blue: 0))\nstatic let text = Color(red: 0.1, green: 0.1, blue: 0.1)`]]));
     expect(swift.map((m) => m.name)).toEqual(["light", "dark"]);

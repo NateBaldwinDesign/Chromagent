@@ -37,7 +37,7 @@ In this guide, `chromagent <command>` means `node <skill-dir>/scripts/chromagent
 2. **Choose key colors.** Use the user's brand colors when they exist. For words like "calm and earthy", run `chromagent suggest "calm and earthy"`, pick from the results, then check the pick with `chromagent describe <color>` (`references/choosing-colors.md`).
 3. **Write `chromagent.theme.json`.** Start small: key colors plus the modes needed. Defaults cover steps, surfaces, roles, and status colors (`references/engine.md`).
 4. **Generate.** Run `chromagent generate` with the matching `--platform` (see "Running the engine").
-5. **Wire it in.** Use the generated variables or tokens in components, and switch modes with the system setting (media queries) or a `data-theme` attribute.
+5. **Wire it in.** Use the generated variables or tokens in components, and switch modes with the system setting (media queries) or a `data-theme` attribute. Roles are measured against the page background. Where text or a border sits on a raised surface or a colored fill instead, check it with `chromagent contrast`, and use the next stronger role or step if it falls short.
 6. **Explain.** Tell the user, in plain words, what each color is for and how each mode differs. Mention the contrast targets.
 
 ## Converting a mode (light to dark, or dark to light)

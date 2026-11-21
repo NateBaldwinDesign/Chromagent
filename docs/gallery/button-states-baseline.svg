@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="876" height="180" viewBox="0 0 876 180" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+<style>.title{font-size:16px;font-weight:600;fill:#111}.mode{font-size:13px;font-weight:600;fill:#444;text-transform:uppercase;letter-spacing:.05em}.aa{font-size:26px;font-weight:600}.role{font-size:11px;fill:#333}.ratio{font-size:11px;fill:#555}.pass{fill:#137333;font-weight:700}.fail{fill:#c5221f;font-weight:700}.none{font-size:12px;fill:#888;font-style:italic}</style>
+<rect width="100%" height="100%" fill="#fff"/>
+<text x="12" y="22" class="title">Without skill</text>
+<text x="12" y="50" class="mode">light</text>
+<rect x="12" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<circle cx="78" cy="94" r="14" fill="#625b71"/>
+<text x="14" y="139" class="role">secondary</text>
+<text x="14" y="152" class="ratio"><tspan class="pass">✓</tspan> 6.45:1 (needs 3)</text>
+<rect x="156" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<circle cx="222" cy="94" r="14" fill="#6650a4"/>
+<text x="158" y="139" class="role">primary</text>
+<text x="158" y="152" class="ratio"><tspan class="pass">✓</tspan> 6.46:1 (needs 3)</text>
+</svg>

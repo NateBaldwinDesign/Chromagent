@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="876" height="456" viewBox="0 0 876 456" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+<style>.title{font-size:16px;font-weight:600;fill:#111}.mode{font-size:13px;font-weight:600;fill:#444;text-transform:uppercase;letter-spacing:.05em}.aa{font-size:26px;font-weight:600}.role{font-size:11px;fill:#333}.ratio{font-size:11px;fill:#555}.pass{fill:#137333;font-weight:700}.fail{fill:#c5221f;font-weight:700}.none{font-size:12px;fill:#888;font-style:italic}</style>
+<rect width="100%" height="100%" fill="#fff"/>
+<text x="12" y="22" class="title">Without skill</text>
+<text x="12" y="50" class="mode">dark</text>
+<rect x="12" y="62" width="132" height="64" rx="8" fill="#1a1a1a" stroke="#0002"/>
+<rect x="34" y="76" width="88" height="36" rx="5" fill="none" stroke="#444444" stroke-width="2"/>
+<text x="14" y="139" class="role">border</text>
+<text x="14" y="152" class="ratio"><tspan class="pass">✓</tspan> 1.79:1 (needs 1.2)</text>
+<rect x="156" y="62" width="132" height="64" rx="8" fill="#1a1a1a" stroke="#0002"/>
+<circle cx="222" cy="94" r="14" fill="#4d94ff"/>
+<text x="158" y="139" class="role">accent</text>
+<text x="158" y="152" class="ratio"><tspan class="pass">✓</tspan> 5.80:1 (needs 3)</text>
+<rect x="300" y="62" width="132" height="64" rx="8" fill="#1a1a1a" stroke="#0002"/>
+<text x="366" y="103" text-anchor="middle" class="aa" fill="#eeeeee">Aa</text>
+<text x="302" y="139" class="role">text</text>
+<text x="302" y="152" class="ratio"><tspan class="pass">✓</tspan> 15.00:1 (needs 4.5)</text>
+<text x="12" y="188" class="mode">dark-high-contrast</text>
+<rect x="12" y="200" width="132" height="64" rx="8" fill="#000000" stroke="#0002"/>
+<text x="78" y="241" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="14" y="277" class="role">text</text>
+<text x="14" y="290" class="ratio"><tspan class="pass">✓</tspan> 21.00:1 (needs 4.5)</text>
+<rect x="156" y="200" width="132" height="64" rx="8" fill="#000000" stroke="#0002"/>
+<circle cx="222" cy="232" r="14" fill="#ffff00"/>
+<text x="158" y="277" class="role">accent</text>
+<text x="158" y="290" class="ratio"><tspan class="pass">✓</tspan> 19.56:1 (needs 3)</text>
+<rect x="300" y="200" width="132" height="64" rx="8" fill="#000000" stroke="#0002"/>
+<rect x="322" y="214" width="88" height="36" rx="5" fill="none" stroke="#ffffff" stroke-width="2"/>
+<text x="302" y="277" class="role">border</text>
+<text x="302" y="290" class="ratio"><tspan class="pass">✓</tspan> 21.00:1 (needs 1.2)</text>
+<text x="12" y="326" class="mode">light</text>
+<rect x="12" y="338" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<rect x="34" y="352" width="88" height="36" rx="5" fill="none" stroke="#d0d0d0" stroke-width="2"/>
+<text x="14" y="415" class="role">border</text>
+<text x="14" y="428" class="ratio"><tspan class="pass">✓</tspan> 1.54:1 (needs 1.2)</text>
+<rect x="156" y="338" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<circle cx="222" cy="370" r="14" fill="#0a6cff"/>
+<text x="158" y="415" class="role">accent</text>
+<text x="158" y="428" class="ratio"><tspan class="pass">✓</tspan> 4.56:1 (needs 3)</text>
+<rect x="300" y="338" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="366" y="379" text-anchor="middle" class="aa" fill="#1f1f1f">Aa</text>
+<text x="302" y="415" class="role">text</text>
+<text x="302" y="428" class="ratio"><tspan class="pass">✓</tspan> 16.48:1 (needs 4.5)</text>
+</svg>
