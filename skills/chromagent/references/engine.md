@@ -78,7 +78,9 @@ Default roles, using the background scale for neutrals and the first other color
 | `success`, `warning`, `error`, `info` | Status scale `900` |
 | `{status}-background`, `{status}-border` | Status scale `100`, `700` |
 
-Add roles for anything else, such as `"focus-ring": "brand.800"` or `"link": "brand.1000"`.
+Status scales are named after their color: `green`, `orange`, `red`, and `blue` by default. A status set to your own CSS color, such as `"status": { "error": "#d93025" }`, makes a scale named `status-error`. So a custom role looks like `"error-strong": "red.1100"`.
+
+Add roles for anything else, such as `"focus-ring": "brand.800"` or `"link": "brand.1000"`. If a role points at something that doesn't exist, the error lists your scale names.
 
 ## Modes
 

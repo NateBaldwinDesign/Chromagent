@@ -93,6 +93,11 @@ describe("normalizeConfig", () => {
     expect(n.roles["text-disabled"]).toBeUndefined();
   });
 
+  it("lists the real scale names when a role points at a missing one", () => {
+    const [problem] = problems({ colors: { brand: "#0066ff" }, roles: { error: "success.900" } });
+    expect(problem).toContain("Your scales are: brand, gray, green, orange, red, blue.");
+  });
+
   it("lists every problem in plain language", () => {
     const list = problems({
       colors: { brand: "not-a-color", "bad name": "#fff" },

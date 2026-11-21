@@ -58,6 +58,9 @@ export function findSettings(files: Map<string, string>): FoundSettings | undefi
 export function checkUsedEngine(ctx: CheckContext): CheckResult {
   const ran = ctx.transcript.commands.find((c) => GENERATE.test(c));
   if (ran) return pass("used-engine", `Ran: ${ran.slice(0, 120)}`);
+  const npmScript = [...ctx.changed].find(([path, text]) => path.endsWith("package.json") && GENERATE.test(text));
+  const npmRan = ctx.transcript.commands.find((c) => /\bnpm (run|test|start)\b/.test(c));
+  if (npmScript && npmRan) return pass("used-engine", `Ran an npm script that calls chromagent generate: ${npmRan.slice(0, 80)}`);
   const script = [...ctx.changed].find(([, text]) => /generateTheme\s*\(/.test(text) && /from\s+["']chromagent["']/.test(text));
   if (script) return pass("used-engine", `Called generateTheme in ${script[0]}`);
   return fail("used-engine", "Never ran `chromagent generate` or called generateTheme.");

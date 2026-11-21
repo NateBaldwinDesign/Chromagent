@@ -399,13 +399,14 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   }
   const stepNames = new Set(steps.map((s) => s.name));
   const surfaceNames = new Set([BASE_SURFACE, ...surfaces.map((s) => s.name)]);
+  const available = `Your scales are: ${scales.map((s) => s.name).join(", ") || "none"}.`;
   for (const [role, ref] of Object.entries(roles)) {
     const [group, item, extra] = typeof ref === "string" ? ref.split(".") : [];
     const valid =
       extra === undefined &&
       (group === "surface" ? surfaceNames.has(item) : scales.some((s) => s.name === group) && stepNames.has(item));
     if (!valid)
-      problems.push(`roles.${role} "${ref}" must point to a color step like "${backgroundScale ?? "gray"}.${steps.at(-3)?.name ?? "1400"}" or a surface like "surface.${BASE_SURFACE}".`);
+      problems.push(`roles.${role} "${ref}" must point to a color step like "${backgroundScale ?? "gray"}.${steps.at(-3)?.name ?? "1400"}" or a surface like "surface.${BASE_SURFACE}". ${available}`);
   }
 
   // Names must not collide in the output.
