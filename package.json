@@ -26,7 +26,7 @@
     "node": ">=20"
   },
   "bin": {
-    "chromagent": "./dist/cli/index.js"
+    "chromagent": "dist/cli/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
