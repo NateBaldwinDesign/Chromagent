@@ -57,7 +57,7 @@ export interface Theme {
 const SAFETY = 1.0002;
 const round = (value: number, places: number) => Number(value.toFixed(places));
 // Report contrast rounded down, so a displayed value never overstates what was measured.
-const floor2 = (value: number) => Math.floor(value * 100 + 1e-9) / 100;
+const floor4 = (value: number) => Math.floor(value * 10000 + 1e-7) / 10000;
 
 function hexOf(css: string) {
   const srgb = new Color(css).toGamut({ space: "srgb", method: "css" }).to("srgb");
@@ -78,7 +78,7 @@ function colorValue(css: string, contrast: number, target: number): ColorValue {
     css,
     hex: hexOf(css),
     oklch: oklchOf(css),
-    contrast: floor2(contrast),
+    contrast: floor4(contrast),
     target: round(target, 4),
     ...(capped && { capped: true as const }),
   };
