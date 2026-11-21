@@ -14,5 +14,6 @@
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["src", "tests", "evals", "scripts", "*.ts"]
+  "include": ["src", "tests", "evals", "*.ts"],
+  "exclude": ["evals/fixtures", "evals/results"]
 }
