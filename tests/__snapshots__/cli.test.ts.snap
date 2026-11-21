@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generate > explains invalid JSON and invalid settings 1`] = `
+"Invalid theme settings:
+- colors.blue: "not-a-color" is not a valid CSS color.
+- defaultMode "nope" is not one of your modes.
+"
+`;
+
+exports[`generate > reports warnings and fails with --strict 1`] = `
+"Warning: In "mid" mode, 2 colors could not reach the contrast target, so the closest possible color was used: brand.200 (wanted 21:1, got 6:1); gray.200 (wanted 21:1, got 6:1). To fix this, lower those targets or the contrast multiplier, or move the background lightness closer to white or black.
+Some colors missed their contrast targets (--strict).
+"
+`;
+
+exports[`init > installs the skill for every agent 1`] = `
+"Installed the chromagent skill for copilot: .github/skills/chromagent
+Installed the chromagent skill for claude: .claude/skills/chromagent
+Installed the chromagent skill for cursor: .cursor/rules/chromagent.mdc
+"
+`;
+
+exports[`init > installs the skill for every agent 2`] = `
+"---
+description: "Color for UI."
+alwaysApply: false
+---
+# Chromagent
+See [contrast](chromagent/references/contrast.md) or \`.cursor/rules/chromagent/references/contrast.md\`.
+"
+`;

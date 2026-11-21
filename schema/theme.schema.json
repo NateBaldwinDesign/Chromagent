@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/NateBaldwinDesign/Chromagent/schema/theme.schema.json",
+  "title": "Chromagent theme settings",
+  "description": "Settings for `chromagent generate`. Only `colors` is required; everything else has a sensible default.",
+  "type": "object",
+  "required": ["colors"],
+  "additionalProperties": false,
+  "definitions": {
+    "cssColor": { "type": "string", "minLength": 1, "description": "Any CSS color, for example \"#0265dc\" or \"oklch(60% 0.2 250)\"." },
+    "interpolation": { "enum": ["oklch", "rgb"], "description": "How to blend between key colors. Default \"oklch\"." },
+    "contrast": { "type": "number", "minimum": 1, "maximum": 108, "description": "WCAG 2 ratio (1 to 21) or, with the apca formula, an Lc value (up to 108)." }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "colors": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Named color scales. Each is one key color, a list of key colors (from light to dark, or any order), or an object with keys and interpolation. A scale with no chroma becomes the neutral (gray) scale.",
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/definitions/cssColor" },
+          { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/cssColor" } },
+          {
+            "type": "object",
+            "required": ["keys"],
+            "additionalProperties": false,
+            "properties": {
+              "keys": {
+                "oneOf": [{ "$ref": "#/definitions/cssColor" }, { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/cssColor" } }]
+              },
+              "interpolation": { "$ref": "#/definitions/interpolation" }
+            }
+          }
+        ]
+      }
+    },
+    "background": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "color": { "type": "string", "description": "Name of the scale that tints backgrounds and surfaces. Default: the neutral scale." },
+        "lightness": { "type": "number", "minimum": 0, "maximum": 1, "description": "Default background lightness (0 = black, 1 = white) for modes that don't set their own." }
+      }
+    },
+    "steps": {
+      "description": "Contrast targets for each scale step against the background. A list is named 100, 200, 300 and so on. Default: 16 steps from 100 to 1600.",
+      "oneOf": [
+        { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/contrast" } },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/definitions/contrast" },
+              {
+                "type": "object",
+                "required": ["contrast"],
+                "additionalProperties": false,
+                "properties": {
+                  "contrast": { "$ref": "#/definitions/contrast" },
+                  "opposite": { "type": "number", "minimum": 1, "maximum": 21, "description": "WCAG 2 only: the exact ratio to use on the opposite background (for example dark mode), instead of polarity compensation." }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "surfaces": {
+      "type": "object",
+      "description": "Layered surfaces such as cards and menus. Default: raised (1.1:1 from its parent) and floating (1.6:1 from the base background).",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["contrast"],
+        "additionalProperties": false,
+        "properties": {
+          "contrast": { "type": "number", "minimum": 1, "maximum": 21, "description": "WCAG 2 ratio from the reference surface (always a WCAG ratio, even with APCA)." },
+          "reference": { "enum": ["base", "parent"], "description": "Measure from the base background or the previous surface. Default \"parent\"." },
+          "color": { "type": "string", "description": "Scale name that tints this surface. Default: the background scale." }
+        }
+      }
+    },
+    "roles": {
+      "type": "object",
+      "description": "Named roles that point to a scale step (\"gray.1400\") or a surface (\"surface.raised\"). Use null to remove a default role.",
+      "additionalProperties": { "type": ["string", "null"] }
+    },
+    "status": {
+      "description": "Status roles and the scale or CSS color for each. Default: success green, warning orange, error red, info blue. Use false for none.",
+      "oneOf": [{ "const": false }, { "type": "object", "additionalProperties": { "type": "string" } }]
+    },
+    "modes": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Each mode is built from global settings. Default: light (background lightness 1) and dark (0.08).",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "backgroundLightness": { "type": "number", "minimum": 0, "maximum": 1, "description": "0 = black, 1 = white (OKLCH lightness)." },
+          "contrastMultiplier": { "type": "number", "minimum": 0, "maximum": 3, "description": "1 = unchanged, above 1 = more contrast (for example 1.5 for high contrast), below 1 = less." },
+          "polarityCompensation": { "type": "number", "minimum": 0, "maximum": 1, "description": "Extra contrast on dark backgrounds (WCAG 2 only). 0.1 = 10%." },
+          "media": { "oneOf": [{ "type": "string" }, { "const": false }], "description": "CSS media query that turns the mode on, or false for none. Worked out from the mode name when left out." }
+        }
+      }
+    },
+    "defaultMode": { "type": "string", "description": "Mode used when nothing else applies. Default: the first mode." },
+    "formula": { "enum": ["wcag2", "apca"], "description": "Contrast formula. Default \"wcag2\"." },
+    "polarityCompensation": { "type": "number", "minimum": 0, "maximum": 1, "description": "Default polarity compensation for every mode. Default 0.1 (10%)." },
+    "interpolation": { "$ref": "#/definitions/interpolation" },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "gamut": { "enum": ["rec2020", "display-p3", "srgb"], "description": "Largest gamut colors may use. Default \"rec2020\" (wide gamut)." },
+        "format": { "enum": ["oklch", "rgb", "hex", "hsl"], "description": "How CSS strings are written. Default \"oklch\"." }
+      }
+    }
+  }
+}

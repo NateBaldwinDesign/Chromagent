@@ -1,0 +1,19 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "formula": "apca",
+  "colors": {
+    "teal": [
+      "#9fe3d6",
+      "#0f7a6c",
+      "#073a33"
+    ]
+  },
+  "modes": {
+    "light": {
+      "backgroundLightness": 1
+    },
+    "dark": {
+      "backgroundLightness": 0.1
+    }
+  }
+}

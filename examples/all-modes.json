@@ -1,0 +1,22 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "colors": {
+    "brand": "#ff5a00",
+    "slate": ["#f4f6f8", "#5b6672", "#1b2027"]
+  },
+  "background": { "color": "slate" },
+  "roles": {
+    "accent": "brand.900",
+    "accent-hover": "brand.1000",
+    "accent-active": "brand.1100",
+    "link": "brand.1000"
+  },
+  "modes": {
+    "light": { "backgroundLightness": 1 },
+    "dark": { "backgroundLightness": 0.1 },
+    "light-high-contrast": { "backgroundLightness": 1, "contrastMultiplier": 1.4 },
+    "dark-high-contrast": { "backgroundLightness": 0, "contrastMultiplier": 1.4, "media": "(prefers-color-scheme: dark) and (prefers-contrast: more)" },
+    "light-low-contrast": { "backgroundLightness": 0.97, "contrastMultiplier": 0.85 }
+  },
+  "polarityCompensation": 0.1
+}

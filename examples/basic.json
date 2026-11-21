@@ -1,0 +1,6 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "colors": {
+    "blue": "#0265dc"
+  }
+}
