@@ -1,15 +1,30 @@
 ---
 name: chromagent
-description: Color for user interfaces. Use when creating or changing UI colors, palettes, color scales, themes, dark mode, high or low contrast modes, brand or accent colors, text and border colors, status colors, or component states, when checking color contrast or accessibility, or when turning mood words ("calm", "bright and vivid") into colors.
+description: Makes accessible, perceptually balanced UI colors with a bundled color engine instead of guessing hex values. Use when creating a color system, palette, or theme from a prompt or brand color; converting an existing light theme to dark mode or a dark theme to light mode; adding high-contrast or low-contrast modes; fixing or checking color contrast (WCAG 2 or APCA); making a brand color accessible; picking text, border, surface, status, or button-state colors; or turning mood words like "calm and earthy" or "bright and vivid" into colors. Outputs CSS variables, Tailwind v4, design tokens (DTCG), or values for SwiftUI and Android.
+license: Apache-2.0
+compatibility: Requires Node.js 20+
+metadata:
+  version: "0.1.0"
 ---
+
 
 # Chromagent
 
 Chromagent is a color engine plus color knowledge for user interfaces. It makes colors from contrast targets, measured the way people see color, so every color has a known contrast in every mode.
 
+## Running the engine
+
+The engine is one file inside this skill: `scripts/chromagent.mjs`. It works offline with Node.js 20+ and needs no install. `<skill-dir>` is the folder that holds this SKILL.md, such as `.agents/skills/chromagent`, `.github/skills/chromagent`, or `.claude/skills/chromagent` in the project, or the same path under your home folder.
+
+```sh
+node <skill-dir>/scripts/chromagent.mjs generate chromagent.theme.json --platform web --out src/styles/colors.css
+```
+
+In this guide, `chromagent <command>` means `node <skill-dir>/scripts/chromagent.mjs <command>`. If the project has the `chromagent` npm package installed, `npx chromagent <command>` works too. The settings schema and example settings are in `<skill-dir>/assets/`.
+
 ## Rules
 
-1. **Use the engine for every color value.** Don't write hex, RGB, or OKLCH values by hand, and don't guess contrast. Generate colors with `chromagent generate` (or `generateTheme`), and measure any color you didn't generate with `chromagent contrast`.
+1. **Use the engine for every color value.** Don't write hex, RGB, or OKLCH values by hand, and don't guess contrast. Generate colors with `chromagent generate`, and measure any color you didn't generate with `chromagent contrast`.
 2. **Keep one settings file.** Save the settings as `chromagent.theme.json` in the project, and generate the color files from it. To change colors later, edit the settings and generate again. Don't edit the generated output.
 3. **Build modes from global settings.** Light, dark, high-contrast, and low-contrast modes come from three settings per mode: `backgroundLightness`, `contrastMultiplier`, and `polarityCompensation`. Don't hand-tune colors for a mode. When adding a mode to a project that already has light or dark colors, put every mode (old and new) in the settings file and regenerate them all together, so they come from one system.
 4. **Fit the project's stack.** Find what the project is built with before generating, and use the matching `--platform` and `--format`. See `references/platforms.md`.
@@ -21,9 +36,20 @@ Chromagent is a color engine plus color knowledge for user interfaces. It makes 
 1. **Find the stack.** Look for `package.json`, Tailwind, token files, `*.swift`, `build.gradle`, and existing color files (`references/platforms.md`).
 2. **Choose key colors.** Use the user's brand colors when they exist. For words like "calm and earthy", run `chromagent suggest "calm and earthy"`, pick from the results, then check the pick with `chromagent describe <color>` (`references/choosing-colors.md`).
 3. **Write `chromagent.theme.json`.** Start small: key colors plus the modes needed. Defaults cover steps, surfaces, roles, and status colors (`references/engine.md`).
-4. **Generate.** For example: `npx chromagent generate chromagent.theme.json --platform web --out src/styles/colors.css`.
+4. **Generate.** Run `chromagent generate` with the matching `--platform` (see "Running the engine").
 5. **Wire it in.** Use the generated variables or tokens in components, and switch modes with the system setting (media queries) or a `data-theme` attribute.
 6. **Explain.** Tell the user, in plain words, what each color is for and how each mode differs. Mention the contrast targets.
+
+## Converting a mode (light to dark, or dark to light)
+
+When the project already has one mode, the new mode must match it, and the original must keep looking the same.
+
+1. **Read the existing colors.** Find the background, text, subtle text, border, and brand or accent colors, and note which variable names components use.
+2. **Measure them.** Run `chromagent contrast <color> <background>` for each one.
+3. **Use them as the system.** Make the original colors the key colors (for example a gray scale with the border, subtle text, and text colors as its keys, and the brand color as its own scale). Set `steps` to the measured contrasts with names like `"text": 15.2`, and point roles at them (`"text": "gray.text"`). Set the original mode's `backgroundLightness` to match its background.
+4. **Generate both modes together** from that one settings file. The original mode comes back almost identical, and the new mode gets the same contrast for each role. Typical new-mode backgrounds: `0.1`–`0.15` for dark, `0.97`–`1` for light.
+5. **Check the original mode.** Compare its generated values with the old ones. If any color changed visibly, fix the settings, or keep the old value for the original mode.
+6. **Keep the old names.** Map the project's existing variables onto the generated roles (for example `--text: var(--color-text)`) so components don't change, and switch modes with `prefers-color-scheme` and a class or `data-theme` attribute.
 
 ## Settings to choose
 

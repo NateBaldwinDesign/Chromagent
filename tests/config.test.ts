@@ -40,6 +40,13 @@ describe("normalizeConfig", () => {
     expect(m.scales.some((s) => s.name === "gray")).toBe(false);
   });
 
+  it("never picks a tinted background scale as the accent when another color exists", () => {
+    const n = normalizeConfig({ colors: { slate: "#4b5563", brand: "#2563eb" }, background: { color: "slate" } });
+    expect(n.roles["accent-hover"]).toMatch(/^brand\./);
+    const only = normalizeConfig({ colors: { slate: "#4b5563" }, background: { color: "slate" } });
+    expect(only.roles.accent).toMatch(/^slate\./);
+  });
+
   it("infers media queries from mode names, but never for the default mode", () => {
     const n = normalizeConfig({
       colors: { brand: "#0066ff" },

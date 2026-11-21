@@ -24,7 +24,7 @@ npm run eval -- --agent all --no-rubric        # skip the AI grader
 ## How a run works
 
 1. The built package is packed and installed once, as a user would get it from npm.
-2. A practice project from `fixtures/` is copied to a temporary folder, the package is added, and `chromagent init` installs the skill for the agent being tested.
+2. A practice project from `fixtures/` is copied to a temporary folder, and the skill folder is copied into `.agents/skills`, `.github/skills`, and `.claude/skills` (the standard places agents look). In a baseline run, no skill is added.
 3. The agent gets the scenario's prompt, exactly as a user would type it.
 4. The finished folder and the agent's transcript are graded.
 

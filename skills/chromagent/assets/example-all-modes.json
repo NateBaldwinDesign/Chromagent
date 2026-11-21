@@ -1,5 +1,5 @@
 {
-  "$schema": "../schema/theme.schema.json",
+  "$schema": "./theme.schema.json",
   "colors": {
     "brand": "#ff5a00",
     "slate": ["#f4f6f8", "#5b6672", "#1b2027"]

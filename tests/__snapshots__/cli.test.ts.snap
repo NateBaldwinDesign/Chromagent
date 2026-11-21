@@ -12,20 +12,3 @@ exports[`generate > reports warnings and fails with --strict 1`] = `
 Some colors missed their contrast targets (--strict).
 "
 `;
-
-exports[`init > installs the skill for every agent 1`] = `
-"Installed the chromagent skill for copilot: .github/skills/chromagent
-Installed the chromagent skill for claude: .claude/skills/chromagent
-Installed the chromagent skill for cursor: .cursor/rules/chromagent.mdc
-"
-`;
-
-exports[`init > installs the skill for every agent 2`] = `
-"---
-description: "Color for UI."
-alwaysApply: false
----
-# Chromagent
-See [contrast](chromagent/references/contrast.md) or \`.cursor/rules/chromagent/references/contrast.md\`.
-"
-`;

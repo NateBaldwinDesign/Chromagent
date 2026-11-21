@@ -373,6 +373,7 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
     });
     const statusScales = new Set(Object.values(statusRoles));
     const accent =
+      scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name) && s.name !== neutral) ??
       scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name)) ??
       scales.find((s) => !s.builtIn && !isNeutral(s));
     if (accent) {

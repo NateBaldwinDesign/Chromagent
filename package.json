@@ -35,14 +35,12 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./schema/theme.schema.json": "./schema/theme.schema.json",
+    "./schema/theme.schema.json": "./skills/chromagent/assets/theme.schema.json",
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
     "skills",
-    "schema",
-    "examples",
     "NOTICE",
     "LICENSE",
     "README.md"

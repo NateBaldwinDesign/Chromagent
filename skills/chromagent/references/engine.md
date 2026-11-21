@@ -14,15 +14,15 @@ How to write Chromagent settings and run the engine, with the command-line tool 
 
 ## Setup
 
-Chromagent needs Node.js 20 or newer. Add it to a JavaScript project with `npm install --save-dev chromagent`. Any project can also run it with `npx chromagent`, including Swift and Android projects.
+The command-line tool is bundled in this skill at `<skill-dir>/scripts/chromagent.mjs` (`<skill-dir>` is the folder holding `SKILL.md`). Run it with `node <skill-dir>/scripts/chromagent.mjs <command>`. It needs Node.js 20 or newer and nothing else, so it works in any project, including Swift and Android ones. Below, `chromagent <command>` is short for that. If the project has the npm package (`npm install --save-dev chromagent`), `chromagent <command>` also works, and the JavaScript API is available.
 
 ## The settings file
 
-Keep the settings in `chromagent.theme.json` at the project root. Only `colors` is required.
+Keep the settings in `chromagent.theme.json` at the project root. Only `colors` is required. The full schema and example settings are in `<skill-dir>/assets/`.
 
 ```json
 {
-  "$schema": "./node_modules/chromagent/schema/theme.schema.json",
+  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagent/main/skills/chromagent/assets/theme.schema.json",
   "colors": {
     "brand": "#ff5a00",
     "slate": ["#f4f6f8", "#5b6672", "#1b2027"]
@@ -103,7 +103,7 @@ Each mode is three global settings. Every color is recalculated from them.
 ## Generating output
 
 ```sh
-npx chromagent generate chromagent.theme.json --platform web --out src/styles/colors.css
+chromagent generate chromagent.theme.json --platform web --out src/styles/colors.css
 ```
 
 | Option | Meaning |
@@ -133,10 +133,10 @@ The engine warns when a target can't be reached, for example 7:1 text on a middl
 ## Measuring, suggesting, and describing colors
 
 ```sh
-npx chromagent contrast "#5b6672" "#ffffff"          # 5.85:1
-npx chromagent contrast "#5b6672" "#ffffff" --formula apca
-npx chromagent suggest "calm and earthy" --count 6
-npx chromagent describe "#ff5a00"
+chromagent contrast "#5b6672" "#ffffff"          # 5.85:1
+chromagent contrast "#5b6672" "#ffffff" --formula apca
+chromagent suggest "calm and earthy" --count 6
+chromagent describe "#ff5a00"
 ```
 
 Use `contrast` for any color the engine didn't make, such as an existing brand color or text on an image. See `references/choosing-colors.md` for `suggest` and `describe`.
@@ -166,3 +166,17 @@ contrast("#333", "#fff");              // 12.63 (WCAG 2), or contrast(a, b, "apc
 **Button states.** Use `accent` for the fill, `accent-hover` and `accent-active` for hover and pressed, `text-on-accent` for the label, a `focus-ring` role (step `800` or stronger), and `text-disabled` with a `100`–`200` neutral fill for disabled. Don't show state with color alone; keep the label or add a shape change for focus.
 
 **Add a mode.** Add an entry under `modes` and generate again. Don't edit generated colors.
+
+**Convert a hand-made light theme to dark (or dark to light).** Measure each existing color against its background, then use those colors as key colors and those contrasts as named steps, so the original mode comes back almost the same:
+
+```json
+{
+  "colors": { "gray": ["#d1d5db", "#4b5563", "#111827"], "brand": "#2563eb" },
+  "background": { "color": "gray" },
+  "steps": { "border": 1.47, "muted": 7.55, "text": 17.73, "accent": 5.16 },
+  "roles": { "text": "gray.text", "text-subtle": "gray.muted", "border": "gray.border", "accent": "brand.accent" },
+  "modes": { "light": { "backgroundLightness": 1 }, "dark": { "backgroundLightness": 0.12 } }
+}
+```
+
+Default roles that aren't listed point to the closest named step. Set a role to `null` to drop it.

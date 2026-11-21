@@ -1,6 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { generateTheme } from "../theme/generateTheme";
 import { ThemeConfigError, type ThemeConfig } from "../theme/config";
@@ -9,14 +8,11 @@ import { toDtcgModes } from "../output/dtcg";
 import { platformOutput, PLATFORMS, type Platform } from "../output/platform";
 import { describeColor, suggestColors } from "../describe/describe";
 import { contrast, type ContrastFormula } from "../math/contrast";
-import { AGENTS, installSkill, type Agent } from "./init";
 
 export interface CliIO {
   stdout: (text: string) => void;
   stderr: (text: string) => void;
   cwd: string;
-  /** Folder containing SKILL.md. Defaults to the skill shipped with the package. */
-  skillSource?: string;
   version?: string;
 }
 
@@ -30,9 +26,6 @@ Usage:
       --out       file to write; for dtcg, a folder that gets one <mode>.tokens.json per mode
       --strict    fail if any color misses its contrast target
 
-  chromagent init [--agent copilot|claude|cursor|all] [--dir <project>]
-      Install the chromagent skill for your AI agent (default: all of them).
-
   chromagent suggest "<words>" [--count 6]     Candidate key colors for words like "calm and earthy"
   chromagent describe <color>                  Describe a color in plain words
   chromagent contrast <text> <background> [--formula wcag2|apca]   Measure contrast
@@ -41,8 +34,6 @@ Usage:
 `;
 
 class CliError extends Error {}
-
-const defaultSkillSource = () => join(dirname(fileURLToPath(import.meta.url)), "..", "..", "skills", "chromagent");
 
 async function readConfig(path: string): Promise<ThemeConfig> {
   let text: string;
@@ -109,17 +100,6 @@ async function generate(args: string[], io: CliIO) {
   return 0;
 }
 
-async function init(args: string[], io: CliIO) {
-  const { values } = parseArgs({ args, options: { agent: { type: "string", default: "all" }, dir: { type: "string" } } });
-  const agent = values.agent!;
-  if (agent !== "all" && !AGENTS.includes(agent as Agent))
-    throw new CliError(`--agent must be copilot, claude, cursor, or all (got "${agent}").`);
-  const root = resolve(io.cwd, values.dir ?? ".");
-  const results = await installSkill(root, agent === "all" ? AGENTS : [agent as Agent], io.skillSource ?? defaultSkillSource());
-  for (const result of results) io.stdout(`Installed the chromagent skill for ${result.agent}: ${result.path}\n`);
-  return 0;
-}
-
 function suggest(args: string[], io: CliIO) {
   const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { count: { type: "string" } } });
   if (positionals.length === 0) throw new CliError('Give some words, for example: chromagent suggest "calm and earthy"');
@@ -163,8 +143,6 @@ export async function run(argv: string[], io: CliIO): Promise<number> {
     switch (command) {
       case "generate":
         return await generate(rest, io);
-      case "init":
-        return await init(rest, io);
       case "suggest":
         return suggest(rest, io);
       case "describe":

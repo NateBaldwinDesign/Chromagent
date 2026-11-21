@@ -12,19 +12,18 @@ Colors are measured the way people see them (OKLCH). Light, dark, high-contrast,
 ## Install
 
 ```sh
-npm install chromagent
-npx chromagent init
+npx skills add NateBaldwinDesign/Chromagent
 ```
 
-`init` copies the skill to every supported agent. Use `--agent` to pick just one:
+Other ways to install the same skill:
 
-| Agent | Installed to |
+| Tool | Command |
 |---|---|
-| GitHub Copilot | `.github/skills/chromagent/` |
-| Claude Code | `.claude/skills/chromagent/` |
-| Cursor | `.cursor/rules/chromagent.mdc` |
+| GitHub CLI | `gh skill install NateBaldwinDesign/Chromagent chromagent` |
+| Claude Code | `/plugin marketplace add NateBaldwinDesign/Chromagent`, then `/plugin install chromagent@chromagent` |
+| npm | `npm install --save-dev chromagent`, then `npx skills experimental_sync -y` |
 
-Running `init` again updates the files in place.
+The skill includes its own copy of the engine (`scripts/chromagent.mjs`), so it works offline with just Node.js 20 or newer.
 
 After that, just ask your agent for color work, for example "Create a color system for this app", "Add dark mode", or "Give my app a calm, earthy feel".
 
@@ -34,7 +33,7 @@ Write a settings file, for example `chromagent.theme.json`:
 
 ```json
 {
-  "$schema": "./node_modules/chromagent/schema/theme.schema.json",
+  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagent/main/skills/chromagent/assets/theme.schema.json",
   "colors": { "brand": "#0265dc" },
   "modes": {
     "light": { "backgroundLightness": 1 },
@@ -63,7 +62,7 @@ npx chromagent describe "#c8a03c"            # "rich, golden and warm"
 npx chromagent contrast "#767676" "#ffffff"  # 4.54
 ```
 
-See [`examples/`](examples) for more settings files, including all four kinds of mode and APCA.
+See [`skills/chromagent/assets/`](skills/chromagent/assets) for more settings files, including all four kinds of mode and APCA.
 
 ## Settings for each mode
 

@@ -4,13 +4,14 @@ import { Ajv } from "ajv";
 import { describe, expect, it } from "vitest";
 import { generateTheme } from "../src";
 
-const schema = JSON.parse(readFileSync(join(__dirname, "..", "schema", "theme.schema.json"), "utf8"));
+const assets = join(__dirname, "..", "skills", "chromagent", "assets");
+const schema = JSON.parse(readFileSync(join(assets, "theme.schema.json"), "utf8"));
 const validate = new Ajv({ allErrors: true }).compile(schema);
-const examplesDir = join(__dirname, "..", "examples");
+const examples = readdirSync(assets).filter((file) => file.startsWith("example-"));
 
 describe("settings schema", () => {
-  it.each(readdirSync(examplesDir))("accepts and generates examples/%s without warnings", (file) => {
-    const config = JSON.parse(readFileSync(join(examplesDir, file), "utf8"));
+  it.each(examples)("accepts and generates %s without warnings", (file) => {
+    const config = JSON.parse(readFileSync(join(assets, file), "utf8"));
     expect(validate(config), JSON.stringify(validate.errors)).toBe(true);
     expect(generateTheme(config).warnings).toEqual([]);
   });
