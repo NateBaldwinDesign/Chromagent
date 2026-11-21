@@ -53,8 +53,9 @@ describe("matches Spectrum Studio reference values", () => {
       const data = buildScaleData(scale(entry.scale, interpolation), output);
       const bg = resolveScaleColorAtLightness(scale("gray", interpolation), entry.backgroundLightness, output);
       expect(bg.css).toBe(entry.background);
+      const settings = { ...settingsBase, colorOutput: output };
       entry.steps.forEach((step) => {
-        const generated = generateColors(data, bg.linear, step.target, { ...settingsBase, colorOutput: output });
+        const generated = generateColors(data, bg.linear, step.target, settings);
         expect(generated.opaque.css, `${entry.output} ${entry.scale} ${step.target}`).toBe(step.css);
         expect(generated.opaque.measuredContrast).toBeCloseTo(step.measured, 9);
       });
