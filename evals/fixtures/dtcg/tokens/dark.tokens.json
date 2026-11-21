@@ -1,0 +1,8 @@
+{
+  "color": {
+    "background": { "$type": "color", "$value": "#1a1a1a" },
+    "text": { "$type": "color", "$value": "#eeeeee" },
+    "border": { "$type": "color", "$value": "#444444" },
+    "accent": { "$type": "color", "$value": "#4d94ff" }
+  }
+}

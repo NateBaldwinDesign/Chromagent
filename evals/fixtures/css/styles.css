@@ -1,0 +1,16 @@
+:root {
+  --page: #ffffff;
+  --card: #f4f4f4;
+  --text: #222222;
+  --muted: #777777;
+  --line: #dddddd;
+  --brand: #3366cc;
+}
+
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--page); color: var(--text); }
+.site-header { display: flex; justify-content: space-between; padding: 1rem 2rem; border-bottom: 1px solid var(--line); }
+.site-header a { color: var(--brand); }
+.card { margin: 2rem; padding: 1.5rem; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+.card p { color: var(--muted); }
+.button { background: var(--brand); color: #ffffff; border: 0; padding: 0.5rem 1rem; border-radius: 6px; }
+.error { color: #e04040; }

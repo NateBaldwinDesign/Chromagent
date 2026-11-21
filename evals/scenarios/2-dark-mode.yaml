@@ -1,0 +1,6 @@
+id: dark-mode
+fixture: tailwind4
+prompt: Add dark mode.
+expectModes: [light, dark]
+expectReferences: [themes-and-modes.md]
+rubric: Dark mode should come from a mode with a low background lightness, with polarity compensation (default 10%), not hand-picked colors.

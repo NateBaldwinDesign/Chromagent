@@ -1,0 +1,5 @@
+{
+  "name": "acme-notes",
+  "private": true,
+  "description": "A small note-taking website. Plain HTML and CSS, no build step."
+}

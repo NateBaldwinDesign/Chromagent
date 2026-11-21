@@ -1,0 +1,5 @@
+{
+  "name": "acme-tokens",
+  "private": true,
+  "description": "Acme design tokens in the W3C Design Tokens (DTCG) format. One file per mode in tokens/."
+}

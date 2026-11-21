@@ -1,0 +1,5 @@
+id: color-system
+fixture: css
+prompt: Create a color system for this app.
+expectReferences: [engine.md, scales.md, platforms.md]
+rubric: The web project should get wide-gamut OKLCH colors. Default contrast is WCAG 2.

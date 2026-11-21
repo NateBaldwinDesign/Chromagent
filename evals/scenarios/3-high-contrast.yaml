@@ -1,0 +1,6 @@
+id: high-contrast
+fixture: dtcg
+prompt: Add a high-contrast mode.
+expectModes: [light, dark, high-contrast]
+expectReferences: [themes-and-modes.md]
+rubric: High contrast should come from a contrast multiplier above 1 (about 1.5 to 2), keeping the existing light and dark modes.

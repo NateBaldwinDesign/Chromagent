@@ -1,0 +1,6 @@
+id: calm-earthy
+fixture: tailwind4
+prompt: Give my app a calm, earthy feel.
+expectWords: [calm, earthy, earthiness, ground, nature, muted, mellow, soft]
+expectReferences: [choosing-colors.md]
+rubric: Earthy colors are usually warm, low-to-medium chroma browns, olives, and greens. The color-description word data is English and Western, so it is a starting point, not a rule.

@@ -1,0 +1,6 @@
+id: bright-vivid
+fixture: css
+prompt: Make a website with bright vivid colors.
+expectWords: [bright, vivid, brilliant, saturated, energize, excite]
+expectReferences: [choosing-colors.md]
+rubric: Vivid colors are high-chroma colors. The color-description word data is English and Western, so it is a starting point, not a rule.
