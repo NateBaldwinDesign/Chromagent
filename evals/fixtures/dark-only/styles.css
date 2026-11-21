@@ -1,0 +1,60 @@
+:root {
+  color-scheme: dark;
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #334155;
+  --brand: #38bdf8;
+  --on-brand: #0f172a;
+  --danger: #f87171;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+a {
+  color: var(--brand);
+}
+
+.card {
+  margin: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 6px;
+  background-color: var(--brand);
+  color: var(--on-brand);
+}
+
+.error {
+  color: var(--danger);
+}
+
+input {
+  padding: 0.5rem;
+  background-color: var(--bg);
+  color: var(--text);
+  border: 1px solid #64748b;
+}

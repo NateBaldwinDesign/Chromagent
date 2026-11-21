@@ -1,0 +1,17 @@
+.badge {
+  color: #4338ca;
+  background-color: #eef2ff;
+  border: 1px solid #c7d2fe;
+}
+
+.alert {
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.input {
+  color: var(--color-ink);
+  background-color: var(--color-page);
+  border: 1px solid #6b7280;
+}

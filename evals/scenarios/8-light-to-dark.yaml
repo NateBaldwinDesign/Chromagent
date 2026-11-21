@@ -1,0 +1,7 @@
+id: light-to-dark
+fixture: light-only
+prompt: Add a dark mode.
+expectModes: [light, dark]
+conversion: { from: light, to: dark }
+expectReferences: [themes-and-modes.md]
+rubric: The existing light colors should become the key colors, the light mode should look the same as before, and the dark mode should come from the same system with a low background lightness and polarity compensation (default 10%).

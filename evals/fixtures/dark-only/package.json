@@ -1,0 +1,5 @@
+{
+  "name": "nightjar-music",
+  "private": true,
+  "description": "A small music library website. Plain HTML and CSS, no build step."
+}

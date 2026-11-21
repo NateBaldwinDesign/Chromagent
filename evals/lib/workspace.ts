@@ -1,10 +1,10 @@
 import { spawn, execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import type { AgentName } from "./types";
 
 const TEXT = /\.(css|scss|html|astro|jsx?|tsx?|mjs|vue|svelte|json|swift|kt|kts|xml|md)$/i;
-const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "build", ".build", ".gradle", ".claude", ".cursor"]);
+const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "build", ".build", ".gradle", ".claude", ".cursor", ".agents"]);
 
 /** All text files under a folder, keyed by relative path. Skips installed skills and dependencies. */
 export function readTextFiles(root: string): Map<string, string> {
@@ -33,33 +33,19 @@ export function changedFiles(workspace: string, fixtureDir: string): Map<string,
   return out;
 }
 
-/**
- * Pack the built package once and install it (with its dependencies) into a cache folder,
- * so every workspace gets the same `node_modules` without going to the network again.
- */
-export function installPackage(repoRoot: string, cacheDir: string): string {
-  if (!existsSync(join(repoRoot, "dist", "cli", "index.js"))) {
-    throw new Error("The package isn't built yet. Run `npm run build` first.");
-  }
-  mkdirSync(cacheDir, { recursive: true });
-  const name = execFileSync("npm", ["pack", "--silent", "--pack-destination", cacheDir], { cwd: repoRoot, encoding: "utf8" }).trim().split("\n").pop()!;
-  const install = join(cacheDir, "install");
-  mkdirSync(install, { recursive: true });
-  writeFileSync(join(install, "package.json"), JSON.stringify({ name: "chromagent-eval", private: true }));
-  execFileSync("npm", ["install", "--no-audit", "--no-fund", "--silent", join(cacheDir, name)], { cwd: install, stdio: "ignore" });
-  return join(install, "node_modules");
-}
+/** Where the standard installers put a project skill, for each kind of agent. */
+export const SKILL_FOLDERS = [".agents/skills", ".github/skills", ".claude/skills"];
 
-/** Copy a practice project into a fresh folder, add the package, and install the skill for one agent. */
-export function prepareWorkspace(fixtureDir: string, workspace: string, nodeModules: string, agent: AgentName) {
+/**
+ * Copy a practice project into a fresh folder. With `skillDir`, also install the skill the way
+ * `npx skills add` and `gh skill install` do: a plain copy in each agent's project skill folder.
+ * Without it, this is the baseline: the same project with no skill.
+ */
+export function prepareWorkspace(fixtureDir: string, workspace: string, skillDir?: string) {
   mkdirSync(workspace, { recursive: true });
   cpSync(fixtureDir, workspace, { recursive: true, filter: (src) => !src.endsWith("eval.json") });
-  // A real copy, not a link: if the agent runs `npm install`, other runs are not affected.
-  cpSync(nodeModules, join(workspace, "node_modules"), { recursive: true, verbatimSymlinks: true });
-  execFileSync("node", [join(workspace, "node_modules", "chromagent", "dist", "cli", "index.js"), "init", "--agent", agent], {
-    cwd: workspace,
-    stdio: "ignore",
-  });
+  if (!skillDir) return;
+  for (const folder of SKILL_FOLDERS) cpSync(skillDir, join(workspace, folder, "chromagent"), { recursive: true });
 }
 
 export interface AgentRun {

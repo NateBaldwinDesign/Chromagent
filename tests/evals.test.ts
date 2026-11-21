@@ -18,7 +18,7 @@ import {
 import { parseClaude, parseCopilot } from "../evals/lib/transcript";
 import { parseRubric, rubricPrompt } from "../evals/lib/rubric";
 import { runPassed, summarize, toMarkdown, writeReport } from "../evals/lib/report";
-import { agentCommand, changedFiles, readTextFiles } from "../evals/lib/workspace";
+import { agentCommand, changedFiles, prepareWorkspace, readTextFiles, SKILL_FOLDERS } from "../evals/lib/workspace";
 import { loadFixture, loadScenarios } from "../evals/run";
 import type { RunResult, Scenario, Transcript } from "../evals/lib/types";
 
@@ -126,6 +126,11 @@ describe("code-graded checks", () => {
     expect(results).toMatchObject({ "used-engine": "fail", "settings-file": "fail", "engine-colors": "fail" });
   });
 
+  it("counts the bundled engine script in the skill folder", () => {
+    const bundled = { ...ran, commands: ["node .agents/skills/chromagent/scripts/chromagent.mjs generate chromagent.theme.json --out colors.css"] };
+    expect(byName(runChecks(context(goodProject, { transcript: bundled })))["used-engine"]).toBe("pass");
+  });
+
   it("counts an npm script that runs chromagent generate", () => {
     const pkg = JSON.stringify({ scripts: { colors: "chromagent generate chromagent.theme.json --out colors.css" } });
     const npm = { ...ran, commands: ["npm run colors"] };
@@ -203,17 +208,24 @@ describe("reports", () => {
   const dir = mkdtempSync(join(tmpdir(), "chromagent-report-"));
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
-  it("summarizes pass rates by scenario, agent, and check", () => {
-    const base = { fixture: "css", durationMs: 1000, workspace: "", run: 1 };
+  it("averages scores with and without the skill, with the spread and the difference", () => {
+    const base = { fixture: "css", durationMs: 1000, workspace: "", run: 1, agent: "copilot" as const, scenario: "a" };
     const results: RunResult[] = [
-      { ...base, scenario: "a", agent: "copilot", passed: true, checks: [{ name: "x", status: "pass", detail: "" }, { name: "y", status: "skip", detail: "" }] },
-      { ...base, scenario: "a", agent: "copilot", run: 2, passed: false, checks: [{ name: "x", status: "fail", detail: "" }] },
+      { ...base, condition: "skill", passed: true, metrics: { result: 0.9, engine: 1 }, checks: [{ name: "x", status: "pass", detail: "" }, { name: "y", status: "skip", detail: "" }] },
+      { ...base, condition: "skill", run: 2, passed: false, metrics: { result: 0.7, engine: null }, checks: [{ name: "x", status: "fail", detail: "" }] },
+      { ...base, condition: "baseline", passed: true, metrics: { result: 0.5 }, checks: [] },
     ];
     expect(runPassed(results[0].checks)).toBe(true);
     const summary = summarize(results, "today");
-    expect(summary.byScenario.a.copilot).toEqual({ passed: 1, runs: 2 });
+    const skill = summary.byScenario.a.copilot.skill;
+    expect(skill.runs).toBe(2);
+    expect(skill.metrics.result.mean).toBeCloseTo(0.8);
+    expect(skill.metrics.result.sd).toBeCloseTo(0.1414, 3);
+    expect(skill.metrics.engine).toEqual({ mean: 1, sd: 0, n: 1 });
     expect(summary.byCheck).toEqual({ x: { passed: 1, graded: 2 } });
-    expect(toMarkdown(summary, results)).toContain("| a | 1/2 (50%) |");
+    const md = toMarkdown(summary, results);
+    expect(md).toContain("| a | copilot | 50% | 80% ± 14 | +30 pts |");
+    expect(md).toContain("| Colors from the engine | – | 100% | – |");
     const out = writeReport(dir, "stamp", results);
     expect(existsSync(join(out, "report.md")) && existsSync(join(dir, "history.jsonl"))).toBe(true);
   });
@@ -233,6 +245,20 @@ describe("workspaces and scenarios", () => {
     rmSync(root, { recursive: true, force: true });
   });
 
+  it("installs the skill by copying it into each agent's folder, and leaves the baseline bare", () => {
+    const root = mkdtempSync(join(tmpdir(), "chromagent-prep-"));
+    const fixture = join(__dirname, "..", "evals", "fixtures", "css");
+    const skill = join(__dirname, "..", "skills", "chromagent");
+    prepareWorkspace(fixture, join(root, "with"), skill);
+    prepareWorkspace(fixture, join(root, "without"));
+    for (const folder of SKILL_FOLDERS) expect(existsSync(join(root, "with", folder, "chromagent", "SKILL.md")), folder).toBe(true);
+    expect(existsSync(join(root, "without", ".agents"))).toBe(false);
+    expect(existsSync(join(root, "with", "eval.json"))).toBe(false);
+    // The installed skill isn't graded as the agent's work.
+    expect([...readTextFiles(join(root, "with")).keys()].sort()).toEqual([...readTextFiles(join(root, "without")).keys()].sort());
+    rmSync(root, { recursive: true, force: true });
+  });
+
   it("builds non-interactive agent commands", () => {
     expect(agentCommand("copilot", "hi")[1]).toEqual(expect.arrayContaining(["-p", "hi", "--allow-all-tools", "--output-format", "json"]));
     expect(agentCommand("claude", "hi", "haiku")[1]).toEqual(expect.arrayContaining(["--output-format", "stream-json", "--model", "haiku"]));
@@ -240,7 +266,8 @@ describe("workspaces and scenarios", () => {
 
   it("has valid scenarios that point at real fixtures and reference files", () => {
     const scenarios = loadScenarios();
-    expect(scenarios.length).toBe(7);
+    expect(scenarios.length).toBe(9);
+    expect(scenarios.filter((s) => s.conversion).map((s) => s.id)).toEqual(["light-to-dark", "dark-to-light"]);
     const references = join(__dirname, "..", "skills", "chromagent", "references");
     for (const s of scenarios) {
       expect(s.prompt, s.id).toBeTruthy();

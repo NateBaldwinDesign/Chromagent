@@ -24,8 +24,8 @@ const fail = (name: string, detail: string): CheckResult => ({ name, status: "fa
 const skip = (name: string, detail: string): CheckResult => ({ name, status: "skip", detail });
 const pct = (part: number, whole: number) => `${Math.round((part / Math.max(whole, 1)) * 100)}%`;
 
-const GENERATE = /chromagent(?:\/dist\/cli\/index\.js)?["']?\s+generate\b/;
-const SUGGEST = /chromagent(?:\/dist\/cli\/index\.js)?["']?\s+suggest\b|suggestColors\s*\(/;
+export const GENERATE = /chromagent(?:\.mjs|\/dist\/cli\/index\.js)?["']?\s+generate\b/;
+export const SUGGEST = /chromagent(?:\.mjs|\/dist\/cli\/index\.js)?["']?\s+suggest\b|suggestColors\s*\(/;
 const SETTINGS_NAME = "chromagent.theme.json";
 
 export interface FoundSettings {
@@ -246,7 +246,7 @@ export function dtcgProblems(files: Map<string, string>, settingsPath?: string):
 function swiftFiles(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (entry.isDirectory() && !["node_modules", ".build", ".git", ".github", ".claude", ".cursor"].includes(entry.name)) out.push(...swiftFiles(join(dir, entry.name)));
+    if (entry.isDirectory() && !["node_modules", ".build", ".git", ".github", ".claude", ".cursor", ".agents"].includes(entry.name)) out.push(...swiftFiles(join(dir, entry.name)));
     else if (entry.isFile() && entry.name.endsWith(".swift")) out.push(join(dir, entry.name));
   }
   return out;
