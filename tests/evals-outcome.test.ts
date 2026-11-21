@@ -1,3 +1,6 @@
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import Color from "colorjs.io";
 import { readTextFiles } from "../evals/lib/workspace";
@@ -16,6 +19,9 @@ import {
   skillTriggered,
 } from "../evals/lib/outcome";
 import type { CheckContext } from "../evals/lib/checks";
+import { buildGallery, pickRun, swatchSvg } from "../evals/gallery";
+import { summarize } from "../evals/lib/report";
+import type { RunResult, Scenario, SwatchPair } from "../evals/lib/types";
 
 const [light, dark, lightHc] = MODES;
 const hex = (c?: Color) => c?.to("srgb").toString({ format: "hex", collapse: false });
@@ -206,5 +212,41 @@ describe("outcome scores", () => {
     const baseline = scoreRun(run, "baseline");
     expect(baseline.metrics.triggered).toBeNull();
     expect(baseline.metrics.result).toBe(skill.metrics.result);
+  });
+});
+
+describe("gallery", () => {
+  const pair = (ratio: number, role = "--ink"): SwatchPair => ({ role, kind: "text", fg: "oklch(20% 0 0)", bg: "oklch(100% 0 0)", ratio, target: 4.5 });
+  const run = (scenario: string, condition: "skill" | "baseline", result: number, n = 1): RunResult => ({
+    scenario, condition, run: n, agent: "copilot", fixture: "light-only", durationMs: 1, workspace: "", checks: [], passed: true,
+    metrics: { result }, swatches: { light: [pair(result * 10)], dark: [pair(3, "--muted <b>")] },
+  });
+
+  it("shows the median run and marks pairs that pass or fail", () => {
+    const results = [run("a", "skill", 0.9), run("a", "skill", 0.5, 2), run("a", "skill", 0.7, 3), run("a", "baseline", 0.4)];
+    expect(pickRun(results, "a", "skill")?.run).toBe(3);
+    expect(pickRun(results, "b", "skill")).toBeUndefined();
+    const svg = swatchSvg("With skill", { dark: [pair(3, "--muted <b>"), pair(3, "--muted <b>")], light: [] });
+    expect(svg).toContain("✗");
+    expect(svg).toContain("muted &lt;b&gt;");
+    expect(svg.match(/>Aa</g)).toHaveLength(1);
+    expect(svg).toContain("No colors found");
+    expect(swatchSvg("x", { light: [pair(5)] })).toContain("✓");
+  });
+
+  it("writes a page with a side-by-side section for mode conversions", () => {
+    const out = mkdtempSync(join(tmpdir(), "chromagent-gallery-"));
+    const results = [run("light-to-dark", "skill", 0.9), run("light-to-dark", "baseline", 0.6), run("dark-mode", "skill", 0.8), run("dark-mode", "baseline", 0.8)];
+    const scenarios: Scenario[] = [
+      { id: "light-to-dark", fixture: "light-only", prompt: "Add a dark mode.", conversion: { from: "light", to: "dark" } },
+      { id: "dark-mode", fixture: "light-only", prompt: "Add dark mode." },
+    ];
+    const md = buildGallery({ summary: summarize(results, "today"), results }, out, scenarios);
+    expect(md).toContain("| [light-to-dark](#light-to-dark) | 60% | 90% | +30 pts |");
+    expect(md).toContain("## Mode conversions");
+    expect(md).toContain("![original](light-to-dark-original.svg)");
+    expect(readFileSync(join(out, "light-to-dark-original.svg"), "utf8")).toContain("Original light mode");
+    expect(existsSync(join(out, "dark-mode-skill.svg")) && existsSync(join(out, "README.md"))).toBe(true);
+    rmSync(out, { recursive: true, force: true });
   });
 });
