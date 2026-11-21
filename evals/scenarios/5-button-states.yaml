@@ -2,4 +2,4 @@ id: button-states
 fixture: compose
 prompt: Build a button with all its states.
 expectReferences: [scales.md, engine.md]
-rubric: States (default, hover or pressed, focused, disabled) should use steps or roles from one generated scale. Disabled controls are exempt from WCAG contrast rules, but focus indicators need at least 3:1. This is an Android Compose app, so colors should be Display P3.
+rubric: Interactive states (default, hover or pressed, focused) should use steps or roles from the same accent scale; a neutral (gray) disabled state is fine. Disabled controls are exempt from WCAG contrast rules, but focus indicators need at least 3:1. This is an Android Compose app, so colors should be Display P3.

@@ -11,7 +11,7 @@ Chromagent is a color engine plus color knowledge for user interfaces. It makes 
 
 1. **Use the engine for every color value.** Don't write hex, RGB, or OKLCH values by hand, and don't guess contrast. Generate colors with `chromagent generate` (or `generateTheme`), and measure any color you didn't generate with `chromagent contrast`.
 2. **Keep one settings file.** Save the settings as `chromagent.theme.json` in the project, and generate the color files from it. To change colors later, edit the settings and generate again. Don't edit the generated output.
-3. **Build modes from global settings.** Light, dark, high-contrast, and low-contrast modes come from three settings per mode: `backgroundLightness`, `contrastMultiplier`, and `polarityCompensation`. Don't hand-tune colors for a mode.
+3. **Build modes from global settings.** Light, dark, high-contrast, and low-contrast modes come from three settings per mode: `backgroundLightness`, `contrastMultiplier`, and `polarityCompensation`. Don't hand-tune colors for a mode. When adding a mode to a project that already has light or dark colors, put every mode (old and new) in the settings file and regenerate them all together, so they come from one system.
 4. **Fit the project's stack.** Find what the project is built with before generating, and use the matching `--platform` and `--format`. See `references/platforms.md`.
 5. **Use roles, not raw steps, in components.** Point components at roles like `text`, `border`, and `accent`. Roles keep their job in every mode.
 6. **Report problems.** If the engine warns that a target can't be reached, tell the user and fix the settings. Don't hide the warning.

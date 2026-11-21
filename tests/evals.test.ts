@@ -82,6 +82,22 @@ describe("finding colors in files", () => {
     expect(extractColors("Color(.displayP3, red: 0.24, green: 0.47, blue: 0.91)")[0].kind).toBe("p3");
     expect(extractColors("Color(red = 0.2f, green = 0.3f, blue = 0.4f, colorSpace = ColorSpaces.DisplayP3)")[0].kind).toBe("p3");
     expect(extractColors("val A = Color(0xFF6650A4)\nval B = Color(0x806650A4)")).toHaveLength(1);
+    const compose = extractColors("a = Color(0.46f, 0.4f, 0.7f, colorSpace = ColorSpaces.DisplayP3)");
+    expect(compose.map((f) => f.kind)).toEqual(["p3"]);
+    expect(compose[0].color.coords).toEqual([0.46, 0.4, 0.7]);
+  });
+
+  it("finds Xcode asset catalog colors", () => {
+    const colorset = JSON.stringify({
+      colors: [
+        { color: { "color-space": "display-p3", components: { red: "0.77", green: "0.27", blue: "0", alpha: "1" } } },
+        { color: { "color-space": "srgb", components: { red: "0xFF", green: "128", blue: "0", alpha: "1" } } },
+        { color: { "color-space": "srgb", components: { red: "0", green: "0", blue: "0", alpha: "0.5" } } },
+      ],
+    });
+    const found = extractColors(colorset, "App/Assets.xcassets/Accent.colorset/Contents.json");
+    expect(found.map((f) => f.kind)).toEqual(["p3", "rgb"]);
+    expect(found[1].color.coords[0]).toBe(1);
   });
 
   it("finds DTCG color values", () => {

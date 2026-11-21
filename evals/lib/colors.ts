@@ -14,6 +14,7 @@ export interface ColorLiteral {
 const CSS_FUNC = /\b(oklch|oklab|lab|lch|rgba?|hsla?|color)\(([^()]*)\)/gi;
 const HEX = /(?<![\w&])#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b/gi;
 const ARGB = /\b0x([0-9a-f]{8})\b/gi;
+const COMPOSE = /\bColor\(\s*([\d.]+)f\s*,\s*([\d.]+)f\s*,\s*([\d.]+)f\s*(?:,\s*(?:alpha\s*=\s*)?1(?:\.0)?f\s*)?,\s*colorSpace\s*=\s*ColorSpaces\.(DisplayP3|Srgb)\s*\)/g;
 const TRIPLE = /\bred\s*[:=]\s*([\d.]+)f?\s*,\s*green\s*[:=]\s*([\d.]+)f?\s*,\s*blue\s*[:=]\s*([\d.]+)f?/gi;
 
 function tryColor(text: string): Color | undefined {
@@ -70,8 +71,36 @@ function dtcgLiterals(text: string): ColorLiteral[] {
   return out;
 }
 
+/** Xcode asset catalog channel: "0.5", "128", or "0x80". */
+function channel(value: unknown): number {
+  const text = String(value);
+  if (/^0x/i.test(text)) return parseInt(text, 16) / 255;
+  const n = Number(text);
+  return n > 1 ? n / 255 : n;
+}
+
+/** Xcode asset catalog colors (`*.colorset/Contents.json`). */
+function colorsetLiterals(text: string): ColorLiteral[] {
+  let doc: { colors?: { color?: { "color-space"?: string; components?: Record<string, unknown> } }[] };
+  try {
+    doc = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  const out: ColorLiteral[] = [];
+  for (const entry of doc.colors ?? []) {
+    const c = entry.color?.components;
+    if (!c || channel(c.alpha ?? 1) < 0.999) continue;
+    const p3 = entry.color?.["color-space"] === "display-p3";
+    const rgb = [c.red, c.green, c.blue].map(channel) as [number, number, number];
+    out.push({ text: JSON.stringify(c), kind: p3 ? "p3" : "rgb", color: new Color(p3 ? "p3" : "srgb", rgb) });
+  }
+  return out;
+}
+
 /** Find every opaque color written in a file. */
 export function extractColors(text: string, fileName = ""): ColorLiteral[] {
+  if (fileName.endsWith(".colorset/Contents.json")) return colorsetLiterals(text);
   if (fileName.endsWith(".json")) return dtcgLiterals(text);
   const out: ColorLiteral[] = [];
   for (const match of text.matchAll(CSS_FUNC)) {
@@ -86,6 +115,11 @@ export function extractColors(text: string, fileName = ""): ColorLiteral[] {
     const argb = match[1];
     if (argb.slice(0, 2).toLowerCase() !== "ff") continue;
     out.push({ text: match[0], kind: "hex", color: new Color(`#${argb.slice(2)}`) });
+  }
+  for (const match of text.matchAll(COMPOSE)) {
+    const p3 = match[4] === "DisplayP3";
+    const rgb = [match[1], match[2], match[3]].map(Number) as [number, number, number];
+    out.push({ text: match[0], kind: p3 ? "p3" : "rgb", color: new Color(p3 ? "p3" : "srgb", rgb) });
   }
   for (const match of text.matchAll(TRIPLE)) {
     const [r, g, b] = [match[1], match[2], match[3]].map(Number);
