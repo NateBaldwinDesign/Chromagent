@@ -44,5 +44,5 @@ ${xs}`),1}}catch(o){if(o instanceof Qe)t.stderr(`${o.message}
 `);else if(o instanceof Z)t.stderr(`${o.message}
 `);else if(o instanceof TypeError&&"code"in o&&String(o.code).startsWith("ERR_PARSE_ARGS"))t.stderr(`${o.message}
 Run "chromagent --help" for usage.
-`);else throw o;return 1}}$s(process.argv.slice(2),{stdout:e=>process.stdout.write(e),stderr:e=>process.stderr.write(e),cwd:process.cwd(),version:"0.1.0"}).then(e=>{process.exitCode=e},e=>{process.stderr.write(`Something went wrong: ${e instanceof Error?e.stack:String(e)}
+`);else throw o;return 1}}$s(process.argv.slice(2),{stdout:e=>process.stdout.write(e),stderr:e=>process.stderr.write(e),cwd:process.cwd(),version:"0.2.0"}).then(e=>{process.exitCode=e},e=>{process.stderr.write(`Something went wrong: ${e instanceof Error?e.stack:String(e)}
 `),process.exitCode=1});

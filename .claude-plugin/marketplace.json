@@ -7,7 +7,7 @@
       "name": "chromagent",
       "source": "./",
       "description": "Accessible, perceptually balanced UI colors: color systems, light and dark modes, high contrast, and contrast fixes.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "design"
     }
   ]

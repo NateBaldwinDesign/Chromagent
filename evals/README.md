@@ -59,6 +59,8 @@ The two conversion scenarios add:
 
 The report shows each score's average, how much it varied between runs (±), and the with − without difference.
 
+**Known limit:** colors are found by their role names (text, background, border, and so on). In Android Compose projects, agents working without the skill often hard-code button colors inside the component, where the grader can't see them. Those runs are then scored only on the theme colors it can find, which works in the baseline's favor. The real difference is likely a little larger than reported.
+
 ## Diagnostic checks
 
 Skill runs also get these pass/fail checks, which help explain a low score.
