@@ -1,0 +1,62 @@
+Chromagent
+Copyright 2026 Nate Baldwin
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+-------------------------------------------------------------------------------
+Spectrum Studio color engine
+-------------------------------------------------------------------------------
+Portions of the color engine in src/math, src/scales, src/modes, and src/theme
+are adapted from the Spectrum Studio color system in the Spectrum Design Data
+project (https://github.com/adobe/spectrum-design-data,
+docs/spectrum-studio/src/features/color-system).
+
+Copyright 2026 Adobe. All rights reserved.
+Licensed under the Apache License, Version 2.0.
+
+Files adapted from that source keep the original "Copyright 2026 Adobe"
+header. They were changed to remove application UI, state, storage, and
+data-visualization code, and to add APCA support and a standalone theme API.
+
+-------------------------------------------------------------------------------
+color-description
+-------------------------------------------------------------------------------
+The descriptive color features (suggestColors and describeColor) use the
+color-description package (https://github.com/words/color-description),
+which is distributed under the MIT License:
+
+MIT License
+
+Copyright (c) 2021 words
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+colorjs.io
+-------------------------------------------------------------------------------
+Color conversion and gamut mapping use colorjs.io
+(https://colorjs.io), Copyright (c) 2021 Lea Verou, Chris Lilley,
+distributed under the MIT License.
+
+-------------------------------------------------------------------------------
+Skill content
+-------------------------------------------------------------------------------
+The skill reference files in skills/chromagent/references are condensed and
+rewritten from Color and Contrast.com (https://colorandcontrast.com),
+by Nate Baldwin.

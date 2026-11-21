@@ -1,0 +1,76 @@
+{
+  "name": "chromagent",
+  "version": "0.1.0",
+  "description": "Perceptual UI color for AI agents: a color skill plus an engine that generates accessible, mode-aware color systems.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Nate Baldwin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NateBaldwinDesign/Chromagent.git"
+  },
+  "homepage": "https://github.com/NateBaldwinDesign/Chromagent#readme",
+  "keywords": [
+    "color",
+    "contrast",
+    "wcag",
+    "apca",
+    "oklch",
+    "design-tokens",
+    "dark-mode",
+    "ai",
+    "agent",
+    "skill"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "chromagent": "./dist/cli/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema/theme.schema.json": "./schema/theme.schema.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "schema",
+    "examples",
+    "NOTICE",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "eval": "node --import tsx evals/run.ts",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "color-description": "^0.23.0",
+    "colorjs.io": "^0.5.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.1",
+    "eslint": "^10.15.0",
+    "fast-check": "^4.10.3",
+    "tsup": "^9.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^5.1.1",
+    "yaml": "^2.9.1"
+  }
+}
