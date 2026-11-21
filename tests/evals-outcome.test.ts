@@ -118,8 +118,8 @@ describe("named palettes", () => {
     const variant = byKey(namedPairs({ name: "light", colors: new Map([["background", new Color("#fff")], ["onSurfaceVariant", new Color("#666")]]) }));
     expect(hex(variant["onSurfaceVariant:background"].bg.color)).toBe("#ffffff");
 
-    const objects = composeModes(new Map([["Color.kt", `object LightPalette {\n  val text = Color(0.1f, 0.1f, 0.1f, colorSpace = ColorSpaces.DisplayP3)\n  val bg = Color(1f, 1f, 1f, colorSpace = ColorSpaces.DisplayP3)\n}\nobject DarkPalette {\n  val text = Color(0.9f, 0.9f, 0.9f, colorSpace = ColorSpaces.DisplayP3)\n}\nval Ink = LightPalette.text`], ["Theme.kt", `val L = lightColorScheme(background = LightPalette.bg, onBackground = Ink)\nval D = darkColorScheme(onBackground = DarkPalette.text)`]]));
-    expect(objects.map((m) => hex(m.colors.get("onBackground")))).toEqual(["#1a1a1a", "#e6e6e6"]);
+    const objects = composeModes(new Map([["Color.kt", `object LightPalette {\n  val text = Color(0.1f, 0.1f, 0.1f, colorSpace = ColorSpaces.DisplayP3)\n  val bg = Color(1f, 1f, 1f, colorSpace = ColorSpaces.DisplayP3)\n}\nobject DarkPalette {\n  val text = Color(0.8f, 0.8f, 0.8f, colorSpace = ColorSpaces.DisplayP3)\n}\nval Ink = LightPalette.text`], ["Theme.kt", `val L = lightColorScheme(background = LightPalette.bg, onBackground = Ink)\nval D = darkColorScheme(onBackground = DarkPalette.text)`]]));
+    expect(objects.map((m) => hex(m.colors.get("onBackground")))).toEqual(["#1a1a1a", "#cccccc"]);
     expect(hex(objects[0].colors.get("background"))).toBe("#ffffff");
 
     const own = composeModes(new Map([["Color.kt", `data class AcmeColors(val text: Color, val background: Color, val accent: Color)
