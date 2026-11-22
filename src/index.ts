@@ -30,3 +30,4 @@ export { checkCvd, harmonizeFeedback, FEEDBACK_HUES, MIN_FEEDBACK_DELTA_E } from
 export type { CvdReport, CvdPair } from "./theme/feedback";
 export { simulateCvd, deltaE2000, VISIONS } from "./math/cvd";
 export type { Vision } from "./math/cvd";
+export { cssVariables } from "./output/css";

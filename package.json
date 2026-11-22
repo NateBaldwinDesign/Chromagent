@@ -35,6 +35,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
+    },
     "./schema/theme.schema.json": "./skills/chromagentic/assets/theme.schema.json",
     "./package.json": "./package.json"
   },

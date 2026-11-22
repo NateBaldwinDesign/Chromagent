@@ -28,6 +28,7 @@ jobs:
           cd "$RUNNER_TEMP"
           node chromagentic/scripts/chromagentic.mjs --version
           node chromagentic/scripts/chromagentic.mjs generate chromagentic/assets/example-all-modes.json --strict > /dev/null
+          node --input-type=module -e "import('./chromagentic/scripts/chromagentic-runtime.mjs').then(m => { if (!m.personalizedVariables({ colors: { brand: '#2563eb' } }, {})['--color-text']) process.exit(1) })"
   skill:
     runs-on: ubuntu-latest
     steps:

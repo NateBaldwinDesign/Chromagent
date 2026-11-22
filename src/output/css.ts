@@ -12,14 +12,21 @@ function roleTarget(ref: string, prefix: string) {
   return group === "surface" ? `--${prefix}-surface-${item}` : `--${prefix}-${group}-${item}`;
 }
 
-function declarations(mode: ThemeMode, prefix: string, indent: string, colorScheme = true) {
-  const lines = colorScheme ? [`${indent}color-scheme: ${mode.settings.backgroundLightness < 0.5 ? "dark" : "light"};`] : [];
+/** The CSS custom properties for one mode, in output order. Role references point at their scale or surface variable. */
+export function cssVariables(mode: ThemeMode, prefix = "color"): Record<string, string> {
+  const vars: Record<string, string> = {};
   for (const [scale, steps] of Object.entries(mode.scales))
-    for (const [step, value] of Object.entries(steps)) lines.push(`${indent}--${prefix}-${scale}-${step}: ${value.css};`);
-  for (const [name, value] of Object.entries(mode.surfaces)) lines.push(`${indent}--${prefix}-surface-${name}: ${value.css};`);
+    for (const [step, value] of Object.entries(steps)) vars[`--${prefix}-${scale}-${step}`] = value.css;
+  for (const [name, value] of Object.entries(mode.surfaces)) vars[`--${prefix}-surface-${name}`] = value.css;
   // Roles are repeated in every block so they follow the mode wherever data-theme is set.
   for (const [role, value] of Object.entries(mode.roles))
-    lines.push(`${indent}--${prefix}-${role}: ${value.ref ? `var(${roleTarget(value.ref, prefix)})` : value.css};`);
+    vars[`--${prefix}-${role}`] = value.ref ? `var(${roleTarget(value.ref, prefix)})` : value.css;
+  return vars;
+}
+
+function declarations(mode: ThemeMode, prefix: string, indent: string, colorScheme = true) {
+  const lines = colorScheme ? [`${indent}color-scheme: ${mode.settings.backgroundLightness < 0.5 ? "dark" : "light"};`] : [];
+  for (const [name, value] of Object.entries(cssVariables(mode, prefix))) lines.push(`${indent}${name}: ${value};`);
   return lines.join("\n");
 }
 

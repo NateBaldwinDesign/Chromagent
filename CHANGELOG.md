@@ -10,6 +10,7 @@
 - Six schemes by default: light and dark, each at regular, high (1.5×), and low (0.8×) contrast. CSS follows the system (`prefers-color-scheme`, `prefers-contrast`) and can be set with `data-theme="light|dark"` plus `data-contrast="more|less|normal"`. The exact `data-theme="dark-high-contrast"` style still works.
 - Feedback colors that match the brand: `status: true` (role-first) picks error, success, warning, and info hues that harmonize with the brand's hue and chroma, then nudges lightness (then hue, then chroma) until every pair differs by CIEDE2000 ≥ 11 in typical vision and in protan, deutan, and tritan simulations (Machado 2009), without dropping below contrast floors. Each mode reports the check in `feedback`; a failure adds a warning (so `--strict` fails).
 - New commands: `chromagentic feedback <brand>` and `chromagentic check-cvd name=color …`. New API: `feedbackColors`, `checkCvd`, `harmonizeFeedback`, `simulateCvd`, `deltaE2000`.
+- Personal colors (opt-in): `chromagentic/runtime` (and `scripts/chromagentic-runtime.mjs` in the skill, 99 KB, 39 KB gzipped) regenerates the same roles live from a person's background lightness and contrast choice and writes CSS variables; the static schemes stay as the fallback. See `assets/personalize-example.html`.
 
 ## 0.2.0
 - Skills-first release: the engine is bundled in the skill, standard installers, measured evals.
