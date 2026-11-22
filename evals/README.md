@@ -37,6 +37,13 @@ npm run eval -- --compare --runs 3             # with vs. without the skill
 - **light-to-dark**: a hand-made, light-only Tailwind project (`fixtures/light-only`), prompted with "Add a dark mode."
 - **dark-to-light**: a dark-only CSS project (`fixtures/dark-only`), prompted with "Add a light mode."
 
+Four more scenarios cover the role-first approach:
+
+- **role-first**: a new app (`fixtures/new-app`), "Pick the colors for this app."
+- **form-validation**: a sign-up form with muted status messages (`fixtures/signup-form`), which needs error, success, warning, and info colors.
+- **personalization**: the new app, asked to let people choose their own lightness and contrast.
+- **six-schemes**: the new app, "Set up the color themes for this new app."
+
 ## Scores (with and without the skill)
 
 Every run, with or without the skill, gets these **result scores** (0–100%). They look at the finished project, not at how the agent got there:
@@ -54,6 +61,16 @@ The two conversion scenarios add:
 - **Brand hues kept**: brand and accent hues shift by 15° or less and stay colorful.
 - **Original unchanged**: the original mode looks the same (a tiny color difference at most).
 - **Mode switch works**: the new mode is switched on by a media query or a class.
+
+The role-first scenarios add:
+
+- **No full scale** (role-first): no color family has 8 or more numbered steps (`--blue-100` … `--blue-900`).
+- **Text tiers** (role-first): 2–4 text colors, the strongest at 7:1 or more.
+- **Color-blind safe** (form-validation): error, success, warning, and info differ by CIEDE2000 ΔE ≥ 11 in typical vision and in protan, deutan, and tritan simulations (Machado 2009).
+- **Harmony with the brand** (form-validation): status colors are about as colorful as the brand (relative chroma within 0.25).
+- **Personal colors** (personalization): static light and dark fallbacks, a script that writes CSS variables, a saved choice, and a control.
+- **Switch wired** and **Asked** (six-schemes): dark mode plugs into the app's `data-theme` switch, and the final reply asks whether people should be able to personalize colors.
+- Low-contrast modes are scored like high contrast (`prefers-contrast: less`, `data-contrast="less"`).
 
 **Overall result** is the average of the result scores that apply. Runs with the skill also get two **process scores**: whether the skill was used without being named, and the share of new colors that came from the engine.
 

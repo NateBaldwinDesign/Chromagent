@@ -1,151 +1,443 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="876" height="742" viewBox="0 0 876 742" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="876" height="2142" viewBox="0 0 876 2142" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
 <style>.title{font-size:16px;font-weight:600;fill:#111}.mode{font-size:13px;font-weight:600;fill:#444;text-transform:uppercase;letter-spacing:.05em}.aa{font-size:26px;font-weight:600}.role{font-size:11px;fill:#333}.ratio{font-size:11px;fill:#555}.pass{fill:#137333;font-weight:700}.fail{fill:#c5221f;font-weight:700}.none{font-size:12px;fill:#888;font-style:italic}</style>
 <rect width="100%" height="100%" fill="#fff"/>
 <text x="12" y="22" class="title">With skill</text>
 <text x="12" y="50" class="mode">light</text>
-<rect x="12" y="62" width="132" height="64" rx="8" fill="#f8f8f8" stroke="#0002"/>
-<rect x="34" y="76" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="14" y="139" class="role">border-strong</text>
-<text x="14" y="152" class="ratio"><tspan class="pass">✓</tspan> 3.04:1 (needs 3)</text>
-<rect x="156" y="62" width="132" height="64" rx="8" fill="#bb4c74" stroke="#0002"/>
-<text x="222" y="103" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
-<text x="158" y="139" class="role">text-on-accent</text>
-<text x="158" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.79:1 (needs 4.5)</text>
-<rect x="300" y="62" width="132" height="64" rx="8" fill="#0079be" stroke="#0002"/>
-<text x="366" y="103" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
-<text x="302" y="139" class="role">surface-background</text>
-<text x="302" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.79:1 (needs 4.5)</text>
-<rect x="444" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<text x="510" y="103" text-anchor="middle" class="aa" fill="#d83220">Aa</text>
-<text x="446" y="139" class="role">error</text>
-<text x="446" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.79:1 (needs 4.5)</text>
-<rect x="588" y="62" width="132" height="64" rx="8" fill="#f8f8f8" stroke="#0002"/>
-<rect x="610" y="76" width="88" height="36" rx="5" fill="none" stroke="#cccccc" stroke-width="2"/>
-<text x="590" y="139" class="role">border</text>
-<text x="590" y="152" class="ratio"><tspan class="pass">✓</tspan> 1.51:1 (needs 1.2)</text>
-<rect x="732" y="62" width="132" height="64" rx="8" fill="#f8f8f8" stroke="#0002"/>
-<text x="798" y="103" text-anchor="middle" class="aa" fill="#606060">Aa</text>
-<text x="734" y="139" class="role">text-subtle</text>
-<text x="734" y="152" class="ratio"><tspan class="pass">✓</tspan> 5.94:1 (needs 4.5)</text>
-<rect x="12" y="168" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<rect x="34" y="182" width="88" height="36" rx="5" fill="none" stroke="#cccccc" stroke-width="2"/>
-<text x="14" y="245" class="role">border</text>
-<text x="14" y="258" class="ratio"><tspan class="pass">✓</tspan> 1.60:1 (needs 1.2)</text>
+<rect x="12" y="62" width="132" height="64" rx="8" fill="#f4f4f4" stroke="#0002"/>
+<rect x="34" y="76" width="88" height="36" rx="5" fill="none" stroke="#e6e6e6" stroke-width="2"/>
+<text x="14" y="139" class="role">divider</text>
+<text x="14" y="152" class="ratio"><tspan class="fail">✗</tspan> 1.14:1 (needs 1.2)</text>
+<rect x="156" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<rect x="178" y="76" width="88" height="36" rx="5" fill="none" stroke="#959595" stroke-width="2"/>
+<text x="158" y="139" class="role">border</text>
+<text x="158" y="152" class="ratio"><tspan class="pass">✓</tspan> 3.00:1 (needs 3)</text>
+<rect x="300" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="366" y="103" text-anchor="middle" class="aa" fill="#df2e55">Aa</text>
+<text x="302" y="139" class="role">error</text>
+<text x="302" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.50:1 (needs 4.5)</text>
+<rect x="444" y="62" width="132" height="64" rx="8" fill="#745eef" stroke="#0002"/>
+<text x="510" y="103" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="446" y="139" class="role">text-on-accent</text>
+<text x="446" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.57:1 (needs 4.5)</text>
+<rect x="588" y="62" width="132" height="64" rx="8" fill="#cbcaff" stroke="#0002"/>
+<rect x="610" y="76" width="88" height="36" rx="5" fill="none" stroke="#e6e6e6" stroke-width="2"/>
+<text x="590" y="139" class="role">divider</text>
+<text x="590" y="152" class="ratio"><tspan class="pass">✓</tspan> 1.24:1 (needs 1.2)</text>
+<rect x="732" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<rect x="754" y="76" width="88" height="36" rx="5" fill="none" stroke="#e6e6e6" stroke-width="2"/>
+<text x="734" y="139" class="role">divider</text>
+<text x="734" y="152" class="ratio"><tspan class="pass">✓</tspan> 1.25:1 (needs 1.2)</text>
+<rect x="12" y="168" width="132" height="64" rx="8" fill="#b0ce2a" stroke="#0002"/>
+<text x="78" y="209" text-anchor="middle" class="aa" fill="#464646">Aa</text>
+<text x="14" y="245" class="role">text-subtle</text>
+<text x="14" y="258" class="ratio"><tspan class="pass">✓</tspan> 5.28:1 (needs 4.5)</text>
 <rect x="156" y="168" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<text x="222" y="209" text-anchor="middle" class="aa" fill="#606060">Aa</text>
-<text x="158" y="245" class="role">text-subtle</text>
-<text x="158" y="258" class="ratio"><tspan class="pass">✓</tspan> 6.29:1 (needs 4.5)</text>
-<rect x="300" y="168" width="132" height="64" rx="8" fill="#bb4c74" stroke="#0002"/>
+<circle cx="222" cy="200" r="14" fill="#745eef"/>
+<text x="158" y="245" class="role">accent</text>
+<text x="158" y="258" class="ratio"><tspan class="pass">✓</tspan> 4.57:1 (needs 3)</text>
+<rect x="300" y="168" width="132" height="64" rx="8" fill="#745eef" stroke="#0002"/>
 <circle cx="366" cy="200" r="14" fill="#ffffff"/>
 <text x="302" y="245" class="role">text-on-accent</text>
-<text x="302" y="258" class="ratio"><tspan class="pass">✓</tspan> 4.79:1 (needs 3)</text>
-<rect x="444" y="168" width="132" height="64" rx="8" fill="#94d4ff" stroke="#0002"/>
-<rect x="466" y="182" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="446" y="245" class="role">border-strong</text>
-<text x="446" y="258" class="ratio"><tspan class="pass">✓</tspan> 2.01:1 (needs 1.2)</text>
-<rect x="588" y="168" width="132" height="64" rx="8" fill="#ffb6cf" stroke="#0002"/>
-<rect x="610" y="182" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="590" y="245" class="role">border-strong</text>
-<text x="590" y="258" class="ratio"><tspan class="pass">✓</tspan> 2.01:1 (needs 1.2)</text>
-<rect x="732" y="168" width="132" height="64" rx="8" fill="#ffbc79" stroke="#0002"/>
-<rect x="754" y="182" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="734" y="245" class="role">border-strong</text>
-<text x="734" y="258" class="ratio"><tspan class="pass">✓</tspan> 2.01:1 (needs 1.2)</text>
-<rect x="12" y="274" width="132" height="64" rx="8" fill="#d4e994" stroke="#0002"/>
-<rect x="34" y="288" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="14" y="351" class="role">border-strong</text>
-<text x="14" y="364" class="ratio"><tspan class="pass">✓</tspan> 2.44:1 (needs 1.2)</text>
-<rect x="156" y="274" width="132" height="64" rx="8" fill="#ff93b9" stroke="#0002"/>
-<text x="222" y="315" text-anchor="middle" class="aa" fill="#0c0c0c">Aa</text>
-<text x="158" y="351" class="role">ink</text>
-<text x="158" y="364" class="ratio"><tspan class="pass">✓</tspan> 9.75:1 (needs 4.5)</text>
-<rect x="300" y="274" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<rect x="322" y="288" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="302" y="351" class="role">border-strong</text>
-<text x="302" y="364" class="ratio"><tspan class="pass">✓</tspan> 3.22:1 (needs 1.2)</text>
-<rect x="444" y="274" width="132" height="64" rx="8" fill="#ffbc79" stroke="#0002"/>
-<text x="510" y="315" text-anchor="middle" class="aa" fill="#0c0c0c">Aa</text>
-<text x="446" y="351" class="role">ink</text>
-<text x="446" y="364" class="ratio"><tspan class="pass">✓</tspan> 12.19:1 (needs 4.5)</text>
-<rect x="588" y="274" width="132" height="64" rx="8" fill="#94d4ff" stroke="#0002"/>
-<text x="654" y="315" text-anchor="middle" class="aa" fill="#0c0c0c">Aa</text>
-<text x="590" y="351" class="role">ink</text>
-<text x="590" y="364" class="ratio"><tspan class="pass">✓</tspan> 12.19:1 (needs 4.5)</text>
-<rect x="732" y="274" width="132" height="64" rx="8" fill="#ffb6cf" stroke="#0002"/>
-<text x="798" y="315" text-anchor="middle" class="aa" fill="#0c0c0c">Aa</text>
-<text x="734" y="351" class="role">ink</text>
-<text x="734" y="364" class="ratio"><tspan class="pass">✓</tspan> 12.19:1 (needs 4.5)</text>
+<text x="302" y="258" class="ratio"><tspan class="pass">✓</tspan> 4.57:1 (needs 3)</text>
+<rect x="444" y="168" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="510" y="209" text-anchor="middle" class="aa" fill="#5b3ecc">Aa</text>
+<text x="446" y="245" class="role">text-link</text>
+<text x="446" y="258" class="ratio"><tspan class="pass">✓</tspan> 7.00:1 (needs 4.5)</text>
+<rect x="588" y="168" width="132" height="64" rx="8" fill="#bedc3f" stroke="#0002"/>
+<rect x="610" y="182" width="88" height="36" rx="5" fill="none" stroke="#959595" stroke-width="2"/>
+<text x="590" y="245" class="role">border</text>
+<text x="590" y="258" class="ratio"><tspan class="pass">✓</tspan> 1.94:1 (needs 1.2)</text>
+<rect x="732" y="168" width="132" height="64" rx="8" fill="#b0ce2a" stroke="#0002"/>
+<text x="798" y="209" text-anchor="middle" class="aa" fill="#2c2c2c">Aa</text>
+<text x="734" y="245" class="role">text</text>
+<text x="734" y="258" class="ratio"><tspan class="pass">✓</tspan> 7.78:1 (needs 4.5)</text>
+<rect x="12" y="274" width="132" height="64" rx="8" fill="#cbcaff" stroke="#0002"/>
+<text x="78" y="315" text-anchor="middle" class="aa" fill="#2c2c2c">Aa</text>
+<text x="14" y="351" class="role">text</text>
+<text x="14" y="364" class="ratio"><tspan class="pass">✓</tspan> 9.03:1 (needs 4.5)</text>
+<rect x="156" y="274" width="132" height="64" rx="8" fill="#bedc3f" stroke="#0002"/>
+<text x="222" y="315" text-anchor="middle" class="aa" fill="#2c2c2c">Aa</text>
+<text x="158" y="351" class="role">text</text>
+<text x="158" y="364" class="ratio"><tspan class="pass">✓</tspan> 9.03:1 (needs 4.5)</text>
+<rect x="300" y="274" width="132" height="64" rx="8" fill="#ffbbd3" stroke="#0002"/>
+<text x="366" y="315" text-anchor="middle" class="aa" fill="#2c2c2c">Aa</text>
+<text x="302" y="351" class="role">text</text>
+<text x="302" y="364" class="ratio"><tspan class="pass">✓</tspan> 9.03:1 (needs 4.5)</text>
+<rect x="444" y="274" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="510" y="315" text-anchor="middle" class="aa" fill="#464646">Aa</text>
+<text x="446" y="351" class="role">text-subtle</text>
+<text x="446" y="364" class="ratio"><tspan class="pass">✓</tspan> 9.51:1 (needs 4.5)</text>
+<rect x="588" y="274" width="132" height="64" rx="8" fill="#b0ce2a" stroke="#0002"/>
+<circle cx="654" cy="306" r="14" fill="#2c2c2c"/>
+<text x="590" y="351" class="role">text</text>
+<text x="590" y="364" class="ratio"><tspan class="pass">✓</tspan> 7.78:1 (needs 3)</text>
+<rect x="732" y="274" width="132" height="64" rx="8" fill="#f4f4f4" stroke="#0002"/>
+<text x="798" y="315" text-anchor="middle" class="aa" fill="#2c2c2c">Aa</text>
+<text x="734" y="351" class="role">text</text>
+<text x="734" y="364" class="ratio"><tspan class="pass">✓</tspan> 12.73:1 (needs 4.5)</text>
 <text x="12" y="400" class="mode">dark</text>
-<rect x="12" y="412" width="132" height="64" rx="8" fill="#f8f8f8" stroke="#0002"/>
-<rect x="34" y="426" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="14" y="489" class="role">border-strong</text>
-<text x="14" y="502" class="ratio"><tspan class="pass">✓</tspan> 3.04:1 (needs 3)</text>
-<rect x="156" y="412" width="132" height="64" rx="8" fill="#bb4c74" stroke="#0002"/>
-<text x="222" y="453" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
-<text x="158" y="489" class="role">text-on-accent</text>
-<text x="158" y="502" class="ratio"><tspan class="pass">✓</tspan> 4.79:1 (needs 4.5)</text>
-<rect x="300" y="412" width="132" height="64" rx="8" fill="#0079be" stroke="#0002"/>
-<text x="366" y="453" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
-<text x="302" y="489" class="role">surface-background</text>
-<text x="302" y="502" class="ratio"><tspan class="pass">✓</tspan> 4.79:1 (needs 4.5)</text>
-<rect x="444" y="412" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<text x="510" y="453" text-anchor="middle" class="aa" fill="#d83220">Aa</text>
-<text x="446" y="489" class="role">error</text>
-<text x="446" y="502" class="ratio"><tspan class="pass">✓</tspan> 4.79:1 (needs 4.5)</text>
-<rect x="588" y="412" width="132" height="64" rx="8" fill="#f8f8f8" stroke="#0002"/>
-<rect x="610" y="426" width="88" height="36" rx="5" fill="none" stroke="#cccccc" stroke-width="2"/>
-<text x="590" y="489" class="role">border</text>
-<text x="590" y="502" class="ratio"><tspan class="pass">✓</tspan> 1.51:1 (needs 1.2)</text>
-<rect x="732" y="412" width="132" height="64" rx="8" fill="#f8f8f8" stroke="#0002"/>
-<text x="798" y="453" text-anchor="middle" class="aa" fill="#606060">Aa</text>
+<rect x="12" y="412" width="132" height="64" rx="8" fill="#131313" stroke="#0002"/>
+<rect x="34" y="426" width="88" height="36" rx="5" fill="none" stroke="#212121" stroke-width="2"/>
+<text x="14" y="489" class="role">divider</text>
+<text x="14" y="502" class="ratio"><tspan class="fail">✗</tspan> 1.15:1 (needs 1.2)</text>
+<rect x="156" y="412" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<rect x="178" y="426" width="88" height="36" rx="5" fill="none" stroke="#5c5c5c" stroke-width="2"/>
+<text x="158" y="489" class="role">border</text>
+<text x="158" y="502" class="ratio"><tspan class="pass">✓</tspan> 3.12:1 (needs 3)</text>
+<rect x="300" y="412" width="132" height="64" rx="8" fill="#370b91" stroke="#0002"/>
+<rect x="322" y="426" width="88" height="36" rx="5" fill="none" stroke="#212121" stroke-width="2"/>
+<text x="302" y="489" class="role">divider</text>
+<text x="302" y="502" class="ratio"><tspan class="pass">✓</tspan> 1.25:1 (needs 1.2)</text>
+<rect x="444" y="412" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<rect x="466" y="426" width="88" height="36" rx="5" fill="none" stroke="#212121" stroke-width="2"/>
+<text x="446" y="489" class="role">divider</text>
+<text x="446" y="502" class="ratio"><tspan class="pass">✓</tspan> 1.28:1 (needs 1.2)</text>
+<rect x="588" y="412" width="132" height="64" rx="8" fill="#7963f4" stroke="#0002"/>
+<text x="654" y="453" text-anchor="middle" class="aa" fill="#020202">Aa</text>
+<text x="590" y="489" class="role">text-on-accent</text>
+<text x="590" y="502" class="ratio"><tspan class="pass">✓</tspan> 4.86:1 (needs 4.5)</text>
+<rect x="732" y="412" width="132" height="64" rx="8" fill="#344100" stroke="#0002"/>
+<text x="798" y="453" text-anchor="middle" class="aa" fill="#b1b1b1">Aa</text>
 <text x="734" y="489" class="role">text-subtle</text>
-<text x="734" y="502" class="ratio"><tspan class="pass">✓</tspan> 5.94:1 (needs 4.5)</text>
-<rect x="12" y="518" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<rect x="34" y="532" width="88" height="36" rx="5" fill="none" stroke="#cccccc" stroke-width="2"/>
-<text x="14" y="595" class="role">border</text>
-<text x="14" y="608" class="ratio"><tspan class="pass">✓</tspan> 1.60:1 (needs 1.2)</text>
-<rect x="156" y="518" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<text x="222" y="559" text-anchor="middle" class="aa" fill="#606060">Aa</text>
-<text x="158" y="595" class="role">text-subtle</text>
-<text x="158" y="608" class="ratio"><tspan class="pass">✓</tspan> 6.29:1 (needs 4.5)</text>
-<rect x="300" y="518" width="132" height="64" rx="8" fill="#bb4c74" stroke="#0002"/>
-<circle cx="366" cy="550" r="14" fill="#ffffff"/>
-<text x="302" y="595" class="role">text-on-accent</text>
-<text x="302" y="608" class="ratio"><tspan class="pass">✓</tspan> 4.79:1 (needs 3)</text>
-<rect x="444" y="518" width="132" height="64" rx="8" fill="#94d4ff" stroke="#0002"/>
-<rect x="466" y="532" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="446" y="595" class="role">border-strong</text>
-<text x="446" y="608" class="ratio"><tspan class="pass">✓</tspan> 2.01:1 (needs 1.2)</text>
-<rect x="588" y="518" width="132" height="64" rx="8" fill="#ffb6cf" stroke="#0002"/>
-<rect x="610" y="532" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="590" y="595" class="role">border-strong</text>
-<text x="590" y="608" class="ratio"><tspan class="pass">✓</tspan> 2.01:1 (needs 1.2)</text>
-<rect x="732" y="518" width="132" height="64" rx="8" fill="#ffbc79" stroke="#0002"/>
-<rect x="754" y="532" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="734" y="595" class="role">border-strong</text>
-<text x="734" y="608" class="ratio"><tspan class="pass">✓</tspan> 2.01:1 (needs 1.2)</text>
-<rect x="12" y="624" width="132" height="64" rx="8" fill="#d4e994" stroke="#0002"/>
-<rect x="34" y="638" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="14" y="701" class="role">border-strong</text>
-<text x="14" y="714" class="ratio"><tspan class="pass">✓</tspan> 2.44:1 (needs 1.2)</text>
-<rect x="156" y="624" width="132" height="64" rx="8" fill="#ff93b9" stroke="#0002"/>
-<text x="222" y="665" text-anchor="middle" class="aa" fill="#0c0c0c">Aa</text>
-<text x="158" y="701" class="role">ink</text>
-<text x="158" y="714" class="ratio"><tspan class="pass">✓</tspan> 9.75:1 (needs 4.5)</text>
-<rect x="300" y="624" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<rect x="322" y="638" width="88" height="36" rx="5" fill="none" stroke="#8f8f8f" stroke-width="2"/>
-<text x="302" y="701" class="role">border-strong</text>
-<text x="302" y="714" class="ratio"><tspan class="pass">✓</tspan> 3.22:1 (needs 1.2)</text>
-<rect x="444" y="624" width="132" height="64" rx="8" fill="#ffbc79" stroke="#0002"/>
-<text x="510" y="665" text-anchor="middle" class="aa" fill="#0c0c0c">Aa</text>
-<text x="446" y="701" class="role">ink</text>
-<text x="446" y="714" class="ratio"><tspan class="pass">✓</tspan> 12.19:1 (needs 4.5)</text>
-<rect x="588" y="624" width="132" height="64" rx="8" fill="#94d4ff" stroke="#0002"/>
-<text x="654" y="665" text-anchor="middle" class="aa" fill="#0c0c0c">Aa</text>
-<text x="590" y="701" class="role">ink</text>
-<text x="590" y="714" class="ratio"><tspan class="pass">✓</tspan> 12.19:1 (needs 4.5)</text>
-<rect x="732" y="624" width="132" height="64" rx="8" fill="#ffb6cf" stroke="#0002"/>
-<text x="798" y="665" text-anchor="middle" class="aa" fill="#0c0c0c">Aa</text>
-<text x="734" y="701" class="role">ink</text>
-<text x="734" y="714" class="ratio"><tspan class="pass">✓</tspan> 12.19:1 (needs 4.5)</text>
+<text x="734" y="502" class="ratio"><tspan class="pass">✓</tspan> 5.17:1 (needs 4.5)</text>
+<rect x="12" y="518" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="78" y="559" text-anchor="middle" class="aa" fill="#f24364">Aa</text>
+<text x="14" y="595" class="role">error</text>
+<text x="14" y="608" class="ratio"><tspan class="pass">✓</tspan> 5.70:1 (needs 4.5)</text>
+<rect x="156" y="518" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="222" y="559" text-anchor="middle" class="aa" fill="#9489ff">Aa</text>
+<text x="158" y="595" class="role">text-link</text>
+<text x="158" y="608" class="ratio"><tspan class="pass">✓</tspan> 7.18:1 (needs 4.5)</text>
+<rect x="300" y="518" width="132" height="64" rx="8" fill="#2b3600" stroke="#0002"/>
+<rect x="322" y="532" width="88" height="36" rx="5" fill="none" stroke="#5c5c5c" stroke-width="2"/>
+<text x="302" y="595" class="role">border</text>
+<text x="302" y="608" class="ratio"><tspan class="pass">✓</tspan> 1.94:1 (needs 1.2)</text>
+<rect x="444" y="518" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<circle cx="510" cy="550" r="14" fill="#7963f4"/>
+<text x="446" y="595" class="role">accent</text>
+<text x="446" y="608" class="ratio"><tspan class="pass">✓</tspan> 4.86:1 (needs 3)</text>
+<rect x="588" y="518" width="132" height="64" rx="8" fill="#7963f4" stroke="#0002"/>
+<circle cx="654" cy="550" r="14" fill="#020202"/>
+<text x="590" y="595" class="role">text-on-accent</text>
+<text x="590" y="608" class="ratio"><tspan class="pass">✓</tspan> 4.86:1 (needs 3)</text>
+<rect x="732" y="518" width="132" height="64" rx="8" fill="#344100" stroke="#0002"/>
+<text x="798" y="559" text-anchor="middle" class="aa" fill="#d5d5d5">Aa</text>
+<text x="734" y="595" class="role">text</text>
+<text x="734" y="608" class="ratio"><tspan class="pass">✓</tspan> 7.56:1 (needs 4.5)</text>
+<rect x="12" y="624" width="132" height="64" rx="8" fill="#370b91" stroke="#0002"/>
+<text x="78" y="665" text-anchor="middle" class="aa" fill="#d5d5d5">Aa</text>
+<text x="14" y="701" class="role">text</text>
+<text x="14" y="714" class="ratio"><tspan class="pass">✓</tspan> 8.80:1 (needs 4.5)</text>
+<rect x="156" y="624" width="132" height="64" rx="8" fill="#2b3600" stroke="#0002"/>
+<text x="222" y="665" text-anchor="middle" class="aa" fill="#d5d5d5">Aa</text>
+<text x="158" y="701" class="role">text</text>
+<text x="158" y="714" class="ratio"><tspan class="pass">✓</tspan> 8.80:1 (needs 4.5)</text>
+<rect x="300" y="624" width="132" height="64" rx="8" fill="#6e0033" stroke="#0002"/>
+<text x="366" y="665" text-anchor="middle" class="aa" fill="#d5d5d5">Aa</text>
+<text x="302" y="701" class="role">text</text>
+<text x="302" y="714" class="ratio"><tspan class="pass">✓</tspan> 8.80:1 (needs 4.5)</text>
+<rect x="444" y="624" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="510" y="665" text-anchor="middle" class="aa" fill="#b1b1b1">Aa</text>
+<text x="446" y="701" class="role">text-subtle</text>
+<text x="446" y="714" class="ratio"><tspan class="pass">✓</tspan> 9.68:1 (needs 4.5)</text>
+<rect x="588" y="624" width="132" height="64" rx="8" fill="#344100" stroke="#0002"/>
+<circle cx="654" cy="656" r="14" fill="#d5d5d5"/>
+<text x="590" y="701" class="role">text</text>
+<text x="590" y="714" class="ratio"><tspan class="pass">✓</tspan> 7.56:1 (needs 3)</text>
+<rect x="732" y="624" width="132" height="64" rx="8" fill="#131313" stroke="#0002"/>
+<text x="798" y="665" text-anchor="middle" class="aa" fill="#d5d5d5">Aa</text>
+<text x="734" y="701" class="role">text</text>
+<text x="734" y="714" class="ratio"><tspan class="pass">✓</tspan> 12.62:1 (needs 4.5)</text>
+<text x="12" y="750" class="mode">light-high-contrast</text>
+<rect x="12" y="762" width="132" height="64" rx="8" fill="#efefef" stroke="#0002"/>
+<rect x="34" y="776" width="88" height="36" rx="5" fill="none" stroke="#dcdcdc" stroke-width="2"/>
+<text x="14" y="839" class="role">divider</text>
+<text x="14" y="852" class="ratio"><tspan class="pass">✓</tspan> 1.20:1 (needs 1.2)</text>
+<rect x="156" y="762" width="132" height="64" rx="8" fill="#bbb8ff" stroke="#0002"/>
+<rect x="178" y="776" width="88" height="36" rx="5" fill="none" stroke="#dcdcdc" stroke-width="2"/>
+<text x="158" y="839" class="role">divider</text>
+<text x="158" y="852" class="ratio"><tspan class="pass">✓</tspan> 1.33:1 (needs 1.2)</text>
+<rect x="300" y="762" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<rect x="322" y="776" width="88" height="36" rx="5" fill="none" stroke="#dcdcdc" stroke-width="2"/>
+<text x="302" y="839" class="role">divider</text>
+<text x="302" y="852" class="ratio"><tspan class="pass">✓</tspan> 1.38:1 (needs 1.2)</text>
+<rect x="444" y="762" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<rect x="466" y="776" width="88" height="36" rx="5" fill="none" stroke="#7f7f7f" stroke-width="2"/>
+<text x="446" y="839" class="role">border</text>
+<text x="446" y="852" class="ratio"><tspan class="pass">✓</tspan> 4.00:1 (needs 3)</text>
+<rect x="588" y="762" width="132" height="64" rx="8" fill="#9ebb00" stroke="#0002"/>
+<text x="654" y="803" text-anchor="middle" class="aa" fill="#2d2d2d">Aa</text>
+<text x="590" y="839" class="role">text-subtle</text>
+<text x="590" y="852" class="ratio"><tspan class="pass">✓</tspan> 6.25:1 (needs 4.5)</text>
+<rect x="732" y="762" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="798" y="803" text-anchor="middle" class="aa" fill="#c10240">Aa</text>
+<text x="734" y="839" class="role">error</text>
+<text x="734" y="852" class="ratio"><tspan class="pass">✓</tspan> 6.25:1 (needs 4.5)</text>
+<rect x="12" y="868" width="132" height="64" rx="8" fill="#6045d4" stroke="#0002"/>
+<text x="78" y="909" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="14" y="945" class="role">text-on-accent</text>
+<text x="14" y="958" class="ratio"><tspan class="pass">✓</tspan> 6.35:1 (needs 4.5)</text>
+<rect x="156" y="868" width="132" height="64" rx="8" fill="#afcc28" stroke="#0002"/>
+<rect x="178" y="882" width="88" height="36" rx="5" fill="none" stroke="#7f7f7f" stroke-width="2"/>
+<text x="158" y="945" class="role">border</text>
+<text x="158" y="958" class="ratio"><tspan class="pass">✓</tspan> 2.19:1 (needs 1.2)</text>
+<rect x="300" y="868" width="132" height="64" rx="8" fill="#9ebb00" stroke="#0002"/>
+<text x="366" y="909" text-anchor="middle" class="aa" fill="#040404">Aa</text>
+<text x="302" y="945" class="role">text</text>
+<text x="302" y="958" class="ratio"><tspan class="pass">✓</tspan> 9.32:1 (needs 4.5)</text>
+<rect x="444" y="868" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<circle cx="510" cy="900" r="14" fill="#6045d4"/>
+<text x="446" y="945" class="role">accent</text>
+<text x="446" y="958" class="ratio"><tspan class="pass">✓</tspan> 6.35:1 (needs 3)</text>
+<rect x="588" y="868" width="132" height="64" rx="8" fill="#6045d4" stroke="#0002"/>
+<circle cx="654" cy="900" r="14" fill="#ffffff"/>
+<text x="590" y="945" class="role">text-on-accent</text>
+<text x="590" y="958" class="ratio"><tspan class="pass">✓</tspan> 6.35:1 (needs 3)</text>
+<rect x="732" y="868" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="798" y="909" text-anchor="middle" class="aa" fill="#4722ad">Aa</text>
+<text x="734" y="945" class="role">text-link</text>
+<text x="734" y="958" class="ratio"><tspan class="pass">✓</tspan> 10.01:1 (needs 4.5)</text>
+<rect x="12" y="974" width="132" height="64" rx="8" fill="#bbb8ff" stroke="#0002"/>
+<text x="78" y="1015" text-anchor="middle" class="aa" fill="#040404">Aa</text>
+<text x="14" y="1051" class="role">text</text>
+<text x="14" y="1064" class="ratio"><tspan class="pass">✓</tspan> 11.23:1 (needs 4.5)</text>
+<rect x="156" y="974" width="132" height="64" rx="8" fill="#afcc28" stroke="#0002"/>
+<text x="222" y="1015" text-anchor="middle" class="aa" fill="#040404">Aa</text>
+<text x="158" y="1051" class="role">text</text>
+<text x="158" y="1064" class="ratio"><tspan class="pass">✓</tspan> 11.23:1 (needs 4.5)</text>
+<rect x="300" y="974" width="132" height="64" rx="8" fill="#ffa1c3" stroke="#0002"/>
+<text x="366" y="1015" text-anchor="middle" class="aa" fill="#040404">Aa</text>
+<text x="302" y="1051" class="role">text</text>
+<text x="302" y="1064" class="ratio"><tspan class="pass">✓</tspan> 11.23:1 (needs 4.5)</text>
+<rect x="444" y="974" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="510" y="1015" text-anchor="middle" class="aa" fill="#2d2d2d">Aa</text>
+<text x="446" y="1051" class="role">text-subtle</text>
+<text x="446" y="1064" class="ratio"><tspan class="pass">✓</tspan> 13.76:1 (needs 4.5)</text>
+<rect x="588" y="974" width="132" height="64" rx="8" fill="#9ebb00" stroke="#0002"/>
+<circle cx="654" cy="1006" r="14" fill="#040404"/>
+<text x="590" y="1051" class="role">text</text>
+<text x="590" y="1064" class="ratio"><tspan class="pass">✓</tspan> 9.32:1 (needs 3)</text>
+<rect x="732" y="974" width="132" height="64" rx="8" fill="#bbb8ff" stroke="#0002"/>
+<circle cx="798" cy="1006" r="14" fill="#040404"/>
+<text x="734" y="1051" class="role">text</text>
+<text x="734" y="1064" class="ratio"><tspan class="pass">✓</tspan> 11.23:1 (needs 3)</text>
+<text x="12" y="1100" class="mode">dark-high-contrast</text>
+<rect x="12" y="1112" width="132" height="64" rx="8" fill="#191919" stroke="#0002"/>
+<rect x="34" y="1126" width="88" height="36" rx="5" fill="none" stroke="#292929" stroke-width="2"/>
+<text x="14" y="1189" class="role">divider</text>
+<text x="14" y="1202" class="ratio"><tspan class="pass">✓</tspan> 1.21:1 (needs 1.2)</text>
+<rect x="156" y="1112" width="132" height="64" rx="8" fill="#421ca4" stroke="#0002"/>
+<rect x="178" y="1126" width="88" height="36" rx="5" fill="none" stroke="#292929" stroke-width="2"/>
+<text x="158" y="1189" class="role">divider</text>
+<text x="158" y="1202" class="ratio"><tspan class="pass">✓</tspan> 1.34:1 (needs 1.2)</text>
+<rect x="300" y="1112" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<rect x="322" y="1126" width="88" height="36" rx="5" fill="none" stroke="#292929" stroke-width="2"/>
+<text x="302" y="1189" class="role">divider</text>
+<text x="302" y="1202" class="ratio"><tspan class="pass">✓</tspan> 1.43:1 (needs 1.2)</text>
+<rect x="444" y="1112" width="132" height="64" rx="8" fill="#404f00" stroke="#0002"/>
+<text x="510" y="1153" text-anchor="middle" class="aa" fill="#d4d4d4">Aa</text>
+<text x="446" y="1189" class="role">text-subtle</text>
+<text x="446" y="1202" class="ratio"><tspan class="pass">✓</tspan> 6.08:1 (needs 4.5)</text>
+<rect x="588" y="1112" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<rect x="610" y="1126" width="88" height="36" rx="5" fill="none" stroke="#707070" stroke-width="2"/>
+<text x="590" y="1189" class="role">border</text>
+<text x="590" y="1202" class="ratio"><tspan class="pass">✓</tspan> 4.18:1 (needs 3)</text>
+<rect x="732" y="1112" width="132" height="64" rx="8" fill="#8d7ffc" stroke="#0002"/>
+<text x="798" y="1153" text-anchor="middle" class="aa" fill="#020202">Aa</text>
+<text x="734" y="1189" class="role">text-on-accent</text>
+<text x="734" y="1202" class="ratio"><tspan class="pass">✓</tspan> 6.53:1 (needs 4.5)</text>
+<rect x="12" y="1218" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="78" y="1259" text-anchor="middle" class="aa" fill="#ff687f">Aa</text>
+<text x="14" y="1295" class="role">error</text>
+<text x="14" y="1308" class="ratio"><tspan class="pass">✓</tspan> 7.84:1 (needs 4.5)</text>
+<rect x="156" y="1218" width="132" height="64" rx="8" fill="#354200" stroke="#0002"/>
+<rect x="178" y="1232" width="88" height="36" rx="5" fill="none" stroke="#707070" stroke-width="2"/>
+<text x="158" y="1295" class="role">border</text>
+<text x="158" y="1308" class="ratio"><tspan class="pass">✓</tspan> 2.19:1 (needs 1.2)</text>
+<rect x="300" y="1218" width="132" height="64" rx="8" fill="#404f00" stroke="#0002"/>
+<text x="366" y="1259" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="302" y="1295" class="role">text</text>
+<text x="302" y="1308" class="ratio"><tspan class="pass">✓</tspan> 8.98:1 (needs 4.5)</text>
+<rect x="444" y="1218" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<circle cx="510" cy="1250" r="14" fill="#8d7ffc"/>
+<text x="446" y="1295" class="role">accent</text>
+<text x="446" y="1308" class="ratio"><tspan class="pass">✓</tspan> 6.53:1 (needs 3)</text>
+<rect x="588" y="1218" width="132" height="64" rx="8" fill="#8d7ffc" stroke="#0002"/>
+<circle cx="654" cy="1250" r="14" fill="#020202"/>
+<text x="590" y="1295" class="role">text-on-accent</text>
+<text x="590" y="1308" class="ratio"><tspan class="pass">✓</tspan> 6.53:1 (needs 3)</text>
+<rect x="732" y="1218" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="798" y="1259" text-anchor="middle" class="aa" fill="#b1adff">Aa</text>
+<text x="734" y="1295" class="role">text-link</text>
+<text x="734" y="1308" class="ratio"><tspan class="pass">✓</tspan> 10.26:1 (needs 4.5)</text>
+<rect x="12" y="1324" width="132" height="64" rx="8" fill="#421ca4" stroke="#0002"/>
+<text x="78" y="1365" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="14" y="1401" class="role">text</text>
+<text x="14" y="1414" class="ratio"><tspan class="pass">✓</tspan> 10.84:1 (needs 4.5)</text>
+<rect x="156" y="1324" width="132" height="64" rx="8" fill="#354200" stroke="#0002"/>
+<text x="222" y="1365" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="158" y="1401" class="role">text</text>
+<text x="158" y="1414" class="ratio"><tspan class="pass">✓</tspan> 10.84:1 (needs 4.5)</text>
+<rect x="300" y="1324" width="132" height="64" rx="8" fill="#80003f" stroke="#0002"/>
+<text x="366" y="1365" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="302" y="1401" class="role">text</text>
+<text x="302" y="1414" class="ratio"><tspan class="pass">✓</tspan> 10.84:1 (needs 4.5)</text>
+<rect x="444" y="1324" width="132" height="64" rx="8" fill="#404f00" stroke="#0002"/>
+<circle cx="510" cy="1356" r="14" fill="#ffffff"/>
+<text x="446" y="1401" class="role">text</text>
+<text x="446" y="1414" class="ratio"><tspan class="pass">✓</tspan> 8.98:1 (needs 3)</text>
+<rect x="588" y="1324" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="654" y="1365" text-anchor="middle" class="aa" fill="#d4d4d4">Aa</text>
+<text x="590" y="1401" class="role">text-subtle</text>
+<text x="590" y="1414" class="ratio"><tspan class="pass">✓</tspan> 14.01:1 (needs 4.5)</text>
+<rect x="732" y="1324" width="132" height="64" rx="8" fill="#421ca4" stroke="#0002"/>
+<circle cx="798" cy="1356" r="14" fill="#ffffff"/>
+<text x="734" y="1401" class="role">text</text>
+<text x="734" y="1414" class="ratio"><tspan class="pass">✓</tspan> 10.84:1 (needs 3)</text>
+<text x="12" y="1450" class="mode">light-low-contrast</text>
+<rect x="12" y="1462" width="132" height="64" rx="8" fill="#f6f6f6" stroke="#0002"/>
+<rect x="34" y="1476" width="88" height="36" rx="5" fill="none" stroke="#eaeaea" stroke-width="2"/>
+<text x="14" y="1539" class="role">divider</text>
+<text x="14" y="1552" class="ratio"><tspan class="fail">✗</tspan> 1.11:1 (needs 1.2)</text>
+<rect x="156" y="1462" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<rect x="178" y="1476" width="88" height="36" rx="5" fill="none" stroke="#eaeaea" stroke-width="2"/>
+<text x="158" y="1539" class="role">divider</text>
+<text x="158" y="1552" class="ratio"><tspan class="pass">✓</tspan> 1.20:1 (needs 1.2)</text>
+<rect x="300" y="1462" width="132" height="64" rx="8" fill="#d3d3ff" stroke="#0002"/>
+<rect x="322" y="1476" width="88" height="36" rx="5" fill="none" stroke="#eaeaea" stroke-width="2"/>
+<text x="302" y="1539" class="role">divider</text>
+<text x="302" y="1552" class="ratio"><tspan class="pass">✓</tspan> 1.20:1 (needs 1.2)</text>
+<rect x="444" y="1462" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<rect x="466" y="1476" width="88" height="36" rx="5" fill="none" stroke="#959595" stroke-width="2"/>
+<text x="446" y="1539" class="role">border</text>
+<text x="446" y="1552" class="ratio"><tspan class="pass">✓</tspan> 3.00:1 (needs 3)</text>
+<rect x="588" y="1462" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="654" y="1503" text-anchor="middle" class="aa" fill="#df2e55">Aa</text>
+<text x="590" y="1539" class="role">error</text>
+<text x="590" y="1552" class="ratio"><tspan class="pass">✓</tspan> 4.50:1 (needs 4.5)</text>
+<rect x="732" y="1462" width="132" height="64" rx="8" fill="#745eef" stroke="#0002"/>
+<text x="798" y="1503" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
+<text x="734" y="1539" class="role">text-on-accent</text>
+<text x="734" y="1552" class="ratio"><tspan class="pass">✓</tspan> 4.57:1 (needs 4.5)</text>
+<rect x="12" y="1568" width="132" height="64" rx="8" fill="#b9d737" stroke="#0002"/>
+<text x="78" y="1609" text-anchor="middle" class="aa" fill="#525252">Aa</text>
+<text x="14" y="1645" class="role">text-subtle</text>
+<text x="14" y="1658" class="ratio"><tspan class="pass">✓</tspan> 4.76:1 (needs 4.5)</text>
+<rect x="156" y="1568" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="222" y="1609" text-anchor="middle" class="aa" fill="#664cdb">Aa</text>
+<text x="158" y="1645" class="role">text-link</text>
+<text x="158" y="1658" class="ratio"><tspan class="pass">✓</tspan> 5.80:1 (needs 4.5)</text>
+<rect x="300" y="1568" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<circle cx="366" cy="1600" r="14" fill="#745eef"/>
+<text x="302" y="1645" class="role">accent</text>
+<text x="302" y="1658" class="ratio"><tspan class="pass">✓</tspan> 4.57:1 (needs 3)</text>
+<rect x="444" y="1568" width="132" height="64" rx="8" fill="#745eef" stroke="#0002"/>
+<circle cx="510" cy="1600" r="14" fill="#ffffff"/>
+<text x="446" y="1645" class="role">text-on-accent</text>
+<text x="446" y="1658" class="ratio"><tspan class="pass">✓</tspan> 4.57:1 (needs 3)</text>
+<rect x="588" y="1568" width="132" height="64" rx="8" fill="#b9d737" stroke="#0002"/>
+<text x="654" y="1609" text-anchor="middle" class="aa" fill="#3a3a3a">Aa</text>
+<text x="590" y="1645" class="role">text</text>
+<text x="590" y="1658" class="ratio"><tspan class="pass">✓</tspan> 6.95:1 (needs 4.5)</text>
+<rect x="732" y="1568" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="798" y="1609" text-anchor="middle" class="aa" fill="#525252">Aa</text>
+<text x="734" y="1645" class="role">text-subtle</text>
+<text x="734" y="1658" class="ratio"><tspan class="pass">✓</tspan> 7.80:1 (needs 4.5)</text>
+<rect x="12" y="1674" width="132" height="64" rx="8" fill="#c5e447" stroke="#0002"/>
+<rect x="34" y="1688" width="88" height="36" rx="5" fill="none" stroke="#959595" stroke-width="2"/>
+<text x="14" y="1751" class="role">border</text>
+<text x="14" y="1764" class="ratio"><tspan class="pass">✓</tspan> 2.08:1 (needs 1.2)</text>
+<rect x="156" y="1674" width="132" height="64" rx="8" fill="#d3d3ff" stroke="#0002"/>
+<text x="222" y="1715" text-anchor="middle" class="aa" fill="#3a3a3a">Aa</text>
+<text x="158" y="1751" class="role">text</text>
+<text x="158" y="1764" class="ratio"><tspan class="pass">✓</tspan> 7.92:1 (needs 4.5)</text>
+<rect x="300" y="1674" width="132" height="64" rx="8" fill="#c5e447" stroke="#0002"/>
+<text x="366" y="1715" text-anchor="middle" class="aa" fill="#3a3a3a">Aa</text>
+<text x="302" y="1751" class="role">text</text>
+<text x="302" y="1764" class="ratio"><tspan class="pass">✓</tspan> 7.92:1 (needs 4.5)</text>
+<rect x="444" y="1674" width="132" height="64" rx="8" fill="#ffc5da" stroke="#0002"/>
+<text x="510" y="1715" text-anchor="middle" class="aa" fill="#3a3a3a">Aa</text>
+<text x="446" y="1751" class="role">text</text>
+<text x="446" y="1764" class="ratio"><tspan class="pass">✓</tspan> 7.92:1 (needs 4.5)</text>
+<rect x="588" y="1674" width="132" height="64" rx="8" fill="#b9d737" stroke="#0002"/>
+<circle cx="654" cy="1706" r="14" fill="#3a3a3a"/>
+<text x="590" y="1751" class="role">text</text>
+<text x="590" y="1764" class="ratio"><tspan class="pass">✓</tspan> 6.95:1 (needs 3)</text>
+<rect x="732" y="1674" width="132" height="64" rx="8" fill="#f6f6f6" stroke="#0002"/>
+<text x="798" y="1715" text-anchor="middle" class="aa" fill="#3a3a3a">Aa</text>
+<text x="734" y="1751" class="role">text</text>
+<text x="734" y="1764" class="ratio"><tspan class="pass">✓</tspan> 10.56:1 (needs 4.5)</text>
+<text x="12" y="1800" class="mode">dark-low-contrast</text>
+<rect x="12" y="1812" width="132" height="64" rx="8" fill="#101010" stroke="#0002"/>
+<rect x="34" y="1826" width="88" height="36" rx="5" fill="none" stroke="#1d1d1d" stroke-width="2"/>
+<text x="14" y="1889" class="role">divider</text>
+<text x="14" y="1902" class="ratio"><tspan class="fail">✗</tspan> 1.12:1 (needs 1.2)</text>
+<rect x="156" y="1812" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<rect x="178" y="1826" width="88" height="36" rx="5" fill="none" stroke="#5a5a5a" stroke-width="2"/>
+<text x="158" y="1889" class="role">border</text>
+<text x="158" y="1902" class="ratio"><tspan class="pass">✓</tspan> 3.00:1 (needs 3)</text>
+<rect x="300" y="1812" width="132" height="64" rx="8" fill="#330189" stroke="#0002"/>
+<rect x="322" y="1826" width="88" height="36" rx="5" fill="none" stroke="#1d1d1d" stroke-width="2"/>
+<text x="302" y="1889" class="role">divider</text>
+<text x="302" y="1902" class="ratio"><tspan class="pass">✓</tspan> 1.21:1 (needs 1.2)</text>
+<rect x="444" y="1812" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<rect x="466" y="1826" width="88" height="36" rx="5" fill="none" stroke="#1d1d1d" stroke-width="2"/>
+<text x="446" y="1889" class="role">divider</text>
+<text x="446" y="1902" class="ratio"><tspan class="pass">✓</tspan> 1.23:1 (needs 1.2)</text>
+<rect x="588" y="1812" width="132" height="64" rx="8" fill="#2e3a00" stroke="#0002"/>
+<text x="654" y="1853" text-anchor="middle" class="aa" fill="#a0a0a0">Aa</text>
+<text x="590" y="1889" class="role">text-subtle</text>
+<text x="590" y="1902" class="ratio"><tspan class="pass">✓</tspan> 4.68:1 (needs 4.5)</text>
+<rect x="732" y="1812" width="132" height="64" rx="8" fill="#7964f4" stroke="#0002"/>
+<text x="798" y="1853" text-anchor="middle" class="aa" fill="#020202">Aa</text>
+<text x="734" y="1889" class="role">text-on-accent</text>
+<text x="734" y="1902" class="ratio"><tspan class="pass">✓</tspan> 4.89:1 (needs 4.5)</text>
+<rect x="12" y="1918" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="78" y="1959" text-anchor="middle" class="aa" fill="#ef4061">Aa</text>
+<text x="14" y="1995" class="role">error</text>
+<text x="14" y="2008" class="ratio"><tspan class="pass">✓</tspan> 5.53:1 (needs 4.5)</text>
+<rect x="156" y="1918" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="222" y="1959" text-anchor="middle" class="aa" fill="#8677f9">Aa</text>
+<text x="158" y="1995" class="role">text-link</text>
+<text x="158" y="2008" class="ratio"><tspan class="pass">✓</tspan> 5.94:1 (needs 4.5)</text>
+<rect x="300" y="1918" width="132" height="64" rx="8" fill="#2e3a00" stroke="#0002"/>
+<text x="366" y="1959" text-anchor="middle" class="aa" fill="#c1c1c1">Aa</text>
+<text x="302" y="1995" class="role">text</text>
+<text x="302" y="2008" class="ratio"><tspan class="pass">✓</tspan> 6.78:1 (needs 4.5)</text>
+<rect x="444" y="1918" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<circle cx="510" cy="1950" r="14" fill="#7964f4"/>
+<text x="446" y="1995" class="role">accent</text>
+<text x="446" y="2008" class="ratio"><tspan class="pass">✓</tspan> 4.89:1 (needs 3)</text>
+<rect x="588" y="1918" width="132" height="64" rx="8" fill="#7964f4" stroke="#0002"/>
+<circle cx="654" cy="1950" r="14" fill="#020202"/>
+<text x="590" y="1995" class="role">text-on-accent</text>
+<text x="590" y="2008" class="ratio"><tspan class="pass">✓</tspan> 4.89:1 (needs 3)</text>
+<rect x="732" y="1918" width="132" height="64" rx="8" fill="#263000" stroke="#0002"/>
+<rect x="754" y="1932" width="88" height="36" rx="5" fill="none" stroke="#5a5a5a" stroke-width="2"/>
+<text x="734" y="1995" class="role">border</text>
+<text x="734" y="2008" class="ratio"><tspan class="pass">✓</tspan> 2.02:1 (needs 1.2)</text>
+<rect x="12" y="2024" width="132" height="64" rx="8" fill="#330189" stroke="#0002"/>
+<text x="78" y="2065" text-anchor="middle" class="aa" fill="#c1c1c1">Aa</text>
+<text x="14" y="2101" class="role">text</text>
+<text x="14" y="2114" class="ratio"><tspan class="pass">✓</tspan> 7.75:1 (needs 4.5)</text>
+<rect x="156" y="2024" width="132" height="64" rx="8" fill="#263000" stroke="#0002"/>
+<text x="222" y="2065" text-anchor="middle" class="aa" fill="#c1c1c1">Aa</text>
+<text x="158" y="2101" class="role">text</text>
+<text x="158" y="2114" class="ratio"><tspan class="pass">✓</tspan> 7.75:1 (needs 4.5)</text>
+<rect x="300" y="2024" width="132" height="64" rx="8" fill="#64002e" stroke="#0002"/>
+<text x="366" y="2065" text-anchor="middle" class="aa" fill="#c1c1c1">Aa</text>
+<text x="302" y="2101" class="role">text</text>
+<text x="302" y="2114" class="ratio"><tspan class="pass">✓</tspan> 7.75:1 (needs 4.5)</text>
+<rect x="444" y="2024" width="132" height="64" rx="8" fill="#020202" stroke="#0002"/>
+<text x="510" y="2065" text-anchor="middle" class="aa" fill="#a0a0a0">Aa</text>
+<text x="446" y="2101" class="role">text-subtle</text>
+<text x="446" y="2114" class="ratio"><tspan class="pass">✓</tspan> 7.94:1 (needs 4.5)</text>
+<rect x="588" y="2024" width="132" height="64" rx="8" fill="#2e3a00" stroke="#0002"/>
+<circle cx="654" cy="2056" r="14" fill="#c1c1c1"/>
+<text x="590" y="2101" class="role">text</text>
+<text x="590" y="2114" class="ratio"><tspan class="pass">✓</tspan> 6.78:1 (needs 3)</text>
+<rect x="732" y="2024" width="132" height="64" rx="8" fill="#101010" stroke="#0002"/>
+<text x="798" y="2065" text-anchor="middle" class="aa" fill="#c1c1c1">Aa</text>
+<text x="734" y="2101" class="role">text</text>
+<text x="734" y="2114" class="ratio"><tspan class="pass">✓</tspan> 10.50:1 (needs 4.5)</text>
 </svg>

@@ -109,6 +109,8 @@ When explaining a theme, describe these settings in plain words. For example: "D
 
 New apps should ship light and dark color schemes, each with regular (default), high, and low contrast. Chromagentic makes all six by default: `light`, `dark`, `light-high-contrast`, `dark-high-contrast`, `light-low-contrast`, and `dark-low-contrast`. Existing projects keep the modes they have unless the user asks for more.
 
+For a new app, also ask whether people should be able to choose their own lightness and contrast (see "Personal colors"). If you can't wait for the answer, finish your reply with that question.
+
 The generated CSS switches them in two ways:
 
 - **System settings:** `prefers-color-scheme: dark`, `prefers-contrast: more`, and `prefers-contrast: less`.

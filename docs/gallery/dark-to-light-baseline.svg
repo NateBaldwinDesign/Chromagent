@@ -38,5 +38,5 @@
 <rect x="300" y="274" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
 <text x="366" y="315" text-anchor="middle" class="aa" fill="#0f172a">Aa</text>
 <text x="302" y="351" class="role">text</text>
-<text x="302" y="364" class="ratio"><tspan class="pass">✓</tspan> 17.85:1 (needs 3)</text>
+<text x="302" y="364" class="ratio"><tspan class="pass">✓</tspan> 17.85:1 (needs 4.5)</text>
 </svg>

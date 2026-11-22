@@ -12,6 +12,8 @@
 - New commands: `chromagentic feedback <brand>` and `chromagentic check-cvd name=color …`. New API: `feedbackColors`, `checkCvd`, `harmonizeFeedback`, `simulateCvd`, `deltaE2000`.
 - Personal colors (opt-in): `chromagentic/runtime` (and `scripts/chromagentic-runtime.mjs` in the skill, 99 KB, 39 KB gzipped) regenerates the same roles live from a person's background lightness and contrast choice and writes CSS variables; the static schemes stay as the fallback. See `assets/personalize-example.html`.
 - Skill rewritten around a role-first workflow: UI colors are not a full value scale; text tiers and when to use them, the accent rule, states, even spacing, six schemes and matching the project's theme switch, asking before personalization, and feedback colors. New references: `semantic-roles.md` and `feedback-colors.md`.
+- New `text-link` role guidance: links use a text-strength brand color (4.5:1), never the 3:1 accent. If the agent can't stop to ask about personal colors, it ends its reply with the question.
+- Evals: four new scenarios (role-first app, form validation with color-blind checks, personal colors, six schemes), low-contrast modes in the grader, and new scores (no full scale, text tiers, CVD separation, harmony with the brand, personalization, theme switch wired, asked).
 
 ## 0.2.0
 - Skills-first release: the engine is bundled in the skill, standard installers, measured evals.

@@ -71,7 +71,9 @@ theme: { extend: { colors: { text: "var(--color-text)", accent: "var(--color-acc
 chromagentic generate chromagentic.theme.json --platform dtcg --format dtcg --out tokens/color
 ```
 
-This writes one `<mode>.tokens.json` per mode. Each scale step is a color token with OKLCH components and a hex fallback. Roles are alias tokens such as `{color.gray.1400}`. Contrast details are stored under `$extensions.chromagentic`. Tools like Style Dictionary can build these into platform files. Use one file per mode as a theme or mode set.
+This writes one `<mode>.tokens.json` per mode. Each role is a color token with OKLCH components and a hex fallback (`{"colorSpace":"oklch","components":[…],"hex":"#…"}`). With `"steps": true`, scale steps are tokens too and roles become aliases such as `{color.gray.1400}`. Contrast details are stored under `$extensions.chromagentic`. Tools like Style Dictionary can build these into platform files. Use one file per mode as a theme or mode set.
+
+Keep this OKLCH value format even when the existing token files use plain hex strings. Don't write your own script that converts the engine's colors to hex. To keep the project's token names, map them to roles in `chromagentic.theme.json` (or rename the generated tokens) and update every mode file the same way, old modes included.
 
 ## iOS, macOS, and visionOS (SwiftUI and UIKit)
 

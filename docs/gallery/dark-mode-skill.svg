@@ -5,19 +5,19 @@
 <text x="12" y="50" class="mode">light</text>
 <rect x="12" y="62" width="132" height="64" rx="8" fill="#fafafb" stroke="#0002"/>
 <rect x="34" y="76" width="88" height="36" rx="5" fill="none" stroke="#e6e8eb" stroke-width="2"/>
-<text x="14" y="139" class="role">border</text>
+<text x="14" y="139" class="role">divider</text>
 <text x="14" y="152" class="ratio"><tspan class="fail">✗</tspan> 1.18:1 (needs 1.2)</text>
 <rect x="156" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
 <rect x="178" y="76" width="88" height="36" rx="5" fill="none" stroke="#e6e8eb" stroke-width="2"/>
-<text x="158" y="139" class="role">border</text>
+<text x="158" y="139" class="role">divider</text>
 <text x="158" y="152" class="ratio"><tspan class="pass">✓</tspan> 1.23:1 (needs 1.2)</text>
 <rect x="300" y="62" width="132" height="64" rx="8" fill="#fafafb" stroke="#0002"/>
-<text x="366" y="103" text-anchor="middle" class="aa" fill="#6b7281">Aa</text>
+<text x="366" y="103" text-anchor="middle" class="aa" fill="#6b727f">Aa</text>
 <text x="302" y="139" class="role">text-subtle</text>
-<text x="302" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.64:1 (needs 4.5)</text>
+<text x="302" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.65:1 (needs 4.5)</text>
 <rect x="444" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
 <text x="510" y="103" text-anchor="middle" class="aa" fill="#2863ea">Aa</text>
-<text x="446" y="139" class="role">brand</text>
+<text x="446" y="139" class="role">text-link</text>
 <text x="446" y="152" class="ratio"><tspan class="pass">✓</tspan> 5.16:1 (needs 4.5)</text>
 <rect x="588" y="62" width="132" height="64" rx="8" fill="#2863ea" stroke="#0002"/>
 <text x="654" y="103" text-anchor="middle" class="aa" fill="#ffffff">Aa</text>
@@ -26,27 +26,27 @@
 <rect x="732" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
 <text x="798" y="103" text-anchor="middle" class="aa" fill="#121825">Aa</text>
 <text x="734" y="139" class="role">ink</text>
-<text x="734" y="152" class="ratio"><tspan class="pass">✓</tspan> 17.74:1 (needs 4.5)</text>
+<text x="734" y="152" class="ratio"><tspan class="pass">✓</tspan> 17.73:1 (needs 4.5)</text>
 <rect x="12" y="168" width="132" height="64" rx="8" fill="#fafafb" stroke="#0002"/>
 <text x="78" y="209" text-anchor="middle" class="aa" fill="#121825">Aa</text>
 <text x="14" y="245" class="role">ink</text>
 <text x="14" y="258" class="ratio"><tspan class="pass">✓</tspan> 17.05:1 (needs 3)</text>
 <text x="12" y="294" class="mode">dark</text>
-<rect x="12" y="306" width="132" height="64" rx="8" fill="#080e1a" stroke="#0002"/>
+<rect x="12" y="306" width="132" height="64" rx="8" fill="#090e1a" stroke="#0002"/>
 <rect x="34" y="320" width="88" height="36" rx="5" fill="none" stroke="#1a212f" stroke-width="2"/>
-<text x="14" y="383" class="role">border</text>
+<text x="14" y="383" class="role">divider</text>
 <text x="14" y="396" class="ratio"><tspan class="pass">✓</tspan> 1.20:1 (needs 1.2)</text>
 <rect x="156" y="306" width="132" height="64" rx="8" fill="#020512" stroke="#0002"/>
 <rect x="178" y="320" width="88" height="36" rx="5" fill="none" stroke="#1a212f" stroke-width="2"/>
-<text x="158" y="383" class="role">border</text>
+<text x="158" y="383" class="role">divider</text>
 <text x="158" y="396" class="ratio"><tspan class="pass">✓</tspan> 1.26:1 (needs 1.2)</text>
-<rect x="300" y="306" width="132" height="64" rx="8" fill="#080e1a" stroke="#0002"/>
-<text x="366" y="347" text-anchor="middle" class="aa" fill="#777e8d">Aa</text>
+<rect x="300" y="306" width="132" height="64" rx="8" fill="#090e1a" stroke="#0002"/>
+<text x="366" y="347" text-anchor="middle" class="aa" fill="#787e8b">Aa</text>
 <text x="302" y="383" class="role">text-subtle</text>
 <text x="302" y="396" class="ratio"><tspan class="pass">✓</tspan> 4.74:1 (needs 4.5)</text>
 <rect x="444" y="306" width="132" height="64" rx="8" fill="#020512" stroke="#0002"/>
 <text x="510" y="347" text-anchor="middle" class="aa" fill="#427bfd">Aa</text>
-<text x="446" y="383" class="role">brand</text>
+<text x="446" y="383" class="role">text-link</text>
 <text x="446" y="396" class="ratio"><tspan class="pass">✓</tspan> 5.32:1 (needs 4.5)</text>
 <rect x="588" y="306" width="132" height="64" rx="8" fill="#427bfd" stroke="#0002"/>
 <text x="654" y="347" text-anchor="middle" class="aa" fill="#020512">Aa</text>
@@ -56,7 +56,7 @@
 <text x="798" y="347" text-anchor="middle" class="aa" fill="#eff0f2">Aa</text>
 <text x="734" y="383" class="role">ink</text>
 <text x="734" y="396" class="ratio"><tspan class="pass">✓</tspan> 17.80:1 (needs 4.5)</text>
-<rect x="12" y="412" width="132" height="64" rx="8" fill="#080e1a" stroke="#0002"/>
+<rect x="12" y="412" width="132" height="64" rx="8" fill="#090e1a" stroke="#0002"/>
 <text x="78" y="453" text-anchor="middle" class="aa" fill="#eff0f2">Aa</text>
 <text x="14" y="489" class="role">ink</text>
 <text x="14" y="502" class="ratio"><tspan class="pass">✓</tspan> 16.93:1 (needs 3)</text>

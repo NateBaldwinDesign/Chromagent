@@ -4,11 +4,15 @@
 <text x="12" y="22" class="title">With skill</text>
 <text x="12" y="50" class="mode">light</text>
 <rect x="12" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<circle cx="78" cy="94" r="14" fill="#d53700"/>
+<circle cx="78" cy="94" r="14" fill="#fa6122"/>
 <text x="14" y="139" class="role">accent</text>
-<text x="14" y="152" class="ratio"><tspan class="pass">✓</tspan> 4.82:1 (needs 3)</text>
-<rect x="156" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
-<text x="222" y="103" text-anchor="middle" class="aa" fill="#212121">Aa</text>
-<text x="158" y="139" class="role">text</text>
-<text x="158" y="152" class="ratio"><tspan class="pass">✓</tspan> 16.07:1 (needs 4.5)</text>
+<text x="14" y="152" class="ratio"><tspan class="pass">✓</tspan> 3.09:1 (needs 3)</text>
+<rect x="156" y="62" width="132" height="64" rx="8" fill="#fa6122" stroke="#0002"/>
+<text x="222" y="103" text-anchor="middle" class="aa" fill="#000000">Aa</text>
+<text x="158" y="139" class="role">textOnAccent</text>
+<text x="158" y="152" class="ratio"><tspan class="pass">✓</tspan> 6.80:1 (needs 4.5)</text>
+<rect x="300" y="62" width="132" height="64" rx="8" fill="#ffffff" stroke="#0002"/>
+<text x="366" y="103" text-anchor="middle" class="aa" fill="#212121">Aa</text>
+<text x="302" y="139" class="role">text</text>
+<text x="302" y="152" class="ratio"><tspan class="pass">✓</tspan> 16.07:1 (needs 4.5)</text>
 </svg>

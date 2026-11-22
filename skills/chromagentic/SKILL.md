@@ -38,11 +38,11 @@ In this guide, `chromagentic <command>` means `node <skill-dir>/scripts/chromage
 1. **Find the stack.** Look for `package.json`, Tailwind, token files, `*.swift`, `build.gradle`, existing color files, and how themes switch (`prefers-color-scheme`, a `dark` class, `data-theme`, Tailwind `dark:` variants, asset catalogs, `values-night`).
 2. **List the roles the interface needs.** Base this on the information architecture: how much text hierarchy, which interactive elements, and whether there are forms or status messages. Small apps often need only `text`, `text-subtle`, `border`, `accent`, `accent-hover`, and `text-on-accent`.
 3. **Choose key colors.** Use the user's brand colors when they exist. For mood words, run `chromagentic suggest "calm and earthy"`, pick from the results, then check the pick with `chromagentic describe <color>` (`references/choosing-colors.md`).
-4. **Ask about personalization.** For new apps, ask the user whether people should be able to choose their own lightness and contrast. Only add the runtime if they say yes (see "Personal colors").
+4. **Ask about personalization.** For new apps, always ask the user whether people should be able to choose their own lightness and contrast. Only add the runtime if they say yes (see "Personal colors"). If you can't stop to wait for an answer, build the static schemes now and end your reply with that question.
 5. **Write `chromagentic.theme.json`.** Key colors, roles, and (for new apps) the six default schemes. Add `"status": true` when the app shows errors, validation, or notices.
 6. **Generate** with the matching `--platform` and `--format`.
 7. **Wire it in.** Use role variables in components (`var(--color-text)`), not raw values. Connect the modes to the project's theme switch. Roles are measured against the page background; for text on a raised surface or a colored fill, check with `chromagentic contrast` and use the next stronger role if it falls short.
-8. **Explain.** Tell the user, in plain words, what each role is for, how each mode differs, the contrast targets, and any target the engine moved to keep steps even.
+8. **Explain.** Tell the user, in plain words, what each role is for, how each mode differs, the contrast targets, and any target the engine moved to keep steps even. For a new app where the user hasn't answered yet, finish your reply with this question: "Would you like people to be able to choose their own lightness and contrast (personalized colors)?"
 
 ## Roles in brief
 
