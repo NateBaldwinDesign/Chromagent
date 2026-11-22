@@ -22,7 +22,7 @@ describe("toCss", () => {
   it("puts the default mode on :root and each mode behind data-theme", () => {
     expect(css).toContain(':root, [data-theme="light"] {');
     expect(css).toContain('[data-theme="dark"] {');
-    expect(css).toContain('[data-theme="dark-high-contrast"] {');
+    expect(css).toContain(`[data-theme="dark-high-contrast"], [data-theme="dark"][data-contrast="more"] {`);
   });
 
   it("applies modes through media queries, most specific last", () => {
@@ -95,5 +95,29 @@ describe("platformOutput", () => {
 
   it("rejects unknown platforms", () => {
     expect(() => platformOutput("windows95" as never)).toThrow(/Unknown platform/);
+  });
+});
+
+describe("toCss contrast switching", () => {
+  const css = toCss(generateTheme({ colors: { brand: "#0066ff" } }));
+
+  it("follows the system color scheme and contrast unless the page chooses", () => {
+    expect(css).toContain("@media (prefers-color-scheme: dark) and (prefers-contrast: more) {\n  :root:not([data-theme]):not([data-contrast]) {");
+    expect(css).toContain("@media (prefers-contrast: less) {\n  [data-theme=\"dark\"]:not([data-contrast]) {");
+  });
+
+  it("lets data-theme and data-contrast pick any of the six schemes", () => {
+    expect(css).toContain('[data-theme="dark-high-contrast"], [data-theme="dark"][data-contrast="more"] {');
+    expect(css).toContain('[data-theme="light-low-contrast"], [data-theme="light"][data-contrast="less"] {');
+    expect(css).toContain('@media (prefers-color-scheme: dark) {\n  :root:not([data-theme])[data-contrast="more"] {');
+    expect(css).toContain(':root:not([data-theme])[data-contrast="less"] {');
+  });
+
+  it("puts dark variants after light ones so they win in dark mode", () => {
+    expect(css.lastIndexOf(':root:not([data-theme])[data-contrast="more"]')).toBeGreaterThan(css.indexOf('[data-theme="dark"][data-contrast="more"]'));
+    const light = css.indexOf('\n:root:not([data-theme])[data-contrast="more"]');
+    const dark = css.indexOf('@media (prefers-color-scheme: dark) {\n  :root:not([data-theme])[data-contrast="more"]');
+    expect(light).toBeGreaterThan(0);
+    expect(dark).toBeGreaterThan(light);
   });
 });

@@ -47,16 +47,23 @@ describe("generate", () => {
   it("writes one DTCG file per mode with --out", async () => {
     const t = io();
     expect(await run(["generate", "theme.json", "--format", "dtcg", "--out", "tokens"], t.io)).toBe(0);
-    expect((await readdir(join(dir, "tokens"))).sort()).toEqual(["dark.tokens.json", "light.tokens.json"]);
+    expect((await readdir(join(dir, "tokens"))).sort()).toEqual([
+      "dark-high-contrast.tokens.json",
+      "dark-low-contrast.tokens.json",
+      "dark.tokens.json",
+      "light-high-contrast.tokens.json",
+      "light-low-contrast.tokens.json",
+      "light.tokens.json",
+    ]);
     const light = JSON.parse(await readFile(join(dir, "tokens", "light.tokens.json"), "utf8"));
     expect(light.color.text.$value.colorSpace).toBe("oklch");
-    expect(t.err()).toContain("Wrote 2 token files");
+    expect(t.err()).toContain("Wrote 6 token files");
   });
 
   it("prints DTCG keyed by mode and writes CSS to a file", async () => {
     const t = io();
     await run(["generate", "theme.json", "--format", "dtcg"], t.io);
-    expect(Object.keys(JSON.parse(t.out()))).toEqual(["light", "dark"]);
+    expect(Object.keys(JSON.parse(t.out()))).toEqual(["light", "dark", "light-high-contrast", "dark-high-contrast", "light-low-contrast", "dark-low-contrast"]);
     await run(["generate", "theme.json", "--out", "out/colors.css"], t.io);
     expect(await readFile(join(dir, "out", "colors.css"), "utf8")).toContain("--color-text:");
   });

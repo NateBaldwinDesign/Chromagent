@@ -29,7 +29,7 @@ describe("edge cases", () => {
   });
 
   it.each(["#000000", "#ffffff"])("accepts %s as a key color", (key) => {
-    const theme = generateTheme({ colors: { ink: key }, steps: true });
+    const theme = generateTheme({ colors: { ink: key }, steps: true, modes: { light: {}, dark: { backgroundLightness: 0.08 } } });
     expect(theme.warnings).toEqual([]);
     expect(theme.modes.light.scales.ink["1600"].contrast).toBeGreaterThanOrEqual(19.5);
   });

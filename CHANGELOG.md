@@ -7,6 +7,7 @@
 - Accents pick the lightness closest to the brand color that passes, and text-on-accent picks the background, white, or black, whichever passes with the least change.
 - Role and state contrasts are spaced in equal OKLCH lightness steps (`spacing`). Moved targets are listed in `adjustments` and printed by the CLI.
 - `status` is off by default for role-first themes; `status: true` adds error, success, warning, and info.
+- Six schemes by default: light and dark, each at regular, high (1.5×), and low (0.8×) contrast. CSS follows the system (`prefers-color-scheme`, `prefers-contrast`) and can be set with `data-theme="light|dark"` plus `data-contrast="more|less|normal"`. The exact `data-theme="dark-high-contrast"` style still works.
 
 ## 0.2.0
 - Skills-first release: the engine is bundled in the skill, standard installers, measured evals.

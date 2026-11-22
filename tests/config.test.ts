@@ -35,9 +35,13 @@ describe("normalizeConfig", () => {
     expect(n.scales.map((s) => s.name)).toEqual(["brand", "gray", "green", "orange", "red", "blue"]);
     expect(n.steps).toHaveLength(16);
     expect(n.steps[0]).toEqual({ name: "100", contrast: 1.06 });
-    expect(n.modes.map((m) => [m.name, m.backgroundLightness, m.polarityCompensation])).toEqual([
-      ["light", 1, 0.1],
-      ["dark", 0.08, 0.1],
+    expect(n.modes.map((m) => [m.name, m.backgroundLightness, m.contrastMultiplier, m.polarityCompensation])).toEqual([
+      ["light", 1, 1, 0.1],
+      ["dark", 0.08, 1, 0.1],
+      ["light-high-contrast", 1, 1.5, 0.1],
+      ["dark-high-contrast", 0.08, 1.5, 0.1],
+      ["light-low-contrast", 1, 0.8, 0.1],
+      ["dark-low-contrast", 0.08, 0.8, 0.1],
     ]);
     expect(n.defaultMode).toBe("light");
     expect(n.roles.accent.ref).toBe("brand.900");

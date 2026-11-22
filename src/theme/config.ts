@@ -83,9 +83,14 @@ export const DEFAULT_SURFACES: Record<string, SurfaceInput> = {
   raised: { contrast: 1.1, reference: "parent" },
   floating: { contrast: 1.6, reference: "base" },
 };
+/** Six schemes: light and dark, each at regular, high, and low contrast. */
 export const DEFAULT_MODES: Record<string, ModeInput> = {
   light: { backgroundLightness: 1 },
   dark: { backgroundLightness: 0.08 },
+  "light-high-contrast": { backgroundLightness: 1, contrastMultiplier: 1.5 },
+  "dark-high-contrast": { backgroundLightness: 0.08, contrastMultiplier: 1.5 },
+  "light-low-contrast": { backgroundLightness: 1, contrastMultiplier: 0.8 },
+  "dark-low-contrast": { backgroundLightness: 0.08, contrastMultiplier: 0.8 },
 };
 export const DEFAULT_STATUS: Record<string, string> = {
   success: "green",
