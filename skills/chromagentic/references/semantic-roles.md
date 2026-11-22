@@ -72,7 +72,9 @@ Borders that people need to see to use a control (input outlines, focus rings, t
 
 ## Brand or accent colors
 
-The accent is the brand's primary color. Use it where people need emphasis or attention: buttons, selected states, focus indicators, links, and active navigation.
+The accent is the brand's primary color. Use it where people need emphasis or attention: buttons, selected states, focus indicators, and active navigation.
+
+The accent only has to reach 3:1, so it is for fills and marks, not text. Brand-colored text, such as links, is text and needs 4.5:1. Add a text role drawn from the brand color: `"text-link": { "color": "brand" }`.
 
 Two rules must both hold in every mode:
 

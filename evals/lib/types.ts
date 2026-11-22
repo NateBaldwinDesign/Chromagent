@@ -25,6 +25,8 @@ export interface Scenario {
   rubric?: string;
   /** For mode conversions: the mode the project already has, and the one the agent should add. */
   conversion?: { from: "light" | "dark"; to: "light" | "dark" };
+  /** Extra result scores: semantic roles, feedback colors, personalization, or the six schemes. */
+  scores?: ("roles" | "feedback" | "personal" | "schemes")[];
 }
 
 export interface SwatchPair {

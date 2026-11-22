@@ -11,7 +11,7 @@ const TAILWIND: Record<string, string> = JSON.parse(readFileSync(new URL("./tail
 export interface Mode {
   name: string;
   scheme: "light" | "dark";
-  contrast: "normal" | "more";
+  contrast: "normal" | "more" | "less";
 }
 
 export const MODES: Mode[] = [
@@ -19,12 +19,14 @@ export const MODES: Mode[] = [
   { name: "dark", scheme: "dark", contrast: "normal" },
   { name: "light-high-contrast", scheme: "light", contrast: "more" },
   { name: "dark-high-contrast", scheme: "dark", contrast: "more" },
+  { name: "light-low-contrast", scheme: "light", contrast: "less" },
+  { name: "dark-low-contrast", scheme: "dark", contrast: "less" },
 ];
 
 /** What a rule or variable needs to apply. */
 interface Condition {
   scheme?: "light" | "dark";
-  contrast?: "more";
+  contrast?: "more" | "less";
   /** States like hover, or screen sizes: never applied. */
   never?: boolean;
 }
@@ -61,6 +63,7 @@ export interface Site {
   /** Modes the project defines on purpose (beyond the default). */
   schemes: Set<"light" | "dark">;
   highContrast: boolean;
+  lowContrast: boolean;
 }
 
 export interface Paint {
@@ -96,7 +99,8 @@ function mediaCondition(query: string): Condition {
   if (/prefers-color-scheme\s*:\s*dark/.test(q)) cond.scheme = "dark";
   if (/prefers-color-scheme\s*:\s*light/.test(q)) cond.scheme = "light";
   if (/prefers-contrast\s*:\s*(more|high)/.test(q)) cond.contrast = "more";
-  if (/prefers-contrast\s*:\s*(less|low)|forced-colors|print|min-width|max-width|hover|prefers-reduced/.test(q)) cond.never = true;
+  if (/prefers-contrast\s*:\s*(less|low)/.test(q)) cond.contrast = "less";
+  if (/forced-colors|print|min-width|max-width|hover|prefers-reduced/.test(q)) cond.never = true;
   return cond;
 }
 
@@ -111,6 +115,7 @@ function selectorCondition(selector: string): { cond: Condition; rest: string } 
       const text = (cls ?? attr ?? "").toLowerCase();
       if (cls === undefined && !/theme|mode|scheme|contrast|appearance/.test(text)) return part;
       if (/high-?contrast|contrast-?more|\bhc\b|contrast="?(more|high)/.test(text)) cond.contrast = "more";
+      else if (/low-?contrast|contrast-?less|contrast="?(less|low)/.test(text)) cond.contrast = "less";
       else if (/dark/.test(text)) cond.scheme = "dark";
       else if (/light/.test(text)) cond.scheme = "light";
       else return part;
@@ -130,7 +135,7 @@ function merge(a: Condition, b: Condition): Condition {
 export function applies(cond: Condition, mode: Mode) {
   if (cond.never) return false;
   if (cond.scheme && cond.scheme !== mode.scheme) return false;
-  if (cond.contrast && mode.contrast !== "more") return false;
+  if (cond.contrast && cond.contrast !== mode.contrast) return false;
   return true;
 }
 
@@ -201,7 +206,8 @@ function parseCss(css: string, site: Site, counter: { n: number }) {
         site.vars.set(prop, list);
       } else decls.set(prop, value);
       if (!cond.never && cond.scheme) site.schemes.add(cond.scheme);
-      if (!cond.never && cond.contrast) site.highContrast = true;
+      if (!cond.never && cond.contrast === "more") site.highContrast = true;
+      if (!cond.never && cond.contrast === "less") site.lowContrast = true;
     }
     if (decls.size) site.rules.push({ path, cond, order: counter.n++, decls });
   };
@@ -245,7 +251,7 @@ function parseHtml(html: string): Element[] {
 }
 
 export function readSite(files: Map<string, string>): Site {
-  const site: Site = { rules: [], vars: new Map(), elements: [], schemes: new Set(), highContrast: false };
+  const site: Site = { rules: [], vars: new Map(), elements: [], schemes: new Set(), highContrast: false, lowContrast: false };
   const counter = { n: 0 };
   for (const [path, text] of files) {
     if (path.endsWith(".css")) parseCss(text, site, counter);
@@ -257,6 +263,7 @@ export function readSite(files: Map<string, string>): Site {
   for (const el of site.elements) for (const c of el.classes) {
     if (/^dark:/.test(c)) site.schemes.add("dark");
     if (/^contrast-more:/.test(c)) site.highContrast = true;
+    if (/^contrast-less:/.test(c)) site.lowContrast = true;
   }
   return site;
 }
@@ -310,6 +317,7 @@ function utilityDecls(site: Site, el: Element, mode: Mode): Map<string, { value:
     for (const v of parts) {
       if (v === "dark") cond.scheme = "dark";
       else if (v === "contrast-more") cond.contrast = "more";
+      else if (v === "contrast-less") cond.contrast = "less";
       else cond.never = true;
     }
     if (!applies(cond, mode)) continue;

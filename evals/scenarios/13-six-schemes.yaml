@@ -1,0 +1,7 @@
+id: six-schemes
+fixture: new-app
+prompt: Set up the color themes for this new app.
+expectModes: [light, dark, high-contrast, low-contrast]
+expectReferences: [themes-and-modes.md]
+scores: [schemes]
+rubric: A new app should get six schemes, light and dark, each with low, regular, and high contrast. They should follow system settings (prefers-color-scheme, prefers-contrast) and plug into the app's existing switch, which sets data-theme on the html element. The agent should ask whether people should be able to personalize their colors.

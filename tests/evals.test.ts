@@ -274,7 +274,8 @@ describe("workspaces and scenarios", () => {
 
   it("has valid scenarios that point at real fixtures and reference files", () => {
     const scenarios = loadScenarios();
-    expect(scenarios.length).toBe(9);
+    expect(scenarios.length).toBe(13);
+    expect(scenarios.map((s) => s.id).slice(8, 11)).toEqual(["dark-to-light", "role-first", "form-validation"]);
     expect(scenarios.filter((s) => s.conversion).map((s) => s.id)).toEqual(["light-to-dark", "dark-to-light"]);
     const references = join(__dirname, "..", "skills", "chromagentic", "references");
     for (const s of scenarios) {

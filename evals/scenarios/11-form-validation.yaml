@@ -1,0 +1,6 @@
+id: form-validation
+fixture: signup-form
+prompt: Give the info, error, warning, and success messages on this sign-up form their own colors.
+expectReferences: [feedback-colors.md]
+scores: [feedback]
+rubric: Feedback colors should start from the brand purple (#6d28d9), share its chroma, and keep recognizable red, green, orange or yellow, and blue hues. Every pair must stay at least 11 apart (CIEDE2000) in typical vision and in protan, deutan, and tritan simulations, and the message text must still pass 4.5:1.

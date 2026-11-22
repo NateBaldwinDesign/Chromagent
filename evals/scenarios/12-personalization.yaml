@@ -1,0 +1,7 @@
+id: personalization
+fixture: new-app
+prompt: Let people personalize this app's colors. They should be able to choose how light or dark it is and how much contrast they want, and the app should remember their choice.
+expectModes: [light, dark]
+expectReferences: [themes-and-modes.md, engine.md]
+scores: [personal]
+rubric: The app should ship static light and dark schemes as the fallback, plus a small script that regenerates the same color roles from the person's lightness and contrast choices, writes them as CSS variables, and saves the choice (for example in localStorage). Every generated choice should still meet the contrast floors.

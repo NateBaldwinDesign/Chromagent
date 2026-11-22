@@ -1,5 +1,5 @@
 id: brand-accessible
 fixture: swiftui
 prompt: "Make my brand color #FF5A00 accessible."
-expectReferences: [contrast.md, platforms.md]
-rubric: "#FF5A00 on white is about 3.1:1 in WCAG 2, so it fails 4.5:1 for normal text. A fix keeps the brand hue and uses a darker step from a generated scale for text and filled buttons. This is an iOS app, so colors should be Display P3."
+expectReferences: [semantic-roles.md, contrast.md, platforms.md]
+rubric: "#FF5A00 on white is about 3.1:1 in WCAG 2, so it fails 4.5:1 for normal text. A fix keeps the brand hue and picks the accent lightness closest to the brand that meets 3:1, with text on it at 4.5:1 (orange usually stays light with dark text on it). This is an iOS app, so colors should be Display P3."

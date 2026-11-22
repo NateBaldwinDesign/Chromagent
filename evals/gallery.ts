@@ -83,7 +83,7 @@ export function originalSwatches(scenario: Scenario): Record<string, SwatchPair[
   return swatches(projectModes(readTextFiles(dir), loadFixture(scenario.fixture).build));
 }
 
-const SCORE_ROWS = ["result", "contrast-light", "contrast-dark", "contrast-high-contrast", "fit", "mood", "build", "new-mode", "role-order", "balance", "hue-kept", "original-kept", "switch"];
+const SCORE_ROWS = ["result", "contrast-light", "contrast-dark", "contrast-high-contrast", "contrast-low-contrast", "fit", "mood", "build", "new-mode", "role-order", "balance", "hue-kept", "original-kept", "switch", "no-full-scale", "text-tiers", "cvd", "harmony", "personal", "switch-wired", "asked"];
 
 function scoreTable(summary: Summary, scenario: string, agent: string): string {
   const cells = summary.byScenario[scenario]?.[agent];

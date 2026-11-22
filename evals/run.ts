@@ -27,7 +27,7 @@ const repoRoot = join(here, "..");
 export function loadScenarios(dir = join(here, "scenarios")): Scenario[] {
   return readdirSync(dir)
     .filter((f) => f.endsWith(".yaml"))
-    .sort()
+    .sort((a, b) => parseInt(a) - parseInt(b) || a.localeCompare(b))
     .map((f) => parseYaml(readFileSync(join(dir, f), "utf8")) as Scenario);
 }
 

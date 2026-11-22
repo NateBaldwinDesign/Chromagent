@@ -7,6 +7,7 @@ import Color from "colorjs.io";
 import { describeColor } from "../../src/index";
 import { checkBuild, findSettings, gradedColors, GENERATE, SUGGEST, type CheckContext } from "./checks";
 import { engineColors, matchesEngine } from "./colors";
+import { INTENT_KEYS, intentScores } from "./intent";
 import { composeModes, dtcgModes, namedPairs, swiftModes } from "./palette";
 import { MODES, pairs, paints, readSite, type Mode, type Pair, type Site } from "./render";
 import type { Condition, Metrics, SwatchPair } from "./types";
@@ -67,6 +68,8 @@ export function projectModes(files: Map<string, string>, build: string, settings
     }
     if (definesMode(site, mode("light-high-contrast"), light)) modes.set("light-high-contrast", pairs(site, mode("light-high-contrast")));
     if (modes.has("dark") && definesMode(site, mode("dark-high-contrast"), dark)) modes.set("dark-high-contrast", pairs(site, mode("dark-high-contrast")));
+    if (definesMode(site, mode("light-low-contrast"), light)) modes.set("light-low-contrast", pairs(site, mode("light-low-contrast")));
+    if (modes.has("dark") && definesMode(site, mode("dark-low-contrast"), dark)) modes.set("dark-low-contrast", pairs(site, mode("dark-low-contrast")));
     return { modes };
   }
   const named = build === "dtcg" ? dtcgModes(files, settingsPath) : build === "swift" ? swiftModes(files) : composeModes(files);
@@ -78,9 +81,9 @@ export function projectModes(files: Map<string, string>, build: string, settings
 export function contrastScores(found: ModePairs, required: string[]): Metrics {
   const out: Metrics = {};
   for (const name of required) {
-    if (name === "high-contrast") {
-      const hc = [...found.modes.keys()].filter((k) => k.endsWith("high-contrast"));
-      out["contrast-high-contrast"] = hc.length ? mean(hc.map((k) => passShare(found.modes.get(k)!) ?? 0)) : 0;
+    if (name === "high-contrast" || name === "low-contrast") {
+      const hc = [...found.modes.keys()].filter((k) => k.endsWith(name));
+      out[`contrast-${name}`] = hc.length ? mean(hc.map((k) => passShare(found.modes.get(k)!) ?? 0)) : 0;
     } else out[`contrast-${name}`] = found.modes.has(name) ? passShare(found.modes.get(name)!) ?? 0 : 0;
   }
   return out;
@@ -89,10 +92,11 @@ export function contrastScores(found: ModePairs, required: string[]): Metrics {
 /** Modes this run must have: light always, plus any the task asks for or the project already had. */
 export function requiredModes(expect: string[] = [], original: ModePairs): string[] {
   const out = new Set(["light"]);
-  for (const m of expect) if (m === "dark" || m === "high-contrast") out.add(m);
+  for (const m of expect) if (m === "dark" || m === "high-contrast" || m === "low-contrast") out.add(m);
   for (const m of original.modes.keys()) {
     if (m === "dark") out.add("dark");
     if (m.endsWith("high-contrast")) out.add("high-contrast");
+    if (m.endsWith("low-contrast")) out.add("low-contrast");
   }
   return [...out];
 }
@@ -214,7 +218,7 @@ export function swatches(found: ModePairs): Record<string, SwatchPair[]> {
   return out;
 }
 
-const RESULT_KEYS = ["contrast", "fit", "mood", "build", "new-mode", "role-order", "balance", "hue-kept", "original-kept", "switch"];
+const RESULT_KEYS = ["contrast", "fit", "mood", "build", "new-mode", "role-order", "balance", "hue-kept", "original-kept", "switch", ...INTENT_KEYS];
 
 /** Every score for one run, plus `result`: the average of the result scores that apply. */
 export function scoreRun(ctx: CheckContext, condition: Condition): { metrics: Metrics; swatches: Record<string, SwatchPair[]> } {
@@ -233,6 +237,7 @@ export function scoreRun(ctx: CheckContext, condition: Condition): { metrics: Me
     mood: moodMatch(ctx, settings?.path),
     build: built,
   };
+  Object.assign(metrics, intentScores(ctx, found));
   if (ctx.scenario.conversion) Object.assign(metrics, conversionScores(ctx.original, ctx.files, ctx.scenario.conversion.from, ctx.scenario.conversion.to, built));
   metrics.result = mean(RESULT_KEYS.map((k) => metrics[k]).filter((v): v is number => typeof v === "number"));
   metrics.triggered = condition === "skill" ? skillTriggered(ctx) : null;

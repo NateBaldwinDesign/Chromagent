@@ -54,7 +54,8 @@ Full details are in `references/semantic-roles.md`.
 | `text-strong` | ≈7.5:1 (optional) | Default body text when more hierarchy is needed |
 | `text` (strongest) | ≈12:1, or the most the mode allows | Default text when no extra hierarchy is needed; otherwise titles, headings, calls to action |
 | `border` | 3:1 | Input borders, dividers that must be seen, focus rings |
-| `accent` | ≥3:1, lightness picked from the brand hue | Buttons, selected states, focus, links: where attention is needed |
+| `accent` | ≥3:1, lightness picked from the brand hue | Fills and marks that need attention: buttons, selected states, focus |
+| `text-link` (`{"color": "brand"}`) | ≥4.5:1 | Brand-colored text such as links. Never use the 3:1 accent for text |
 | `text-on-accent` | ≥4.5:1 on the accent | Label on accent fills: white, black, or the background, whichever passes with the least change |
 | states (`-hover`, `-active`, `-selected`, `-focus`) | Small even contrast steps | Interaction states |
 | `error`, `success`, `warning`, `info` | ≥4.5:1, distinct for color-blind users | Validation, errors, notices (`references/feedback-colors.md`) |

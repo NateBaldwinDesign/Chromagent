@@ -1,0 +1,7 @@
+id: role-first
+fixture: new-app
+prompt: Pick the colors for this app.
+expectModes: [light, dark]
+expectReferences: [semantic-roles.md]
+scores: [roles]
+rubric: A small new app needs a few semantic roles (page background, two or three text tiers, border, accent with states, text on accent), not a full value scale. Strongest text is the default for titles and body; subtle text is for the eyebrow label and the task metadata. Text needs 4.5:1, borders and the accent 3:1, and text on the accent 4.5:1.

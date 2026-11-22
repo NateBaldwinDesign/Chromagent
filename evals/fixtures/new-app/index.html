@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tasklight</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <span class="logo">Tasklight</span>
+      <button id="theme-toggle" class="button-secondary" type="button">Toggle theme</button>
+    </header>
+    <main class="content">
+      <p class="eyebrow">This week</p>
+      <h1>My tasks</h1>
+      <form class="new-task">
+        <input class="field" type="text" placeholder="Add a task" />
+        <button class="button-primary" type="submit">Add</button>
+      </form>
+      <ul class="tasks">
+        <li class="task">
+          <h2>Write the launch post</h2>
+          <p class="task-notes">Draft the intro and pick two screenshots.</p>
+          <p class="task-meta">Due Friday · 2 comments</p>
+        </li>
+        <li class="task">
+          <h2>Review the pricing page</h2>
+          <p class="task-notes">Check the new plan names with Sam.</p>
+          <p class="task-meta">Due Monday · 5 comments</p>
+        </li>
+      </ul>
+      <a class="link" href="#">See completed tasks</a>
+    </main>
+  </body>
+</html>
