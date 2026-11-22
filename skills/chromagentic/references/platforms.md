@@ -47,7 +47,7 @@ Use the `css` field for exact values. The `hex` field is an sRGB fallback; don't
 chromagentic generate chromagentic.theme.json --platform web --out src/styles/colors.css
 ```
 
-Import the file once, before other styles. Use roles in components: `color: var(--color-text); background: var(--color-surface-raised);`. Modes follow the system settings through media queries. To let users pick a mode, set `data-theme="dark"` (or any mode name) on `<html>`; it overrides the media query.
+Import the file once, before other styles. Use roles in components: `color: var(--color-text); background: var(--color-surface-raised);`. Modes follow the system settings through media queries. To let users pick a mode, set `data-theme="dark"` (or any mode name) on `<html>`, and `data-contrast="more"` or `"less"` for contrast; they override the media queries. If the project already toggles a class or uses Tailwind's `dark:` variant, connect it as described in `references/themes-and-modes.md`.
 
 ## Tailwind CSS
 

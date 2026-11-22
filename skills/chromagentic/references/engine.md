@@ -4,11 +4,12 @@ How to write Chromagentic settings and run the engine, with the command-line too
 
 - Setup
 - The settings file
-- Default steps, surfaces, and roles
+- Roles, surfaces, and optional steps
 - Modes
 - Generating output
-- Warnings
+- Warnings and notes
 - Measuring, suggesting, and describing colors
+- Feedback colors and color-blind checks
 - JavaScript API
 - Recipes
 
@@ -28,72 +29,60 @@ Keep the settings in `chromagentic.theme.json` at the project root. Only `colors
     "slate": ["#f4f6f8", "#5b6672", "#1b2027"]
   },
   "background": { "color": "slate" },
-  "modes": {
-    "light": { "backgroundLightness": 1 },
-    "dark": { "backgroundLightness": 0.1 }
-  }
+  "roles": {
+    "text": {}, "text-subtle": {}, "border": {},
+    "accent": { "states": ["hover", "active"] }, "text-on-accent": {}
+  },
+  "status": true
 }
 ```
 
 | Setting | What it does | Default |
 |---|---|---|
-| `colors` | Named scales. Each is one key color, a list of key colors, or `{ "keys": [...], "interpolation": "oklch" \| "rgb" }`. Any CSS color works. | Required |
-| `background.color` | Scale that tints backgrounds and surfaces | The first colorless (gray) scale, or a built-in gray |
+| `colors` | Named colors. Each is one key color, a list of key colors, or `{ "keys": [...], "interpolation": "oklch" \| "rgb" }`. Any CSS color works. | Required |
+| `background.color` | Color that tints backgrounds and surfaces (the neutral) | The first colorless (gray) color, or a built-in gray |
 | `background.lightness` | Background lightness for modes that don't set one (0 black, 1 white) | `1` |
-| `steps` | Contrast target for each step against the background. A list is named `100`, `200`, and so on. An object can use custom names. | 16 steps, `100`–`1600` |
+| `roles` | Role name to a role spec (`references/semantic-roles.md`), a fixed `"scale.step"` or `"surface.name"`, or `null` to remove a default | See below |
+| `status` | Feedback colors. `true`: harmonized with the brand and checked for color-blind users. An object: your own colors (still checked). `false`: none | Off without `steps`, on with `steps` |
+| `spacing` | Even lightness steps between all role and state targets. A number fixes the step (OKLCH L); `false` turns it off | On, step chosen automatically |
+| `steps` | Opt-in full value scales. `true` uses the 16 default steps; a list or object sets your own contrasts | Off (roles only) |
 | `surfaces` | Layered surfaces, each `{ "contrast", "reference": "parent" \| "base", "color" }` | `raised`, `floating` |
-| `roles` | Role name to `"scale.step"` or `"surface.name"`. `null` removes a default role. | See below |
-| `status` | Status role to scale name or CSS color. `false` for none. | success green, warning orange, error red, info blue |
-| `modes` | Mode name to global settings | `light` and `dark` |
+| `modes` | Mode name to global settings | Six schemes (see "Modes") |
 | `defaultMode` | Mode used when nothing else applies | The first mode |
 | `formula` | `"wcag2"` or `"apca"` | `"wcag2"` |
 | `polarityCompensation` | Default polarity compensation for every mode (0–1) | `0.1` |
 | `output` | `{ "gamut": "rec2020" \| "display-p3" \| "srgb", "format": "oklch" \| "rgb" \| "hex" \| "hsl" }` | `rec2020`, `oklch` |
 
-Key colors set the hue and chroma of a scale. The engine moves along the key colors' path to find the lightness that meets each step's contrast target, so a key color doesn't need to match any one step. Use two or three key colors (light, middle, dark) when a scale should shift hue, for example a yellow that turns olive or brown as it gets darker.
+Key colors set the hue and chroma. The engine moves along the key colors' path to find the lightness that meets each target, so a key color doesn't need to match any one role. Use two or three key colors (light, middle, dark) when the hue should shift with lightness, for example a yellow that turns olive or brown as it gets darker.
 
-## Default steps, surfaces, and roles
+## Roles, surfaces, and optional steps
 
-Default WCAG 2 targets. APCA uses matching Lc values (3 to 105.5).
+Without `steps`, the output has only roles and surfaces. Default roles: `text` (strongest tier), `text-subtle`, `border`, and, when there is a brand color, `accent` with `accent-hover` and `accent-active`, plus `text-on-accent`. With `"status": true`, also `error`, `success`, `warning`, `info` and `<name>-background`. Role specs, tiers, floors, states, and spacing are explained in `references/semantic-roles.md`.
 
-| Step | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 1000 | 1100 | 1200 | 1300 | 1400 | 1500 | 1600 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Contrast | 1.06 | 1.15 | 1.32 | 1.6 | 2 | 2.6 | 3.22 | 3.95 | 4.79 | 6.29 | 7.9 | 10 | 12.3 | 14.8 | 17 | 19.5 |
-
-- `100`–`300`: subtle fills, hover backgrounds, and status backgrounds
-- `400`–`600`: decorative borders and dividers
-- `700`–`800`: input borders, icons, and focus rings (3:1 or more)
-- `900` and up: text, links, and solid fills behind text (4.5:1 or more)
+The accent comes from the first non-gray color that isn't the background. `text-on-accent` is white, black, or the background, whichever passes 4.5:1 with the least change.
 
 Default surfaces: `background` (the mode's background), `raised` (1.1:1 from its parent), and `floating` (1.6:1 from the base background). Surface contrast is always a WCAG 2 ratio.
 
-Default roles, using the background scale for neutrals and the first other color for the accent:
-
-| Role | Points to |
-|---|---|
-| `text`, `text-subtle`, `text-disabled` | Neutral `1400`, `1000`, `600` |
-| `border`, `border-strong` | Neutral `400`, `700` |
-| `accent`, `accent-hover`, `accent-active` | Accent `900`, `1000`, `1100` |
-| `text-on-accent` | `surface.background` |
-| `success`, `warning`, `error`, `info` | Status scale `900` |
-| `{status}-background`, `{status}-border` | Status scale `100`, `700` |
-
-Status scales are named after their color: `green`, `orange`, `red`, and `blue` by default. A status set to your own CSS color, such as `"status": { "error": "#d93025" }`, makes a scale named `status-error`. So a custom role looks like `"error-strong": "red.1100"`.
-
-Add roles for anything else, such as `"focus-ring": "brand.800"` or `"link": "brand.1000"`. If a role points at something that doesn't exist, the error lists your scale names.
+**Full scales (opt-in).** `"steps": true` adds 16 steps per color, named `100`–`1600` (WCAG 2 targets 1.06 to 19.5; APCA uses matching Lc values). Roles can then point at steps (`"link": "brand.1000"`), and without `roles` the older fixed-step roles are used. Use full scales only when the project needs many tints (`references/scales.md`).
 
 ## Modes
 
 Each mode is three global settings. Every color is recalculated from them.
 
+Default modes (six schemes for new apps):
+
 ```json
 "modes": {
   "light": { "backgroundLightness": 1 },
-  "dark": { "backgroundLightness": 0.1 },
+  "dark": { "backgroundLightness": 0.08 },
   "light-high-contrast": { "backgroundLightness": 1, "contrastMultiplier": 1.5 },
-  "dark-high-contrast": { "backgroundLightness": 0, "contrastMultiplier": 1.5 }
+  "dark-high-contrast": { "backgroundLightness": 0.08, "contrastMultiplier": 1.5 },
+  "light-low-contrast": { "backgroundLightness": 1, "contrastMultiplier": 0.8 },
+  "dark-low-contrast": { "backgroundLightness": 0.08, "contrastMultiplier": 0.8 }
 }
 ```
+
+Set `modes` yourself to keep an existing project's modes, or to change the values. Low-contrast modes can match regular ones when the floors stop them from going lower.
 
 - `backgroundLightness`: 0 (black) to 1 (white)
 - `contrastMultiplier`: 1 is unchanged, above 1 adds contrast, below 1 lowers it (0 to 3)
@@ -116,19 +105,24 @@ chromagentic generate chromagentic.theme.json --platform web --out src/styles/co
 | `--out <path>` | Write to a file instead of the screen |
 | `--strict` | Fail if any color misses its target |
 
-CSS names are `--color-{scale}-{step}`, `--color-surface-{name}`, and `--color-{role}`. Roles point to steps with `var()`, so they follow the mode. The default mode is set on `:root`. Other modes turn on with their media query, or with `data-theme="{mode}"` on any element (which overrides the media query).
+CSS names are `--color-{role}` and `--color-surface-{name}` (plus `--color-{scale}-{step}` when steps are on). The default mode is set on `:root`. Other modes turn on with their media query (`prefers-color-scheme`, `prefers-contrast: more` or `less`), or with attributes on any element:
+
+- `data-theme="dark"` (or any mode name) picks a mode and overrides the system setting.
+- `data-contrast="more"` or `"less"` picks the high- or low-contrast version of the current theme; `"normal"` ignores the system contrast setting.
 
 In the JSON output, each color looks like this:
 
 ```json
-{ "css": "oklch(29.36% 0% 0)", "hex": "#262626", "oklch": [0.2936, 0, 0], "contrast": 15.08, "target": 14.8, "ref": "gray.1400" }
+{ "css": "oklch(29.36% 0% 0)", "hex": "#262626", "oklch": [0.2936, 0, 0], "contrast": 12.45, "target": 12.45 }
 ```
 
 `css` is the exact color in the chosen gamut and format. `hex` is an sRGB fallback. OKLCH chroma in CSS is written as a percentage, where 100% is 0.4.
 
-## Warnings
+## Warnings and notes
 
-The engine warns when a target can't be reached, for example 7:1 text on a middle-gray background, and uses the closest color it can. It also notes when a high-contrast mode pushes colors to pure black or white. Read each warning to the user and fix the settings: lower the target or multiplier, or move the background closer to white or black. Use `--strict` in CI.
+The engine warns when a target can't be reached, for example 7:1 text on a middle-gray background, and uses the closest color it can. It also warns when feedback colors are too similar for color-blind users, and notes when a high-contrast mode pushes colors to pure black or white. Read each warning to the user and fix the settings: lower the target or multiplier, or move the background closer to white or black. Use `--strict` in CI; it fails on any warning.
+
+A note (not a warning) lists targets that even spacing moved, such as `text-subtle (light 4.5→4.85)`. The JSON output has them under `adjustments`. Mention them when explaining the colors.
 
 ## Measuring, suggesting, and describing colors
 
@@ -141,17 +135,29 @@ chromagentic describe "#ff5a00"
 
 Use `contrast` for any color the engine didn't make, such as an existing brand color or text on an image. See `references/choosing-colors.md` for `suggest` and `describe`.
 
+## Feedback colors and color-blind checks
+
+```sh
+chromagentic feedback "#0d9488"                      # brand-harmonized error, success, warning, info per mode
+chromagentic check-cvd error=#d32f2f success=#388e3c # exits with an error if any pair is under ΔE 11
+```
+
+See `references/feedback-colors.md`.
+
 ## JavaScript API
 
 ```js
-import { generateTheme, toCss, toDtcg, platformOutput, contrast, suggestColors, describeColor } from "chromagentic";
+import { generateTheme, toCss, toDtcg, platformOutput, contrast, feedbackColors, checkCvd } from "chromagentic";
 
 const theme = generateTheme({
   colors: { brand: "#ff5a00" },
+  status: true,
   output: platformOutput("web"),
 });
 theme.warnings;                        // [] when every target is met
-theme.modes.dark.roles.text;           // { css, hex, oklch, contrast, target, ref }
+theme.adjustments;                     // targets moved by even spacing
+theme.modes.dark.roles.text;           // { css, hex, oklch, contrast, target }
+theme.modes.dark.feedback;             // color-blind check: { pass, worst, failing, changed }
 const css = toCss(theme);              // or toCss(theme, { tailwind: true, prefix: "color" })
 const tokens = toDtcg(theme, "light"); // one DTCG document per mode
 contrast("#333", "#fff");              // 12.63 (WCAG 2), or contrast(a, b, "apca") for Lc
@@ -159,11 +165,20 @@ contrast("#333", "#fff");              // 12.63 (WCAG 2), or contrast(a, b, "apc
 
 `generateTheme` throws a `ThemeConfigError` with a `problems` list when settings are invalid.
 
+**Personal colors (browser).** Only when the user asks for it:
+
+```js
+import { personalize } from "chromagentic/runtime"; // or "<skill-dir>/scripts/chromagentic-runtime.mjs", copied into the app
+personalize(settings, { backgroundLightness: 0.15, contrast: 1.3 }); // writes the same --color-* variables on <html>
+```
+
+`backgroundLightness` is 0–1 and `contrast` is a multiplier from 0.5 to 2. Floors still hold. Load the generated static CSS too, as the fallback. `<skill-dir>/assets/personalize-example.html` shows saving the choice in `localStorage`.
+
 ## Recipes
 
-**Make a brand color accessible.** Use the brand color as a key color. Don't use it directly for text. Use the generated steps: `brand.900` or darker for text and solid buttons with white text, and `brand.700`–`800` for icons and borders. Tell the user which steps sit close to the original brand color.
+**Make a brand color accessible.** Use the brand color as the accent's key color and leave the accent's contrast unset. The engine keeps it as close to the brand as the rules allow and picks white or dark text for it. Tell the user how far it moved in each mode (compare `chromagentic describe` of both, or the hex values). Keep the exact brand color for decorative areas without text.
 
-**Button states.** Use `accent` for the fill, `accent-hover` and `accent-active` for hover and pressed, `text-on-accent` for the label, a `focus-ring` role (step `800` or stronger), and `text-disabled` with a `100`–`200` neutral fill for disabled. Don't show state with color alone; keep the label or add a shape change for focus.
+**Button states.** `"accent": { "states": ["hover", "active", "focus"] }` and `"text-on-accent": {}`. Add a `focus-ring` border role if the focus outline sits on the page. For disabled, add `"text-disabled": { "kind": "tint", "contrast": 2 }` with a subtle fill. Don't show state with color alone; keep the label, and add an outline for focus.
 
 **Add a mode.** Add an entry under `modes` and generate again. Don't edit generated colors.
 
@@ -179,4 +194,4 @@ contrast("#333", "#fff");              // 12.63 (WCAG 2), or contrast(a, b, "apc
 }
 ```
 
-Default roles that aren't listed point to the closest named step. Set a role to `null` to drop it.
+Fixed steps aren't moved by even spacing, so the original values stay. Default roles that aren't listed point to the closest named step. Set a role to `null` to drop it.

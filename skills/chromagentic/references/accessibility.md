@@ -140,6 +140,6 @@ Source: colorandcontrast.com/visual-acuity/, colorandcontrast.com/contrast-sensi
 - **Meet contrast minimums.** Use 4.5:1 for text and 3:1 for non-text UI (WCAG 2).
 - **Keep chroma moderate for key distinctions.** Low-chroma colors are harder to tell apart with CVD.
 - **Avoid saturated red next to saturated blue**, especially for text.
-- **Check palettes for each CVD type** with simulation and Delta E. Treat simulators as a guide, not proof.
+- **Check palettes for each CVD type** with simulation and Delta E: `chromagentic check-cvd` requires ΔE 2000 ≥ 11 for every pair in protan, deutan, and tritan simulations (`references/feedback-colors.md`). Treat simulators as a guide, not proof.
 - **Respect user settings.** Support `prefers-contrast`, `forced-colors`, and text resizing.
 - **Data visualization needs more than color.** Use labels, patterns, and direct annotation.

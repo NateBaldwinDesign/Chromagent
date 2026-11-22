@@ -10,6 +10,9 @@ How color themes support light, dark, and contrast modes, and how Chromagentic b
 - Adaptive themes and personalization
 - Adaptation, light sensitivity, and glare
 - The Chromagentic approach
+- Six default schemes
+- Matching the project's theme switch
+- Personal colors
 - Typical values
 
 ## Color themes
@@ -101,6 +104,41 @@ Chromagentic does not hand-pick colors for each mode. Each scale step is defined
 This keeps the theme consistent. A token like "text-secondary" has the same job and the same relative contrast in every mode. Adding a new mode means choosing new settings, not repainting the palette.
 
 When explaining a theme, describe these settings in plain words. For example: "Dark mode uses a near-black background, with subtle steps given a little extra contrast so they look as clear as in light mode."
+
+## Six default schemes
+
+New apps should ship light and dark color schemes, each with regular (default), high, and low contrast. Chromagentic makes all six by default: `light`, `dark`, `light-high-contrast`, `dark-high-contrast`, `light-low-contrast`, and `dark-low-contrast`. Existing projects keep the modes they have unless the user asks for more.
+
+The generated CSS switches them in two ways:
+
+- **System settings:** `prefers-color-scheme: dark`, `prefers-contrast: more`, and `prefers-contrast: less`.
+- **Attributes:** `data-theme="light"` or `"dark"` picks the theme, and `data-contrast="more"`, `"less"`, or `"normal"` picks the contrast. An attribute beats the system setting, and `normal` ignores the system contrast preference.
+
+Low-contrast modes can come out close to regular ones, because the floors (text 4.5:1, borders 3:1) stop them from going lower.
+
+## Matching the project's theme switch
+
+Find how the project already switches themes and connect the generated modes to it. Don't add a second switch.
+
+| Project uses | Do this |
+|---|---|
+| Only system settings | Nothing extra: the media queries handle it |
+| `data-theme` attribute | Use it as is; add `data-contrast` for the contrast choice |
+| A `dark` class (`<html class="dark">`) | Set `data-theme="dark"` (and remove it for light) in the same code that toggles the class. Keep the class if other styles use it |
+| Tailwind `dark:` variant | Tailwind v4: `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));`. Tailwind v3: `darkMode: ["selector", '[data-theme="dark"]']`. Role utilities (`bg-accent`) already switch, so `dark:` is rarely needed |
+| A theme toggle in JavaScript | Set `document.documentElement.dataset.theme` and `.dataset.contrast`, and save the choice |
+| SwiftUI or UIKit | Asset catalog color sets with dark and high-contrast appearances (`references/platforms.md`) |
+| Android | `values-night` resources, or Compose color schemes chosen with `isSystemInDarkTheme()` and the contrast setting |
+
+Colors for a theme that people switch to should be a "color table": one row per role, one column per scheme. Show it to the user when explaining.
+
+## Personal colors
+
+Some people need more contrast than the high-contrast scheme gives, or a softer, darker background than the dark scheme. Personalization lets them choose.
+
+Always ask the user before adding it. If they want it, use the runtime (`<skill-dir>/scripts/chromagentic-runtime.mjs`, or `chromagentic/runtime` from npm). It regenerates the same roles live from two choices: background lightness (0–1) and contrast (0.5–2). It writes the same CSS variables as the static CSS, so components don't change, and the floors still hold. Keep the six static schemes loaded as the fallback for people who don't personalize and for when scripts don't run. Save the choice (for example in `localStorage`) and apply it on load. See `<skill-dir>/assets/personalize-example.html`.
+
+The runtime is about 99 KB (about 39 KB compressed). Load it only on pages with the settings control, or after the page has loaded.
 
 ## Typical values
 

@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
@@ -31,6 +31,18 @@ describe("skill folder", () => {
     // About 4 characters per token: stay well under the 5,000-token body budget.
     expect(fm.body.length).toBeLessThan(20000);
     expect(fm.body.split("\n").length).toBeLessThan(500);
+  });
+
+  it("links only to reference files that exist, and lists every one", () => {
+    const body = frontmatter().body;
+    const linked = new Set([...body.matchAll(/references\/([a-z-]+\.md)/g)].map((m) => m[1]));
+    expect([...linked].sort()).toEqual(readdirSync(join(skillDir, "references")).sort());
+  });
+
+  it("starts from semantic roles rather than a full scale", () => {
+    const body = frontmatter().body;
+    expect(body).toMatch(/not a full value scale/);
+    for (const topic of ["text-subtle", "text-on-accent", "check-cvd", "data-contrast", "Ask"]) expect(body).toContain(topic);
   });
 
   it("uses one version number everywhere", () => {

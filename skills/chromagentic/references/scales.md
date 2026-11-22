@@ -2,6 +2,8 @@
 
 How UI color scales are built, and how contrast-based scales keep each step's purpose the same in every mode.
 
+Most apps don't need a full scale. Start from semantic roles (`references/semantic-roles.md`) and add steps only when the project needs them: a design system shared across many products, many tinted surfaces or tags, charts, or a team that already works with numbered steps. Turn full scales on with `"steps": true` or your own list of contrasts.
+
 - Tints, shades, tones, and monochromatic colors
 - UI color scales
 - Creating color scales
