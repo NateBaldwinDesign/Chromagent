@@ -16,21 +16,21 @@ export interface CliIO {
   version?: string;
 }
 
-export const HELP = `chromagent: accessible, perceptual UI color for AI agents
+export const HELP = `chromagentic: accessible, perceptual UI color for AI agents
 
 Usage:
-  chromagent generate <theme.json> [--format css|tailwind|dtcg|json] [--platform <name>] [--out <path>] [--strict]
+  chromagentic generate <theme.json> [--format css|tailwind|dtcg|json] [--platform <name>] [--out <path>] [--strict]
       Generate colors for every mode from a settings file. Prints to the screen unless --out is given.
       --format    css (default), tailwind (Tailwind v4 @theme), dtcg (design tokens), or json (everything)
       --platform  pick the gamut and format for a platform: ${PLATFORMS.join(", ")}
       --out       file to write; for dtcg, a folder that gets one <mode>.tokens.json per mode
       --strict    fail if any color misses its contrast target
 
-  chromagent suggest "<words>" [--count 6]     Candidate key colors for words like "calm and earthy"
-  chromagent describe <color>                  Describe a color in plain words
-  chromagent contrast <text> <background> [--formula wcag2|apca]   Measure contrast
+  chromagentic suggest "<words>" [--count 6]     Candidate key colors for words like "calm and earthy"
+  chromagentic describe <color>                  Describe a color in plain words
+  chromagentic contrast <text> <background> [--formula wcag2|apca]   Measure contrast
 
-  chromagent --help | --version
+  chromagentic --help | --version
 `;
 
 class CliError extends Error {}
@@ -60,7 +60,7 @@ async function generate(args: string[], io: CliIO) {
       strict: { type: "boolean", default: false },
     },
   });
-  if (positionals.length !== 1) throw new CliError("Give one settings file, for example: chromagent generate theme.json");
+  if (positionals.length !== 1) throw new CliError("Give one settings file, for example: chromagentic generate theme.json");
   const format = values.format!;
   if (!["css", "tailwind", "dtcg", "json"].includes(format))
     throw new CliError(`--format must be css, tailwind, dtcg, or json (got "${format}").`);
@@ -102,7 +102,7 @@ async function generate(args: string[], io: CliIO) {
 
 function suggest(args: string[], io: CliIO) {
   const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { count: { type: "string" } } });
-  if (positionals.length === 0) throw new CliError('Give some words, for example: chromagent suggest "calm and earthy"');
+  if (positionals.length === 0) throw new CliError('Give some words, for example: chromagentic suggest "calm and earthy"');
   const count = values.count === undefined ? undefined : Number(values.count);
   if (count !== undefined && !(count >= 1)) throw new CliError("--count must be a number of 1 or more.");
   const result = suggestColors(positionals.join(" "), { count });
@@ -121,14 +121,14 @@ function parseColorArgs<T>(fn: () => T) {
 }
 
 function describeCommand(args: string[], io: CliIO) {
-  if (args.length === 0) throw new CliError("Give a color, for example: chromagent describe #ff5a00");
+  if (args.length === 0) throw new CliError("Give a color, for example: chromagentic describe #ff5a00");
   io.stdout(`${JSON.stringify(parseColorArgs(() => describeColor(args.join(" "))), null, 2)}\n`);
   return 0;
 }
 
 function contrastCommand(args: string[], io: CliIO) {
   const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { formula: { type: "string", default: "wcag2" } } });
-  if (positionals.length !== 2) throw new CliError("Give two colors, for example: chromagent contrast #333 #fff");
+  if (positionals.length !== 2) throw new CliError("Give two colors, for example: chromagentic contrast #333 #fff");
   const formula = values.formula as ContrastFormula;
   if (formula !== "wcag2" && formula !== "apca") throw new CliError(`--formula must be wcag2 or apca (got "${formula}").`);
   const value = parseColorArgs(() => contrast(positionals[0], positionals[1], formula));
@@ -167,7 +167,7 @@ export async function run(argv: string[], io: CliIO): Promise<number> {
     if (error instanceof ThemeConfigError) io.stderr(`${error.message}\n`);
     else if (error instanceof CliError) io.stderr(`${error.message}\n`);
     else if (error instanceof TypeError && "code" in error && String(error.code).startsWith("ERR_PARSE_ARGS"))
-      io.stderr(`${error.message}\nRun "chromagent --help" for usage.\n`);
+      io.stderr(`${error.message}\nRun "chromagentic --help" for usage.\n`);
     else throw error;
     return 1;
   }

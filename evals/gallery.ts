@@ -113,7 +113,7 @@ export function buildGallery(report: { summary: Summary; results: RunResult[] },
   const lines = [
     "# Gallery: with and without the skill",
     "",
-    `Each scenario was run ${n} time${n === 1 ? "" : "s"} with ${agent}, with and without the chromagent skill, from the same prompt. The swatches show a typical run (the median score). ✓ means the pair meets its contrast target; ✗ means it doesn't. Colors are shown in sRGB so every screen can display them.`,
+    `Each scenario was run ${n} time${n === 1 ? "" : "s"} with ${agent}, with and without the chromagentic skill, from the same prompt. The swatches show a typical run (the median score). ✓ means the pair meets its contrast target; ✗ means it doesn't. Colors are shown in sRGB so every screen can display them.`,
     "",
     `Report: ${report.summary.date}. Rebuild with \`npm run gallery\`.`,
     "",

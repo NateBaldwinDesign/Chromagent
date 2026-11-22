@@ -24,9 +24,9 @@ const fail = (name: string, detail: string): CheckResult => ({ name, status: "fa
 const skip = (name: string, detail: string): CheckResult => ({ name, status: "skip", detail });
 const pct = (part: number, whole: number) => `${Math.round((part / Math.max(whole, 1)) * 100)}%`;
 
-export const GENERATE = /chromagent(?:\.mjs|\/dist\/cli\/index\.js)?["']?\s+generate\b/;
-export const SUGGEST = /chromagent(?:\.mjs|\/dist\/cli\/index\.js)?["']?\s+suggest\b|suggestColors\s*\(/;
-const SETTINGS_NAME = "chromagent.theme.json";
+export const GENERATE = /chromagentic(?:\.mjs|\/dist\/cli\/index\.js)?["']?\s+generate\b/;
+export const SUGGEST = /chromagentic(?:\.mjs|\/dist\/cli\/index\.js)?["']?\s+suggest\b|suggestColors\s*\(/;
+const SETTINGS_NAME = "chromagentic.theme.json";
 
 export interface FoundSettings {
   path: string;
@@ -34,7 +34,7 @@ export interface FoundSettings {
   theme: Theme;
 }
 
-/** The agent's settings file: `chromagent.theme.json`, or any JSON file that works as theme settings. */
+/** The agent's settings file: `chromagentic.theme.json`, or any JSON file that works as theme settings. */
 export function findSettings(files: Map<string, string>): FoundSettings | undefined {
   const paths = [...files.keys()].filter((p) => p.endsWith(".json"));
   paths.sort((a, b) => Number(b.endsWith(SETTINGS_NAME)) - Number(a.endsWith(SETTINGS_NAME)));
@@ -60,17 +60,17 @@ export function checkUsedEngine(ctx: CheckContext): CheckResult {
   if (ran) return pass("used-engine", `Ran: ${ran.slice(0, 120)}`);
   const npmScript = [...ctx.changed].find(([path, text]) => path.endsWith("package.json") && GENERATE.test(text));
   const npmRan = ctx.transcript.commands.find((c) => /\bnpm (run|test|start)\b/.test(c));
-  if (npmScript && npmRan) return pass("used-engine", `Ran an npm script that calls chromagent generate: ${npmRan.slice(0, 80)}`);
+  if (npmScript && npmRan) return pass("used-engine", `Ran an npm script that calls chromagentic generate: ${npmRan.slice(0, 80)}`);
   const wrapper = [...ctx.changed].find(
     ([path, text]) =>
-      /chromagent(\.mjs)?\b/.test(text) &&
+      /chromagentic(\.mjs)?\b/.test(text) &&
       (GENERATE.test(text) || /["']generate["']/.test(text)) &&
       ctx.transcript.commands.some((c) => c.includes(path.split("/").pop()!)),
   );
-  if (wrapper) return pass("used-engine", `Ran ${wrapper[0]}, which calls chromagent generate`);
-  const script = [...ctx.changed].find(([, text]) => /generateTheme\s*\(/.test(text) && /from\s+["']chromagent["']/.test(text));
+  if (wrapper) return pass("used-engine", `Ran ${wrapper[0]}, which calls chromagentic generate`);
+  const script = [...ctx.changed].find(([, text]) => /generateTheme\s*\(/.test(text) && /from\s+["']chromagentic["']/.test(text));
   if (script) return pass("used-engine", `Called generateTheme in ${script[0]}`);
-  return fail("used-engine", "Never ran `chromagent generate` or called generateTheme.");
+  return fail("used-engine", "Never ran `chromagentic generate` or called generateTheme.");
 }
 
 export function checkSettings(settings: FoundSettings | undefined): CheckResult {
@@ -166,7 +166,7 @@ export function checkDescriptive(ctx: CheckContext, settings: FoundSettings | un
   const wanted = ctx.scenario.expectWords;
   if (!wanted?.length) return skip(name, "Not a descriptive prompt.");
   const used = ctx.transcript.commands.some((c) => SUGGEST.test(c)) || [...ctx.changed.values()].some((t) => SUGGEST.test(t));
-  if (!used) return fail(name, "Didn't use `chromagent suggest` for the descriptive words.");
+  if (!used) return fail(name, "Didn't use `chromagentic suggest` for the descriptive words.");
   if (!settings) return fail(name, "No settings file, so the key colors can't be checked.");
   const keys = keyColors(settings.config);
   if (!keys.length) return fail(name, "No key colors besides grays and status colors.");

@@ -1,4 +1,4 @@
-Chromagent
+Chromagentic
 Copyright 2026 Nate Baldwin
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
@@ -21,7 +21,7 @@ data-visualization code, and to add APCA support and a standalone theme API.
 -------------------------------------------------------------------------------
 color-description
 -------------------------------------------------------------------------------
-The bundled command-line tool in skills/chromagent/scripts/chromagent.mjs
+The bundled command-line tool in skills/chromagentic/scripts/chromagentic.mjs
 includes the code of both color-description and colorjs.io.
 
 The descriptive color features (suggestColors and describeColor) use the
@@ -81,6 +81,6 @@ SOFTWARE.
 -------------------------------------------------------------------------------
 Skill content
 -------------------------------------------------------------------------------
-The skill reference files in skills/chromagent/references are condensed and
+The skill reference files in skills/chromagentic/references are condensed and
 rewritten from Color and Contrast.com (https://colorandcontrast.com),
 by Nate Baldwin.

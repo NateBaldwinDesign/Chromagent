@@ -86,7 +86,7 @@ Source: colorandcontrast.com/color-psychology/
 
 ## From descriptive words to colors
 
-Chromagent can turn mood words into candidate colors and describe colors in words.
+Chromagentic can turn mood words into candidate colors and describe colors in words.
 
 ### `suggestColors(prompt, { count })`
 

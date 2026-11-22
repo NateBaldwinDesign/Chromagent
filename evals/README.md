@@ -1,6 +1,6 @@
 # Agent evals
 
-These tests check how well a real AI agent uses chromagent. They start Copilot CLI or Claude Code on small practice projects, then grade what the agent did. **They use AI credits**, so they don't run in CI.
+These tests check how well a real AI agent uses chromagentic. They start Copilot CLI or Claude Code on small practice projects, then grade what the agent did. **They use AI credits**, so they don't run in CI.
 
 ```sh
 npm run build
@@ -67,13 +67,13 @@ Skill runs also get these pass/fail checks, which help explain a low score.
 
 Graded by code:
 
-- **used-engine**: the agent ran the engine (`scripts/chromagent.mjs generate`, `chromagent generate`, or `generateTheme`).
+- **used-engine**: the agent ran the engine (`scripts/chromagentic.mjs generate`, `chromagentic generate`, or `generateTheme`).
 - **settings-file**: it saved a working settings file.
 - **contrast**: every color meets its target in every mode, or the agent told the user about any warning.
 - **engine-colors**: at least 90% of new colors in the project match colors the engine made. This catches hand-written hex codes.
 - **format**: colors use the right format for the platform: OKLCH for web and tokens, Display P3 for iOS and Android.
 - **modes**: requested modes come from global settings (background lightness, contrast multiplier).
-- **descriptive**: for mood words, the agent used `chromagent suggest`, and at least half of its key colors are described with matching words by `describeColor`.
+- **descriptive**: for mood words, the agent used `chromagentic suggest`, and at least half of its key colors are described with matching words by `describeColor`.
 - **references**: the agent opened the reference file that fits the task.
 - **builds**: the project still builds. These checks are lightweight and offline: CSS braces and variables, DTCG JSON and aliases, and a Swift type-check with Xcode. There's no Android build here, so the Compose build is marked as skipped.
 

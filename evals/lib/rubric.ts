@@ -7,7 +7,7 @@ import type { AgentName, CheckResult, Scenario } from "./types";
 
 const GUIDE = `You are grading an AI coding agent's final reply about UI color. Score it with this fixed guide.
 
-- accurate: true when every factual claim about color, contrast, modes, gamut, or the chromagent tool agrees with the reference material below. Claims the material doesn't cover count as accurate only if they are mainstream, correct color science. Any wrong number, wrong standard, or invented chromagent feature makes it false.
+- accurate: true when every factual claim about color, contrast, modes, gamut, or the chromagentic tool agrees with the reference material below. Claims the material doesn't cover count as accurate only if they are mainstream, correct color science. Any wrong number, wrong standard, or invented chromagentic feature makes it false.
 - explains: true when the reply tells the user, in plain words, what was made and why (for example, what the colors are for, the contrast targets, or how modes differ).
 
 Reply with only one line of JSON: {"accurate": true|false, "explains": true|false, "notes": "<one short sentence>"}`;
@@ -52,7 +52,7 @@ export function referenceText(skillDir: string, scenario: Scenario): string {
 }
 
 export async function gradeWithRubric(grader: AgentName, scenario: Scenario, finalMessage: string, skillDir: string): Promise<CheckResult> {
-  const dir = mkdtempSync(join(tmpdir(), "chromagent-grader-"));
+  const dir = mkdtempSync(join(tmpdir(), "chromagentic-grader-"));
   try {
     const run = await runAgent(grader, rubricPrompt(scenario, finalMessage, referenceText(skillDir, scenario)), dir, 5 * 60_000);
     return parseRubric(parseTranscript(grader, run.output).finalMessage);

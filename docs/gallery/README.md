@@ -1,6 +1,6 @@
 # Gallery: with and without the skill
 
-Each scenario was run 3 times with copilot, with and without the chromagent skill, from the same prompt. The swatches show a typical run (the median score). ✓ means the pair meets its contrast target; ✗ means it doesn't. Colors are shown in sRGB so every screen can display them.
+Each scenario was run 3 times with copilot, with and without the chromagentic skill, from the same prompt. The swatches show a typical run (the median score). ✓ means the pair meets its contrast target; ✗ means it doesn't. Colors are shown in sRGB so every screen can display them.
 
 Report: 2026-11-21T21:33:22.960Z. Rebuild with `npm run gallery`.
 

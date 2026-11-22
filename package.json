@@ -1,5 +1,5 @@
 {
-  "name": "chromagent",
+  "name": "chromagentic",
   "version": "0.2.0",
   "description": "Perceptual UI color for AI agents: a color skill plus an engine that generates accessible, mode-aware color systems.",
   "type": "module",
@@ -7,9 +7,9 @@
   "author": "Nate Baldwin",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NateBaldwinDesign/Chromagent.git"
+    "url": "git+https://github.com/NateBaldwinDesign/Chromagentic.git"
   },
-  "homepage": "https://github.com/NateBaldwinDesign/Chromagent#readme",
+  "homepage": "https://github.com/NateBaldwinDesign/Chromagentic#readme",
   "keywords": [
     "color",
     "contrast",
@@ -26,7 +26,7 @@
     "node": ">=20"
   },
   "bin": {
-    "chromagent": "dist/cli/index.js"
+    "chromagentic": "dist/cli/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -35,7 +35,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./schema/theme.schema.json": "./skills/chromagent/assets/theme.schema.json",
+    "./schema/theme.schema.json": "./skills/chromagentic/assets/theme.schema.json",
     "./package.json": "./package.json"
   },
   "files": [

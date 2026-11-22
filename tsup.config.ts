@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { defineConfig } from "tsup";
 
 const { version } = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
-const define = { __CHROMAGENT_VERSION__: JSON.stringify(version) };
+const define = { __CHROMAGENTIC_VERSION__: JSON.stringify(version) };
 
 export default defineConfig([
   {
@@ -17,8 +17,8 @@ export default defineConfig([
   },
   {
     // One offline file inside the skill, so the skill works without npm install.
-    entry: { chromagent: "src/cli/index.ts" },
-    outDir: "skills/chromagent/scripts",
+    entry: { chromagentic: "src/cli/index.ts" },
+    outDir: "skills/chromagentic/scripts",
     outExtension: () => ({ js: ".mjs" }),
     format: ["esm"],
     platform: "node",

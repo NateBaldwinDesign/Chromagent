@@ -59,7 +59,7 @@ describe("toDtcg", () => {
     expect(token.$value.colorSpace).toBe("oklch");
     expect(token.$value.components).toHaveLength(3);
     expect(token.$value.hex).toMatch(/^#[0-9a-f]{6}$/);
-    expect(token.$extensions.chromagent.contrast).toBeGreaterThanOrEqual(token.$extensions.chromagent.target);
+    expect(token.$extensions.chromagentic.contrast).toBeGreaterThanOrEqual(token.$extensions.chromagentic.target);
     expect(tokens.color.accent).toEqual({ $type: "color", $value: "{color.brand.200}" });
     expect(tokens.color.surface.background.$value.components[0]).toBeCloseTo(1, 3);
   });

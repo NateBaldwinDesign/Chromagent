@@ -5,12 +5,12 @@ import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 
 const root = join(__dirname, "..");
-const skillDir = join(root, "skills", "chromagent");
+const skillDir = join(root, "skills", "chromagentic");
 const read = (path: string) => readFileSync(join(root, path), "utf8");
 const json = (path: string) => JSON.parse(read(path));
 
 function frontmatter() {
-  const text = read("skills/chromagent/SKILL.md");
+  const text = read("skills/chromagentic/SKILL.md");
   const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(text);
   if (!match) throw new Error("SKILL.md has no frontmatter");
   const [, head, body] = match;
@@ -22,7 +22,7 @@ function frontmatter() {
 describe("skill folder", () => {
   it("follows the Agent Skills format", () => {
     const fm = frontmatter();
-    expect(fm.name).toBe("chromagent");
+    expect(fm.name).toBe("chromagentic");
     expect(fm.name).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
     expect(fm.description?.length).toBeGreaterThan(0);
     expect(fm.description!.length).toBeLessThanOrEqual(1024);
@@ -51,15 +51,15 @@ describe("skill folder", () => {
   });
 
   it("carries the license and credits, since the skill can be installed on its own", () => {
-    expect(read("skills/chromagent/NOTICE")).toBe(read("NOTICE"));
-    expect(read("skills/chromagent/LICENSE.txt")).toBe(read("LICENSE"));
+    expect(read("skills/chromagentic/NOTICE")).toBe(read("NOTICE"));
+    expect(read("skills/chromagentic/LICENSE.txt")).toBe(read("LICENSE"));
   });
 
   describe("bundled engine", () => {
     // Copy only the skill folder somewhere with no node_modules, like a real install.
-    const dir = mkdtempSync(join(tmpdir(), "chromagent-skill-"));
-    cpSync(skillDir, join(dir, "chromagent"), { recursive: true });
-    const script = join(dir, "chromagent", "scripts", "chromagent.mjs");
+    const dir = mkdtempSync(join(tmpdir(), "chromagentic-skill-"));
+    cpSync(skillDir, join(dir, "chromagentic"), { recursive: true });
+    const script = join(dir, "chromagentic", "scripts", "chromagentic.mjs");
     const run = (...args: string[]) => execFileSync(process.execPath, [script, ...args], { cwd: dir, encoding: "utf8" });
     afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
@@ -71,7 +71,7 @@ describe("skill folder", () => {
 
     it("generates every example settings file", () => {
       for (const name of ["example-basic.json", "example-all-modes.json", "example-apca.json"]) {
-        const out = JSON.parse(run("generate", join(dir, "chromagent", "assets", name), "--format", "json"));
+        const out = JSON.parse(run("generate", join(dir, "chromagentic", "assets", name), "--format", "json"));
         expect(Object.keys(out.modes).length).toBeGreaterThan(0);
       }
     });

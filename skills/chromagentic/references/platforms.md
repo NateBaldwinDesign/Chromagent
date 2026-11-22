@@ -1,6 +1,6 @@
 # Platforms
 
-How to find what a project is built with, and how to turn Chromagent output into that platform's color format.
+How to find what a project is built with, and how to turn Chromagentic output into that platform's color format.
 
 - Finding the stack
 - Gamut rules
@@ -44,7 +44,7 @@ Use the `css` field for exact values. The `hex` field is an sRGB fallback; don't
 ## Web CSS
 
 ```sh
-chromagent generate chromagent.theme.json --platform web --out src/styles/colors.css
+chromagentic generate chromagentic.theme.json --platform web --out src/styles/colors.css
 ```
 
 Import the file once, before other styles. Use roles in components: `color: var(--color-text); background: var(--color-surface-raised);`. Modes follow the system settings through media queries. To let users pick a mode, set `data-theme="dark"` (or any mode name) on `<html>`; it overrides the media query.
@@ -54,10 +54,10 @@ Import the file once, before other styles. Use roles in components: `color: var(
 **Tailwind v4:**
 
 ```sh
-chromagent generate chromagent.theme.json --platform tailwind --format tailwind --out src/styles/colors.css
+chromagentic generate chromagentic.theme.json --platform tailwind --format tailwind --out src/styles/colors.css
 ```
 
-Import it after Tailwind: `@import "tailwindcss"; @import "./colors.css";`. The default mode goes in `@theme`, so Tailwind makes utilities such as `bg-accent`, `text-text-subtle`, `border-border`, and `bg-surface-raised`. Other modes override the same variables. Chromagent scales named `gray`, `red`, `orange`, `green`, or `blue` replace Tailwind's palettes of the same name. Use different scale names to keep Tailwind's.
+Import it after Tailwind: `@import "tailwindcss"; @import "./colors.css";`. The default mode goes in `@theme`, so Tailwind makes utilities such as `bg-accent`, `text-text-subtle`, `border-border`, and `bg-surface-raised`. Other modes override the same variables. Chromagentic scales named `gray`, `red`, `orange`, `green`, or `blue` replace Tailwind's palettes of the same name. Use different scale names to keep Tailwind's.
 
 **Tailwind v3:** generate CSS, import it, and point the config at the variables:
 
@@ -68,15 +68,15 @@ theme: { extend: { colors: { text: "var(--color-text)", accent: "var(--color-acc
 ## Design tokens (DTCG)
 
 ```sh
-chromagent generate chromagent.theme.json --platform dtcg --format dtcg --out tokens/color
+chromagentic generate chromagentic.theme.json --platform dtcg --format dtcg --out tokens/color
 ```
 
-This writes one `<mode>.tokens.json` per mode. Each scale step is a color token with OKLCH components and a hex fallback. Roles are alias tokens such as `{color.gray.1400}`. Contrast details are stored under `$extensions.chromagent`. Tools like Style Dictionary can build these into platform files. Use one file per mode as a theme or mode set.
+This writes one `<mode>.tokens.json` per mode. Each scale step is a color token with OKLCH components and a hex fallback. Roles are alias tokens such as `{color.gray.1400}`. Contrast details are stored under `$extensions.chromagentic`. Tools like Style Dictionary can build these into platform files. Use one file per mode as a theme or mode set.
 
 ## iOS, macOS, and visionOS (SwiftUI and UIKit)
 
 ```sh
-chromagent generate chromagent.theme.json --platform ios --format json --out chromagent.colors.json
+chromagentic generate chromagentic.theme.json --platform ios --format json --out chromagentic.colors.json
 ```
 
 Each color's `css` is `color(display-p3 r g b)`. Use those numbers.
@@ -90,7 +90,7 @@ Generate one color set per role, not per scale step, unless the project needs th
 ## Android (Jetpack Compose and XML views)
 
 ```sh
-chromagent generate chromagent.theme.json --platform compose --format json --out chromagent.colors.json
+chromagentic generate chromagentic.theme.json --platform compose --format json --out chromagentic.colors.json
 ```
 
 Use the P3 numbers: `Color(red = r, green = g, blue = b, colorSpace = ColorSpaces.DisplayP3)`. Display P3 colors need Android 8 (API 26) or newer. Make one object per mode, and choose with `isSystemInDarkTheme()`. Android 14 adds a contrast setting (`UiModeManager.getContrast()`) for choosing a high-contrast mode. Expose roles through a `CompositionLocal` or map them onto Material `ColorScheme` slots (`primary` from `accent`, `onPrimary` from `text-on-accent`, `background` and `surface` from surfaces, `error` from `error`).

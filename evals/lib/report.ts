@@ -85,7 +85,7 @@ export const LABELS: Record<string, string> = {
 
 export function toMarkdown(summary: Summary, results: RunResult[]): string {
   const lines = [
-    "# Chromagent eval report",
+    "# Chromagentic eval report",
     "",
     `${summary.date} · ${summary.runs} runs. Scores run from 0% to 100%; "±" is the spread across runs.`,
     "",

@@ -1,4 +1,4 @@
-# chromagent
+# chromagentic
 
 Accessible, perception-based UI color for AI coding agents.
 
@@ -6,7 +6,7 @@ Accessible, perception-based UI color for AI coding agents.
 
 Ask an AI agent to "add a dark mode" or "make my brand color accessible" and it will usually write hex codes by hand. They often look fine, but nobody has measured them. Text can fall short of its contrast target on a raised surface, a dark mode can feel flatter than the light one, brand hues drift, and web projects get old sRGB hex instead of wide-gamut color.
 
-Chromagent is a skill that fixes this. The agent describes the colors it wants, and a color engine builds them to exact contrast targets in every mode.
+Chromagentic is a skill that fixes this. The agent describes the colors it wants, and a color engine builds them to exact contrast targets in every mode.
 
 ## What it looks like
 
@@ -39,24 +39,24 @@ With the skill, new modes kept the original's contrast order and perceived contr
 ## Install
 
 ```sh
-npx skills add NateBaldwinDesign/Chromagent
+npx skills add NateBaldwinDesign/Chromagentic
 ```
 
 Other ways to install the same skill:
 
 | Tool | Command |
 |---|---|
-| GitHub CLI | `gh skill install NateBaldwinDesign/Chromagent chromagent` |
-| Claude Code | `/plugin marketplace add NateBaldwinDesign/Chromagent`, then `/plugin install chromagent@chromagent` |
-| npm | `npm install --save-dev chromagent`, then `npx skills experimental_sync -y` |
+| GitHub CLI | `gh skill install NateBaldwinDesign/Chromagentic chromagentic` |
+| Claude Code | `/plugin marketplace add NateBaldwinDesign/Chromagentic`, then `/plugin install chromagentic@chromagentic` |
+| npm | `npm install --save-dev chromagentic`, then `npx skills experimental_sync -y` |
 
-The skill includes its own copy of the engine (`scripts/chromagent.mjs`), so it works offline with just Node.js 20 or newer.
+The skill includes its own copy of the engine (`scripts/chromagentic.mjs`), so it works offline with just Node.js 20 or newer.
 
 After that, just ask your agent for color work, for example "Create a color system for this app", "Add dark mode", or "Give my app a calm, earthy feel".
 
 ## What it does
 
-Chromagent gives your agent two things:
+Chromagentic gives your agent two things:
 
 1. **A skill**: practical color knowledge for user interfaces (perception, contrast, scales, modes, accessibility, platforms), rewritten from [Color and Contrast.com](https://colorandcontrast.com).
 2. **A color engine**: exact colors made from contrast targets, so your agent never has to guess. Every color has a known contrast in every mode.
@@ -65,11 +65,11 @@ Colors are measured the way people see them (OKLCH). Light, dark, high-contrast,
 
 ## Generate colors yourself
 
-Write a settings file, for example `chromagent.theme.json`:
+Write a settings file, for example `chromagentic.theme.json`:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagent/main/skills/chromagent/assets/theme.schema.json",
+  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagentic/main/skills/chromagentic/assets/theme.schema.json",
   "colors": { "brand": "#0265dc" },
   "modes": {
     "light": { "backgroundLightness": 1 },
@@ -81,7 +81,7 @@ Write a settings file, for example `chromagent.theme.json`:
 Then generate:
 
 ```sh
-npx chromagent generate chromagent.theme.json --out src/colors.css
+npx chromagentic generate chromagentic.theme.json --out src/colors.css
 ```
 
 Useful options:
@@ -93,12 +93,12 @@ Useful options:
 Other commands:
 
 ```sh
-npx chromagent suggest "calm and earthy"     # candidate key colors for mood words
-npx chromagent describe "#c8a03c"            # "rich, golden and warm"
-npx chromagent contrast "#767676" "#ffffff"  # 4.54
+npx chromagentic suggest "calm and earthy"     # candidate key colors for mood words
+npx chromagentic describe "#c8a03c"            # "rich, golden and warm"
+npx chromagentic contrast "#767676" "#ffffff"  # 4.54
 ```
 
-See [`skills/chromagent/assets/`](skills/chromagent/assets) for more settings files, including all four kinds of mode and APCA.
+See [`skills/chromagentic/assets/`](skills/chromagentic/assets) for more settings files, including all four kinds of mode and APCA.
 
 ## Settings for each mode
 
@@ -121,7 +121,7 @@ Contrast can use **WCAG 2** (the default) or **APCA** (`"formula": "apca"`).
 ## JavaScript API
 
 ```js
-import { generateTheme, toCss, toDtcg, suggestColors, describeColor, contrast } from "chromagent";
+import { generateTheme, toCss, toDtcg, suggestColors, describeColor, contrast } from "chromagentic";
 
 const theme = generateTheme({ colors: { brand: "#0265dc" } });
 theme.modes.light.roles.text;   // { css, hex, oklch, contrast, target, ref }

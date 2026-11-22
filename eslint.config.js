@@ -2,7 +2,7 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: [".tmp", "dist", "coverage", "node_modules", "evals/results", "evals/fixtures/**", "scripts/studio-reference/**", "skills/chromagent/scripts/**"] },
+  { ignores: [".tmp", "dist", "coverage", "node_modules", "evals/results", "evals/fixtures/**", "scripts/studio-reference/**", "skills/chromagentic/scripts/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -15,7 +15,7 @@ function io(extra: Partial<CliIO> = {}) {
 
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "chromagent-cli-"));
+  dir = await mkdtemp(join(tmpdir(), "chromagentic-cli-"));
   await writeFile(join(dir, "theme.json"), JSON.stringify({ colors: { blue: "#0265dc" } }));
 });
 afterEach(() => rm(dir, { recursive: true, force: true }));

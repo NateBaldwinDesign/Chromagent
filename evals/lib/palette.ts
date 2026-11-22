@@ -91,7 +91,7 @@ function firstColor(text: string): Color | undefined {
 export function dtcgModes(files: Map<string, string>, skip?: string): NamedMode[] {
   const out: NamedMode[] = [];
   for (const [path, text] of files) {
-    if (!path.endsWith(".json") || path === skip || /(^|\/)(package|tsconfig|eval)[^/]*\.json$|chromagent\.theme\.json$/.test(path)) continue;
+    if (!path.endsWith(".json") || path === skip || /(^|\/)(package|tsconfig|eval)[^/]*\.json$|chromagentic\.theme\.json$/.test(path)) continue;
     let doc: Record<string, unknown>;
     try {
       doc = JSON.parse(text);

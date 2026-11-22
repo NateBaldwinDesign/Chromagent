@@ -4,7 +4,7 @@ import { Ajv } from "ajv";
 import { describe, expect, it } from "vitest";
 import { generateTheme } from "../src";
 
-const assets = join(__dirname, "..", "skills", "chromagent", "assets");
+const assets = join(__dirname, "..", "skills", "chromagentic", "assets");
 const schema = JSON.parse(readFileSync(join(assets, "theme.schema.json"), "utf8"));
 const validate = new Ajv({ allErrors: true }).compile(schema);
 const examples = readdirSync(assets).filter((file) => file.startsWith("example-"));

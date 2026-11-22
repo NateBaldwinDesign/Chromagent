@@ -29,7 +29,7 @@ function token(value: ColorValue, theme: Theme): DtcgColorToken {
     $type: "color",
     $value: { colorSpace: space.dtcg, components, hex: value.hex },
     $extensions: {
-      chromagent: { contrast: value.contrast, target: value.target, formula: theme.formula, ...(value.capped && { capped: true }) },
+      chromagentic: { contrast: value.contrast, target: value.target, formula: theme.formula, ...(value.capped && { capped: true }) },
     },
   };
 }
@@ -49,7 +49,7 @@ export function toDtcg(theme: Theme, modeName: string = theme.defaultMode): Dtcg
   color.surface = surface;
   for (const [role, value] of Object.entries(mode.roles))
     color[role] = { $type: "color", $value: `{color.${value.ref}}` } as DtcgColorToken;
-  return { $description: `chromagent "${mode.name}" mode`, color } as DtcgGroup;
+  return { $description: `chromagentic "${mode.name}" mode`, color } as DtcgGroup;
 }
 
 /** Design tokens for every mode, keyed by mode name (one token file per mode). */

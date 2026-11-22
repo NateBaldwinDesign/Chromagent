@@ -72,9 +72,9 @@ async function main() {
   const conditions: Condition[] = values.compare ? ["baseline", "skill"] : values.baseline ? ["baseline"] : ["skill"];
 
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const scratch = mkdtempSync(join(tmpdir(), "chromagent-eval-"));
-  const skillDir = join(repoRoot, "skills", "chromagent");
-  if (!existsSync(join(skillDir, "scripts", "chromagent.mjs"))) throw new Error("The skill's engine isn't built yet. Run `npm run build` first.");
+  const scratch = mkdtempSync(join(tmpdir(), "chromagentic-eval-"));
+  const skillDir = join(repoRoot, "skills", "chromagentic");
+  if (!existsSync(join(skillDir, "scripts", "chromagentic.mjs"))) throw new Error("The skill's engine isn't built yet. Run `npm run build` first.");
   const resultsDir = join(here, "results");
   const transcripts = join(resultsDir, stamp, "transcripts");
   mkdirSync(transcripts, { recursive: true });

@@ -180,8 +180,8 @@ describe("outcome scores", () => {
   });
 
   it("notices the skill triggering from a file read or the bundled engine", () => {
-    expect(skillTriggered(ctx({}, { transcript: { commands: [], toolArgs: ['{"path":".github/skills/chromagent/SKILL.md"}'], finalMessage: "" } }))).toBe(1);
-    expect(skillTriggered(ctx({}, { transcript: { commands: ["node .agents/skills/chromagent/scripts/chromagent.mjs contrast #fff #000"], toolArgs: [], finalMessage: "" } }))).toBe(1);
+    expect(skillTriggered(ctx({}, { transcript: { commands: [], toolArgs: ['{"path":".github/skills/chromagentic/SKILL.md"}'], finalMessage: "" } }))).toBe(1);
+    expect(skillTriggered(ctx({}, { transcript: { commands: ["node .agents/skills/chromagentic/scripts/chromagentic.mjs contrast #fff #000"], toolArgs: [], finalMessage: "" } }))).toBe(1);
     expect(skillTriggered(ctx({}))).toBe(0);
   });
 
@@ -251,7 +251,7 @@ describe("gallery", () => {
   });
 
   it("writes a page with a side-by-side section for mode conversions", () => {
-    const out = mkdtempSync(join(tmpdir(), "chromagent-gallery-"));
+    const out = mkdtempSync(join(tmpdir(), "chromagentic-gallery-"));
     const results = [run("light-to-dark", "skill", 0.9), run("light-to-dark", "baseline", 0.6), run("dark-mode", "skill", 0.8), run("dark-mode", "baseline", 0.8)];
     const scenarios: Scenario[] = [
       { id: "light-to-dark", fixture: "light-only", prompt: "Add a dark mode.", conversion: { from: "light", to: "dark" } },

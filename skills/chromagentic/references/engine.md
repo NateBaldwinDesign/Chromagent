@@ -1,6 +1,6 @@
 # Engine
 
-How to write Chromagent settings and run the engine, with the command-line tool or the JavaScript API.
+How to write Chromagentic settings and run the engine, with the command-line tool or the JavaScript API.
 
 - Setup
 - The settings file
@@ -14,15 +14,15 @@ How to write Chromagent settings and run the engine, with the command-line tool 
 
 ## Setup
 
-The command-line tool is bundled in this skill at `<skill-dir>/scripts/chromagent.mjs` (`<skill-dir>` is the folder holding `SKILL.md`). Run it with `node <skill-dir>/scripts/chromagent.mjs <command>`. It needs Node.js 20 or newer and nothing else, so it works in any project, including Swift and Android ones. Below, `chromagent <command>` is short for that. If the project has the npm package (`npm install --save-dev chromagent`), `chromagent <command>` also works, and the JavaScript API is available.
+The command-line tool is bundled in this skill at `<skill-dir>/scripts/chromagentic.mjs` (`<skill-dir>` is the folder holding `SKILL.md`). Run it with `node <skill-dir>/scripts/chromagentic.mjs <command>`. It needs Node.js 20 or newer and nothing else, so it works in any project, including Swift and Android ones. Below, `chromagentic <command>` is short for that. If the project has the npm package (`npm install --save-dev chromagentic`), `chromagentic <command>` also works, and the JavaScript API is available.
 
 ## The settings file
 
-Keep the settings in `chromagent.theme.json` at the project root. Only `colors` is required. The full schema and example settings are in `<skill-dir>/assets/`.
+Keep the settings in `chromagentic.theme.json` at the project root. Only `colors` is required. The full schema and example settings are in `<skill-dir>/assets/`.
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagent/main/skills/chromagent/assets/theme.schema.json",
+  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagentic/main/skills/chromagentic/assets/theme.schema.json",
   "colors": {
     "brand": "#ff5a00",
     "slate": ["#f4f6f8", "#5b6672", "#1b2027"]
@@ -103,7 +103,7 @@ Each mode is three global settings. Every color is recalculated from them.
 ## Generating output
 
 ```sh
-chromagent generate chromagent.theme.json --platform web --out src/styles/colors.css
+chromagentic generate chromagentic.theme.json --platform web --out src/styles/colors.css
 ```
 
 | Option | Meaning |
@@ -133,10 +133,10 @@ The engine warns when a target can't be reached, for example 7:1 text on a middl
 ## Measuring, suggesting, and describing colors
 
 ```sh
-chromagent contrast "#5b6672" "#ffffff"          # 5.85:1
-chromagent contrast "#5b6672" "#ffffff" --formula apca
-chromagent suggest "calm and earthy" --count 6
-chromagent describe "#ff5a00"
+chromagentic contrast "#5b6672" "#ffffff"          # 5.85:1
+chromagentic contrast "#5b6672" "#ffffff" --formula apca
+chromagentic suggest "calm and earthy" --count 6
+chromagentic describe "#ff5a00"
 ```
 
 Use `contrast` for any color the engine didn't make, such as an existing brand color or text on an image. See `references/choosing-colors.md` for `suggest` and `describe`.
@@ -144,7 +144,7 @@ Use `contrast` for any color the engine didn't make, such as an existing brand c
 ## JavaScript API
 
 ```js
-import { generateTheme, toCss, toDtcg, platformOutput, contrast, suggestColors, describeColor } from "chromagent";
+import { generateTheme, toCss, toDtcg, platformOutput, contrast, suggestColors, describeColor } from "chromagentic";
 
 const theme = generateTheme({
   colors: { brand: "#ff5a00" },

@@ -94,7 +94,7 @@ WCAG 2 treats both polarities the same. Swapping text and background gives the s
 
 Light text on a dark background needs a larger luminance difference to look as clear. A pair that passes 4.5:1 in dark mode often looks weaker than a 4.5:1 pair in light mode. Light text can also blur or glow at its edges because of the irradiation illusion and glare.
 
-Chromagent compensates for this when it uses WCAG 2 contrast. As the background gets darker, it raises each contrast target by a set amount of perceived lightness (CIE L*). Full strength (100%) adds up to 12 L* points; the default strength of 10% adds about 1.2. Subtle steps such as borders and surfaces gain the most, and high-contrast text barely changes. Targets only go up, so a step never drops below its WCAG 2 minimum.
+Chromagentic compensates for this when it uses WCAG 2 contrast. As the background gets darker, it raises each contrast target by a set amount of perceived lightness (CIE L*). Full strength (100%) adds up to 12 L* points; the default strength of 10% adds about 1.2. Subtle steps such as borders and surfaces gain the most, and high-contrast text barely changes. Targets only go up, so a step never drops below its WCAG 2 minimum.
 
 APCA already accounts for polarity in its formula. No extra compensation is needed when using APCA.
 

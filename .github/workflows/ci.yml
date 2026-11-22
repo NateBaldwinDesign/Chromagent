@@ -24,10 +24,10 @@ jobs:
         run: git diff --exit-code -- skills/
       - name: Skill bundle runs on its own
         run: |
-          cp -r skills/chromagent "$RUNNER_TEMP/chromagent"
+          cp -r skills/chromagentic "$RUNNER_TEMP/chromagentic"
           cd "$RUNNER_TEMP"
-          node chromagent/scripts/chromagent.mjs --version
-          node chromagent/scripts/chromagent.mjs generate chromagent/assets/example-all-modes.json --strict > /dev/null
+          node chromagentic/scripts/chromagentic.mjs --version
+          node chromagentic/scripts/chromagentic.mjs generate chromagentic/assets/example-all-modes.json --strict > /dev/null
   skill:
     runs-on: ubuntu-latest
     steps:
@@ -36,4 +36,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install "git+https://github.com/agentskills/agentskills#subdirectory=skills-ref"
-      - run: skills-ref validate ./skills/chromagent
+      - run: skills-ref validate ./skills/chromagentic

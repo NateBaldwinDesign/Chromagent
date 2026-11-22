@@ -45,7 +45,7 @@ export function prepareWorkspace(fixtureDir: string, workspace: string, skillDir
   mkdirSync(workspace, { recursive: true });
   cpSync(fixtureDir, workspace, { recursive: true, filter: (src) => !src.endsWith("eval.json") });
   if (!skillDir) return;
-  for (const folder of SKILL_FOLDERS) cpSync(skillDir, join(workspace, folder, "chromagent"), { recursive: true });
+  for (const folder of SKILL_FOLDERS) cpSync(skillDir, join(workspace, folder, "chromagentic"), { recursive: true });
 }
 
 export interface AgentRun {

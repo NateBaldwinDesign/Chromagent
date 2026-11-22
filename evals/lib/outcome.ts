@@ -125,7 +125,7 @@ export function moodMatch(ctx: CheckContext, settingsPath?: string): number | nu
 /** Did the skill load without being named: the agent opened SKILL.md or ran the bundled engine. */
 export function skillTriggered(ctx: CheckContext): number {
   const used = [...ctx.transcript.toolArgs, ...ctx.transcript.commands].some(
-    (t) => /skills\/chromagent\/(SKILL\.md|references\/|scripts\/chromagent\.mjs)/.test(t) || GENERATE.test(t) || SUGGEST.test(t),
+    (t) => /skills\/chromagentic\/(SKILL\.md|references\/|scripts\/chromagentic\.mjs)/.test(t) || GENERATE.test(t) || SUGGEST.test(t),
   );
   return used ? 1 : 0;
 }

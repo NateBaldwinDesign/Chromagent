@@ -78,7 +78,7 @@ A uniform space created in 2020 by Björn Ottosson. It is based on CAM16 and IPT
 - L runs from 0 (black) to 1 (white). Chroma starts at 0 (gray). Its highest possible value depends on the hue and the gamut.
 - Hue stays steadier than in LCH or HSL as lightness changes.
 
-Chromagent reports colors as OKLCH `[l, c, h]`. This is the recommended space for picking and adjusting UI colors.
+Chromagentic reports colors as OKLCH `[l, c, h]`. This is the recommended space for picking and adjusting UI colors.
 
 Source: colorandcontrast.com/oklab/
 
@@ -103,7 +103,7 @@ A color from OKLCH or P3 can fall outside sRGB. There are two main ways to fix t
 - **Clamping** cuts each channel to its allowed range and rounds values. It is fast, but it can shift hue and lightness.
 - **Gamut mapping** finds the closest in-gamut color, usually by lowering chroma while keeping lightness and hue. It looks more faithful. CSS Color 4 uses this approach in OKLCH.
 
-In UI: Modern web CSS can keep wide-gamut OKLCH colors, and the browser maps them to each screen. Map to Display P3 only for platforms bound to it (such as iOS), and to sRGB only for older tech. Lightness can shift slightly after mapping, so contrast must be measured on the mapped color (Chromagent does this).
+In UI: Modern web CSS can keep wide-gamut OKLCH colors, and the browser maps them to each screen. Map to Display P3 only for platforms bound to it (such as iOS), and to sRGB only for older tech. Lightness can shift slightly after mapping, so contrast must be measured on the mapped color (Chromagentic does this).
 
 Source: colorandcontrast.com/gamut/, colorandcontrast.com/clamping/
 

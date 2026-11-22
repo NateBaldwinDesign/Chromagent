@@ -52,7 +52,7 @@ Source: colorandcontrast.com/creating-color-scales/
 
 ## Contrast-based scales
 
-Chromagent builds contrast-based scales. Each step is defined by a contrast ratio against the background, not by a fixed lightness value.
+Chromagentic builds contrast-based scales. Each step is defined by a contrast ratio against the background, not by a fixed lightness value.
 
 How it works:
 
@@ -115,6 +115,6 @@ Data visualization uses three other kinds of scales:
 - **Sequential**: colors from low to high for numeric data.
 - **Diverging**: two sequential scales with a neutral midpoint.
 
-These are out of scope for this version of Chromagent. If asked, explain the type and note that the engine does not generate them yet. Data visualizations also need more than color to be accessible.
+These are out of scope for this version of Chromagentic. If asked, explain the type and note that the engine does not generate them yet. Data visualizations also need more than color to be accessible.
 
 Source: colorandcontrast.com/color-scale/

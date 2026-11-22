@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagent/main/skills/chromagent/assets/theme.schema.json",
-  "title": "Chromagent theme settings",
-  "description": "Settings for `chromagent generate`. Only `colors` is required; everything else has a sensible default.",
+  "$id": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagentic/main/skills/chromagentic/assets/theme.schema.json",
+  "title": "Chromagentic theme settings",
+  "description": "Settings for `chromagentic generate`. Only `colors` is required; everything else has a sensible default.",
   "type": "object",
   "required": ["colors"],
   "additionalProperties": false,

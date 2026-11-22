@@ -1,6 +1,6 @@
 # Themes and modes
 
-How color themes support light, dark, and contrast modes, and how Chromagent builds every mode from a few global settings.
+How color themes support light, dark, and contrast modes, and how Chromagentic builds every mode from a few global settings.
 
 - Color themes
 - Light mode and dark mode
@@ -9,7 +9,7 @@ How color themes support light, dark, and contrast modes, and how Chromagent bui
 - Low contrast preference
 - Adaptive themes and personalization
 - Adaptation, light sensitivity, and glare
-- The Chromagent approach
+- The Chromagentic approach
 - Typical values
 
 ## Color themes
@@ -90,9 +90,9 @@ Source: colorandcontrast.com/adaptive-color-theme/, colorandcontrast.com/persona
 
 Source: colorandcontrast.com/light-and-dark-adaptation/, colorandcontrast.com/light-sensitivity/, colorandcontrast.com/optical-glare/
 
-## The Chromagent approach
+## The Chromagentic approach
 
-Chromagent does not hand-pick colors for each mode. Each scale step is defined by its contrast against the background. A mode is made by changing a few global settings:
+Chromagentic does not hand-pick colors for each mode. Each scale step is defined by its contrast against the background. A mode is made by changing a few global settings:
 
 - **Background lightness** sets light or dark mode. Every step is recalculated against the new background.
 - **Contrast multiplier** sets regular, high, or low contrast. It scales every step's contrast target.
