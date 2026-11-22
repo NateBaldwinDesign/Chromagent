@@ -6,6 +6,7 @@ import { MAX_CHROMA } from "../math/colorMath";
 import { MAX_CONTRAST_MULTIPLIER } from "../modes/polarity";
 import { MAX_APCA } from "../math/apca";
 import type { ColorStop } from "../engineTypes";
+import { harmonizeFeedback } from "./feedback";
 import { expandStates, inferKind, normalizeRoleSpec, pairOf, type NormalizedRole, type RoleKind, type RoleSpec } from "./roles";
 
 /** A key color, a list of key colors, or a scale definition. Colors are any CSS color string. */
@@ -53,7 +54,7 @@ export interface ThemeConfig {
    * a role spec like { "tier": "subtle" }, or null to remove a default role.
    */
   roles?: Record<string, string | RoleSpec | null>;
-  /** Feedback colors (error, success, warning, info). true = built-in colors, or map each name to a color. */
+  /** Feedback colors (error, success, warning, info). true = harmonized with the brand (built-in colors with `steps`), or map each name to a color. */
   status?: Record<string, string> | boolean;
   /** Even lightness steps between roles and states. A number fixes the step (OKLCH L); false turns snapping off. */
   spacing?: number | false;
@@ -281,7 +282,15 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   const roleFirst = config.steps === undefined;
   const wantStatus = config.status === undefined ? !roleFirst : config.status !== false;
   if (wantStatus) {
-    const status = config.status === undefined || config.status === true ? DEFAULT_STATUS : config.status;
+    // Role-first themes draw feedback colors from the brand: same chroma, harmonious hues.
+    const brand = scales.find((s) => !s.builtIn && !isNeutral(s) && s.name !== backgroundScale);
+    const harmonized =
+      roleFirst && config.status === true && brand
+        ? Object.fromEntries(
+            Object.entries(harmonizeFeedback(`oklch(${brand.stops[0].lightness} ${(brand.stops[0].chroma / 100) * MAX_CHROMA} ${brand.stops[0].hue})`)).map(([name, [l, c, h]]) => [name, `oklch(${l} ${c.toFixed(4)} ${h})`]),
+          )
+        : undefined;
+    const status = harmonized ?? (config.status === undefined || config.status === true ? DEFAULT_STATUS : config.status);
     if (typeof status !== "object" || Array.isArray(status)) problems.push("status must be true, false, or an object.");
     else
       for (const [role, value] of Object.entries(status)) {

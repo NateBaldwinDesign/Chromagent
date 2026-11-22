@@ -18,6 +18,7 @@ import { BASE_SURFACE, normalizeConfig, type NormalizedConfig, type NormalizedMo
 import type { ColorScale, ColorSystemDocument, Surface } from "../engineTypes";
 import { colorValue, describeTarget, round, SAFETY, type ColorValue, type RoleValue } from "./values";
 import { generateRoles, type RoleAdjustment } from "./roleGeneration";
+import type { CvdReport } from "./feedback";
 
 export type { ColorValue, RoleValue } from "./values";
 export type { RoleAdjustment } from "./roleGeneration";
@@ -32,6 +33,8 @@ export interface ThemeMode {
   roles: Record<string, RoleValue>;
   /** Lightness step (OKLCH L) used to space roles and states evenly. */
   spacing?: number;
+  /** Color-vision check of the feedback colors: every pair must differ by CIEDE2000 ≥ 11 in each vision. */
+  feedback?: CvdReport & { changed: string[] };
 }
 
 export interface Theme {
@@ -188,6 +191,11 @@ export function generateTheme(config: ThemeConfig): Theme {
       for (const item of generated.missed)
         missed.push(`${item.role} (needs at least ${describeTarget(n.formula, item.target)}, got ${describeTarget(n.formula, item.contrast)})`);
       for (const item of generated.adjustments) adjustments.push({ mode: mode.name, ...item });
+      const cvd = generated.feedback;
+      if (cvd && !cvd.pass && cvd.worst)
+        warnings.push(
+          `In "${mode.name}" mode, the feedback colors ${cvd.worst.a} and ${cvd.worst.b} are too similar${cvd.worst.vision === "normal" ? "" : ` for people with ${cvd.worst.vision} color vision`} (difference ${cvd.worst.deltaE}, needs ${cvd.required}). Try a different brand color, or set the feedback colors yourself in "status".`,
+        );
     }
     const roles: ThemeMode["roles"] = {};
     for (const [name, role] of Object.entries(n.roles)) {
@@ -227,6 +235,7 @@ export function generateTheme(config: ThemeConfig): Theme {
       surfaces: surfaceValues,
       roles,
       ...(generated && { spacing: generated.step }),
+      ...(generated?.feedback && { feedback: generated.feedback }),
     };
   }
 

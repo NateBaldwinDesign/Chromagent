@@ -1,4 +1,4 @@
-import { contrastRatio, luminance, outputColorCss, type LinearRgb, type RgbGamut } from "../math/colorMath";
+import { contrastRatio, convertLinearGamut, gamutClamp, linearToOklch, luminance, outputColorCss, type LinearRgb, type RgbGamut } from "../math/colorMath";
 import type { ColorOutputSettings } from "../math/outputSettings";
 import { measureOutputContrast } from "../math/outputContrast";
 import { apcaContrast, apcaFromLuminance, MAX_APCA } from "../math/apca";
@@ -9,6 +9,7 @@ import type { ScaleData } from "../scales/scaleGeneration";
 import { ROLE_FLOORS, type NormalizedRole } from "./roles";
 import { DEFAULT_STEP, lightnessScale, snapToSteps } from "./spacing";
 import { colorValue, oklchOf, round, SAFETY, type RoleValue } from "./values";
+import { separateFeedback, type CvdReport, type Oklch } from "./feedback";
 
 export interface Swatch {
   css: string;
@@ -48,6 +49,8 @@ export interface RoleResult {
   step: number;
   adjustments: RoleAdjustment[];
   missed: { role: string; target: number; contrast: number }[];
+  /** Color-vision check of the feedback colors (two or more), after any nudges. */
+  feedback?: CvdReport & { changed: string[] };
 }
 
 /** Generates every spec-based role for one mode: targets, accent lightness, even spacing, states, and on-colors. */
@@ -190,6 +193,38 @@ export function generateRoles(roles: NormalizedRole[], ctx: RoleContext): RoleRe
     if (!role.base && Math.abs(target - requested[role.name]) > 0.005 * requested[role.name])
       adjustments.push({ role: role.name, requested: round(requested[role.name], 2), used: round(target, 2) });
   }
+  // Feedback colors: keep every pair distinct for typical vision and color vision deficiencies.
+  const feedbackRoles = generated.filter((r) => r.kind === "feedback" && !r.base && swatches[r.name]);
+  let feedback: RoleResult["feedback"];
+  if (feedbackRoles.length > 1) {
+    const realize = ([l, c, h]: Oklch) => gamutClamp(l, c, h, gamut);
+    const result = separateFeedback(
+      Object.fromEntries(feedbackRoles.map((r) => [r.name, [...linearToOklch(convertLinearGamut(swatches[r.name].linear, gamut, "srgb"))] as Oklch])),
+      {
+        realize: (value) => convertLinearGamut(realize(value), gamut, "srgb"),
+        accepts: (name, value) => {
+          const role = feedbackRoles.find((r) => r.name === name)!;
+          const linear = realize(value);
+          if (fast(linear, ctx.background) < floorOf(role) * SAFETY) return false;
+          const hasOn = generated.some((r) => r.kind === "on" && r.pair === name);
+          return !hasOn || pickOn([{ css: "", linear, contrast: 0 }], onFloor(name)).passes;
+        },
+        lightnessStep: step,
+      },
+    );
+    for (const name of result.changed) {
+      const role = feedbackRoles.find((r) => r.name === name)!;
+      const linear = realize(result.colors[name]);
+      const css = outputColorCss(linear, ctx.output);
+      const contrast = measure(css, ctx.backgroundCss);
+      swatches[name] = { css, linear, contrast };
+      const target = contrast >= values[name].target ? values[name].target : floorOf(role);
+      values[name] = { ...values[name], ...colorValue(css, contrast, target) };
+      if (contrast >= target) delete values[name].capped;
+      if (contrast + 1e-6 < floorOf(role)) missed.push({ role: name, target: floorOf(role), contrast });
+    }
+    feedback = { ...result.report, changed: result.changed };
+  }
   for (const role of generated) {
     if (role.kind !== "on") continue;
     const surfaces = [role.pair!, ...statesOf(role.pair!).map((s) => s.name)].filter((name) => swatches[name]);
@@ -199,5 +234,5 @@ export function generateRoles(roles: NormalizedRole[], ctx: RoleContext): RoleRe
     values[role.name] = { ...colorValue(pick.option.css, measured, minimum), minimum: round(minimum, 4), against: role.pair };
     if (measured + 1e-6 < minimum) missed.push({ role: role.name, target: minimum, contrast: measured });
   }
-  return { values, step, adjustments, missed };
+  return { values, step, adjustments, missed, ...(feedback && { feedback }) };
 }

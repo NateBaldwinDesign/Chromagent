@@ -109,7 +109,7 @@
       "oneOf": [{ "const": false }, { "type": "number", "minimum": 0.01, "maximum": 0.2 }]
     },
     "status": {
-      "description": "Feedback roles (error, success, warning, info). Off by default for role-first themes, on when steps are set. true uses the built-in colors; an object picks your own; false turns them off.",
+      "description": "Feedback roles (error, success, warning, info). Off by default for role-first themes, on when steps are set. true makes colors that harmonize with the brand (same chroma, related hues) and stay distinct for color-blind users (CIEDE2000 ≥ 11 in protan, deutan, and tritan simulations); with steps, true uses the built-in colors. An object picks your own (still checked); false turns them off.",
       "oneOf": [{ "type": "boolean" }, { "type": "object", "additionalProperties": { "type": "string" } }]
     },
     "modes": {

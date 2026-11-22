@@ -8,6 +8,8 @@ import { toDtcgModes } from "../output/dtcg";
 import { platformOutput, PLATFORMS, type Platform } from "../output/platform";
 import { describeColor, suggestColors } from "../describe/describe";
 import { contrast, type ContrastFormula } from "../math/contrast";
+import { feedbackColors } from "../theme/feedbackColors";
+import { checkCvd, MIN_FEEDBACK_DELTA_E } from "../theme/feedback";
 
 export interface CliIO {
   stdout: (text: string) => void;
@@ -29,6 +31,12 @@ Usage:
   chromagentic suggest "<words>" [--count 6]     Candidate key colors for words like "calm and earthy"
   chromagentic describe <color>                  Describe a color in plain words
   chromagentic contrast <text> <background> [--formula wcag2|apca]   Measure contrast
+  chromagentic feedback <brand> [--formula wcag2|apca]
+      Error, success, warning, and info colors that match the brand, for every default mode,
+      checked so each pair stays distinct for color-blind users (protan, deutan, tritan)
+  chromagentic check-cvd <name=color>... [--min 11]
+      Check that colors stay distinct (CIEDE2000) in typical vision and each color-blind simulation.
+      Exits with 1 if any pair is too close.
 
   chromagentic --help | --version
 `;
@@ -140,6 +148,33 @@ function contrastCommand(args: string[], io: CliIO) {
   return 0;
 }
 
+function feedbackCommand(args: string[], io: CliIO) {
+  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { formula: { type: "string", default: "wcag2" } } });
+  if (positionals.length !== 1) throw new CliError("Give one brand color, for example: chromagentic feedback #0066ff");
+  const formula = values.formula as ContrastFormula;
+  if (formula !== "wcag2" && formula !== "apca") throw new CliError(`--formula must be wcag2 or apca (got "${formula}").`);
+  const result = parseColorArgs(() => feedbackColors(positionals[0], { formula }));
+  for (const warning of result.warnings) io.stderr(`Warning: ${warning}\n`);
+  io.stdout(`${JSON.stringify(result.modes, null, 2)}\n`);
+  return 0;
+}
+
+function checkCvdCommand(args: string[], io: CliIO) {
+  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { min: { type: "string" } } });
+  if (positionals.length < 2) throw new CliError("Give two or more colors, for example: chromagentic check-cvd error=#d32f2f success=#2e7d32");
+  const required = values.min === undefined ? MIN_FEEDBACK_DELTA_E : Number(values.min);
+  if (!(required > 0)) throw new CliError("--min must be a number above 0.");
+  const colors: Record<string, string> = {};
+  positionals.forEach((item, index) => {
+    const at = item.indexOf("=");
+    colors[at > 0 ? item.slice(0, at) : `color${index + 1}`] = at > 0 ? item.slice(at + 1) : item;
+  });
+  const result = parseColorArgs(() => checkCvd(colors, required));
+  io.stdout(`${JSON.stringify(result, null, 2)}\n`);
+  if (!result.pass) io.stderr(`${result.failing.length} pair${result.failing.length === 1 ? " is" : "s are"} too similar (needs a difference of ${required}).\n`);
+  return result.pass ? 0 : 1;
+}
+
 /** Runs the command-line tool. Returns the exit code. */
 export async function run(argv: string[], io: CliIO): Promise<number> {
   const [command, ...rest] = argv;
@@ -153,6 +188,10 @@ export async function run(argv: string[], io: CliIO): Promise<number> {
         return describeCommand(rest, io);
       case "contrast":
         return contrastCommand(rest, io);
+      case "feedback":
+        return feedbackCommand(rest, io);
+      case "check-cvd":
+        return checkCvdCommand(rest, io);
       case "--version":
       case "-v":
         io.stdout(`${io.version ?? "unknown"}\n`);
