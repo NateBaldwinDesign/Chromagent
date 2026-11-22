@@ -1,6 +1,6 @@
 {
   "name": "chromagentic",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Accessible, perceptually balanced UI colors for AI agents: color systems, light and dark modes, high contrast, and contrast fixes, made by a bundled color engine.",
   "author": { "name": "Nate Baldwin", "url": "https://github.com/NateBaldwinDesign" },
   "homepage": "https://github.com/NateBaldwinDesign/Chromagentic",

@@ -1,6 +1,6 @@
 {
   "name": "chromagentic",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Perceptual UI color for AI agents: a color skill plus an engine that generates accessible, mode-aware color systems.",
   "type": "module",
   "license": "Apache-2.0",

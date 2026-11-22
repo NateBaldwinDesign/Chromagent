@@ -4,7 +4,7 @@ description: Makes accessible, perceptually balanced UI colors with a bundled co
 license: Apache-2.0
 compatibility: Requires Node.js 20+
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Chromagentic
