@@ -29,13 +29,13 @@ describe("edge cases", () => {
   });
 
   it.each(["#000000", "#ffffff"])("accepts %s as a key color", (key) => {
-    const theme = generateTheme({ colors: { ink: key } });
+    const theme = generateTheme({ colors: { ink: key }, steps: true });
     expect(theme.warnings).toEqual([]);
     expect(theme.modes.light.scales.ink["1600"].contrast).toBeGreaterThanOrEqual(19.5);
   });
 
   it("warns, rather than failing, when the background leaves no room for strong contrast", () => {
-    const theme = generateTheme({ colors: { brand: "#0265dc" }, modes: { mid: { backgroundLightness: 0.6 } } });
+    const theme = generateTheme({ colors: { brand: "#0265dc" }, steps: true, modes: { mid: { backgroundLightness: 0.6 } } });
     expect(theme.warnings).toHaveLength(1);
     expect(theme.warnings[0]).toMatch(/In "mid" mode, \d+ colors could not reach/);
     const capped = allValues(theme).filter((v) => v.capped);
@@ -44,7 +44,7 @@ describe("edge cases", () => {
   });
 
   it("explains impossible APCA targets too", () => {
-    const theme = generateTheme({ colors: { brand: "#0265dc" }, formula: "apca", modes: { mid: { backgroundLightness: 0.55 } } });
+    const theme = generateTheme({ colors: { brand: "#0265dc" }, steps: true, formula: "apca", modes: { mid: { backgroundLightness: 0.55 } } });
     expect(theme.warnings[0]).toMatch(/wanted Lc/);
   });
 
@@ -59,6 +59,7 @@ describe("edge cases", () => {
   it("tops out at pure white with the strongest settings", () => {
     const theme = generateTheme({
       colors: { brand: "#0265dc" },
+      steps: true,
       modes: { "dark-high-contrast": { backgroundLightness: 0, contrastMultiplier: 3, polarityCompensation: 1 } },
     });
     const top = theme.modes["dark-high-contrast"].scales.brand["1600"];

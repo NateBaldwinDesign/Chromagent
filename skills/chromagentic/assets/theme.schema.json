@@ -44,8 +44,9 @@
       }
     },
     "steps": {
-      "description": "Contrast targets for each scale step against the background. A list is named 100, 200, 300 and so on. Default: 16 steps from 100 to 1600.",
+      "description": "Full value scales are opt-in; leave this out to get only the semantic roles. true gives the default 16 steps (100 to 1600). A list is named 100, 200, 300 and so on, or name your own steps.",
       "oneOf": [
+        { "const": true },
         { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/contrast" } },
         {
           "type": "object",
@@ -83,12 +84,33 @@
     },
     "roles": {
       "type": "object",
-      "description": "Named roles that point to a scale step (\"gray.1400\") or a surface (\"surface.raised\"). Use null to remove a default role.",
-      "additionalProperties": { "type": ["string", "null"] }
+      "description": "Semantic roles described by intent. Default: text (strongest), text-subtle, border, accent with hover and active states, and text-on-accent. A role can also point to a scale step (\"gray.1400\") or a surface (\"surface.raised\"). Use null to remove a default role.",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "null" },
+          { "type": "string" },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "enum": ["text", "icon", "border", "accent", "feedback", "tint", "on"], "description": "What the role is for; sets its minimum contrast. Inferred from the name." },
+              "color": { "type": "string", "description": "The color name to draw from. Default: the neutral for text and borders, the brand color for accents." },
+              "contrast": { "type": "number", "minimum": 0, "description": "Preferred contrast. Accents pick the lightness closest to the brand color when this is left out." },
+              "min": { "type": "number", "minimum": 0, "description": "Minimum contrast. It can raise the built-in floor (text 4.5, borders and accents 3) but never lower it." },
+              "tier": { "enum": ["subtle", "strong", "strongest"], "description": "Text hierarchy: subtle ≈4.5:1, strong ≈7.5:1, strongest ≈12:1." },
+              "states": { "type": "array", "items": { "enum": ["hover", "active", "selected", "focus"] }, "description": "Adds <role>-<state> roles, each a small even step more contrast than the last." }
+            }
+          }
+        ]
+      }
+    },
+    "spacing": {
+      "description": "Equal lightness (OKLCH L) step that spaces role and state contrasts evenly. Default: chosen between 0.035 and 0.07. false keeps exact targets.",
+      "oneOf": [{ "const": false }, { "type": "number", "minimum": 0.01, "maximum": 0.2 }]
     },
     "status": {
-      "description": "Status roles and the scale or CSS color for each. Default: success green, warning orange, error red, info blue. Use false for none.",
-      "oneOf": [{ "const": false }, { "type": "object", "additionalProperties": { "type": "string" } }]
+      "description": "Feedback roles (error, success, warning, info). Off by default for role-first themes, on when steps are set. true uses the built-in colors; an object picks your own; false turns them off.",
+      "oneOf": [{ "type": "boolean" }, { "type": "object", "additionalProperties": { "type": "string" } }]
     },
     "modes": {
       "type": "object",

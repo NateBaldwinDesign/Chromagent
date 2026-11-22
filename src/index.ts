@@ -1,5 +1,6 @@
 export { generateTheme } from "./theme/generateTheme";
-export type { Theme, ThemeMode, ColorValue, RoleValue } from "./theme/generateTheme";
+export type { Theme, ThemeMode, ColorValue, RoleValue, RoleAdjustment } from "./theme/generateTheme";
+export type { RoleSpec, RoleKind, RoleTier, RoleState } from "./theme/roles";
 export {
   normalizeConfig,
   ThemeConfigError,

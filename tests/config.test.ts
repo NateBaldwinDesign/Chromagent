@@ -12,12 +12,26 @@ function problems(config: unknown) {
 }
 
 describe("normalizeConfig", () => {
-  it("fills in sensible defaults from a single brand color", () => {
+  it("starts from semantic roles, not a full value scale", () => {
     const n = normalizeConfig({ colors: { brand: "#0066ff" } });
     expect(n.formula).toBe("wcag2");
     expect(n.gamut).toBe("rec2020");
     expect(n.format).toBe("oklch");
     expect(n.backgroundScale).toBe("gray");
+    expect(n.roleFirst).toBe(true);
+    expect(n.outputSteps).toEqual([]);
+    expect(n.scales.map((s) => s.name)).toEqual(["brand", "gray"]);
+    expect(Object.keys(n.roles)).toEqual(["text", "text-subtle", "border", "accent", "accent-hover", "accent-active", "text-on-accent"]);
+    expect(n.roles.text).toMatchObject({ kind: "text", tier: "strongest", floor: 4.5 });
+    expect(n.roles.border).toMatchObject({ kind: "border", floor: 3 });
+    expect(n.roles.accent).toMatchObject({ kind: "accent", scale: "brand", floor: 3 });
+    expect(n.roles["accent-hover"]).toMatchObject({ base: "accent", step: 1 });
+    expect(n.roles["text-on-accent"]).toMatchObject({ kind: "on", pair: "accent", floor: 4.5 });
+  });
+
+  it("keeps the full scale and step references when steps: true", () => {
+    const n = normalizeConfig({ colors: { brand: "#0066ff" }, steps: true });
+    expect(n.roleFirst).toBe(false);
     expect(n.scales.map((s) => s.name)).toEqual(["brand", "gray", "green", "orange", "red", "blue"]);
     expect(n.steps).toHaveLength(16);
     expect(n.steps[0]).toEqual({ name: "100", contrast: 1.06 });
@@ -26,10 +40,10 @@ describe("normalizeConfig", () => {
       ["dark", 0.08, 0.1],
     ]);
     expect(n.defaultMode).toBe("light");
-    expect(n.roles.accent).toBe("brand.900");
-    expect(n.roles.text).toBe("gray.1400");
-    expect(n.roles.error).toBe("red.900");
-    expect(n.roles["text-on-accent"]).toBe("surface.background");
+    expect(n.roles.accent.ref).toBe("brand.900");
+    expect(n.roles.text.ref).toBe("gray.1400");
+    expect(n.roles.error.ref).toBe("red.900");
+    expect(n.roles["text-on-accent"].ref).toBe("surface.background");
   });
 
   it("uses your own neutral color for the background when it has almost no chroma", () => {
@@ -42,9 +56,9 @@ describe("normalizeConfig", () => {
 
   it("never picks a tinted background scale as the accent when another color exists", () => {
     const n = normalizeConfig({ colors: { slate: "#4b5563", brand: "#2563eb" }, background: { color: "slate" } });
-    expect(n.roles["accent-hover"]).toMatch(/^brand\./);
-    const only = normalizeConfig({ colors: { slate: "#4b5563" }, background: { color: "slate" } });
-    expect(only.roles.accent).toMatch(/^slate\./);
+    expect(n.roles["accent-hover"].scale).toBe("brand");
+    const only = normalizeConfig({ colors: { slate: "#4b5563" }, background: { color: "slate" }, steps: true });
+    expect(only.roles.accent.ref).toMatch(/^slate\./);
   });
 
   it("infers media queries from mode names, but never for the default mode", () => {
@@ -91,17 +105,22 @@ describe("normalizeConfig", () => {
   it("lets a status role use your own color", () => {
     const n = normalizeConfig({ colors: { brand: "#0066ff" }, status: { danger: "#d00" } });
     expect(n.scales.find((s) => s.name === "status-danger")?.builtIn).toBe(false);
-    expect(n.roles.danger).toBe("status-danger.900");
+    expect(n.roles.danger).toMatchObject({ kind: "feedback", scale: "status-danger" });
+    expect(n.roles["danger-background"]).toMatchObject({ kind: "tint", scale: "status-danger" });
+    expect(normalizeConfig({ colors: { brand: "#0066ff" }, status: { danger: "#d00" }, steps: true }).roles.danger.ref).toBe("status-danger.900");
   });
 
   it("allows custom roles and removing defaults", () => {
-    const n = normalizeConfig({ colors: { brand: "#0066ff" }, roles: { link: "brand.1000", "text-disabled": null } });
-    expect(n.roles.link).toBe("brand.1000");
+    const n = normalizeConfig({ colors: { brand: "#0066ff" }, steps: true, roles: { link: "brand.1000", "text-disabled": null } });
+    expect(n.roles.link.ref).toBe("brand.1000");
     expect(n.roles["text-disabled"]).toBeUndefined();
+    const r = normalizeConfig({ colors: { brand: "#0066ff" }, roles: { link: "brand.1000", border: null } });
+    expect(r.outputSteps).toEqual(["1000"]);
+    expect(r.roles.border).toBeUndefined();
   });
 
   it("lists the real scale names when a role points at a missing one", () => {
-    const [problem] = problems({ colors: { brand: "#0066ff" }, roles: { error: "success.900" } });
+    const [problem] = problems({ colors: { brand: "#0066ff" }, steps: true, roles: { error: "success.900" } });
     expect(problem).toContain("Your scales are: brand, gray, green, orange, red, blue.");
   });
 

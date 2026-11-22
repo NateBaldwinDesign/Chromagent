@@ -19,7 +19,7 @@ const mode = fc.record({
 });
 
 const theme = (key: string, extra: Partial<ThemeConfig> = {}) =>
-  generateTheme({ colors: { brand: key }, status: false, surfaces: {}, roles: {}, ...extra });
+  generateTheme({ colors: { brand: key }, steps: true, status: false, surfaces: {}, roles: {}, ...extra });
 
 function eachColor(t: Theme, fn: (value: Theme["modes"][string]["scales"][string][string], background: string, modeName: string) => void) {
   for (const m of Object.values(t.modes))

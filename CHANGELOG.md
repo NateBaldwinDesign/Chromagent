@@ -2,6 +2,11 @@
 
 ## 0.3.0
 - Renamed from `chromagent` to `chromagentic` (package, command, skill folder, settings file, and GitHub repo). The old repo URL redirects.
+- Role-first by default: settings without `steps` produce only semantic roles (text tiers, text-subtle, border, accent with hover/active, text-on-accent), not a full value scale. Use `"steps": true` for the old 16-step scales; string role references like `"gray.1400"` still work.
+- Roles are described by intent (`kind`, `tier`, `min`, `contrast`, `states`). Hard minimums: text 4.5:1, borders and accents 3:1, text on an accent 4.5:1.
+- Accents pick the lightness closest to the brand color that passes, and text-on-accent picks the background, white, or black, whichever passes with the least change.
+- Role and state contrasts are spaced in equal OKLCH lightness steps (`spacing`). Moved targets are listed in `adjustments` and printed by the CLI.
+- `status` is off by default for role-first themes; `status: true` adds error, success, warning, and info.
 
 ## 0.2.0
 - Skills-first release: the engine is bundled in the skill, standard installers, measured evals.

@@ -19,7 +19,7 @@ function declarations(mode: ThemeMode, prefix: string, indent: string, colorSche
   for (const [name, value] of Object.entries(mode.surfaces)) lines.push(`${indent}--${prefix}-surface-${name}: ${value.css};`);
   // Roles are repeated in every block so they follow the mode wherever data-theme is set.
   for (const [role, value] of Object.entries(mode.roles))
-    lines.push(`${indent}--${prefix}-${role}: var(${roleTarget(value.ref, prefix)});`);
+    lines.push(`${indent}--${prefix}-${role}: ${value.ref ? `var(${roleTarget(value.ref, prefix)})` : value.css};`);
   return lines.join("\n");
 }
 

@@ -24,6 +24,7 @@ import type { RunResult, Scenario, Transcript } from "../evals/lib/types";
 
 const settings: ThemeConfig = {
   colors: { gray: "#6b7280", brand: "#2563eb" },
+  steps: true,
   modes: { light: {}, dark: { backgroundLightness: 0.15 } },
 };
 const scenario: Scenario = { id: "t", fixture: "css", prompt: "Create a color system." };
@@ -157,7 +158,7 @@ describe("code-graded checks", () => {
   });
 
   it("requires warnings to be mentioned to the user", () => {
-    const capped = { colors: { brand: "#0265dc" }, modes: { mid: { backgroundLightness: 0.6 } } };
+    const capped = { colors: { brand: "#0265dc" }, steps: true as const, modes: { mid: { backgroundLightness: 0.6 } } };
     const project = { "chromagentic.theme.json": JSON.stringify(capped), "colors.css": toCss(generateTheme(capped)) };
     expect(byName(runChecks(context(project))).contrast).toBe("fail");
     const told = { ...ran, finalMessage: "Note: one target can't be reached on this background." };

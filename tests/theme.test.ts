@@ -5,6 +5,7 @@ import { ThemeConfigError } from "../src/theme/config";
 
 const config = {
   colors: { brand: "#FF5A00" },
+  steps: true as const,
   modes: {
     light: {},
     dark: { backgroundLightness: 0.08 },
@@ -77,13 +78,13 @@ describe("generateTheme (WCAG 2)", () => {
   });
 
   it("warns in plain language when a target can't be reached", () => {
-    const hard = generateTheme({ colors: { brand: "#FF5A00" }, steps: [4.5, 21], modes: { mid: { backgroundLightness: 0.5 } } });
+    const hard = generateTheme({ colors: { brand: "#FF5A00" }, steps: [4.5, 21], status: true, modes: { mid: { backgroundLightness: 0.5 } } });
     expect(hard.modes.mid.scales.brand["200"].capped).toBe(true);
     expect(hard.warnings[0]).toMatch(/could not reach the contrast target/);
   });
 
   it("explains maxed-out high-contrast steps separately", () => {
-    const hc = generateTheme({ colors: { brand: "#FF5A00" }, modes: { dark: { backgroundLightness: 0.08, contrastMultiplier: 2 } } });
+    const hc = generateTheme({ colors: { brand: "#FF5A00" }, steps: true, modes: { dark: { backgroundLightness: 0.08, contrastMultiplier: 2 } } });
     expect(hc.warnings.join()).toMatch(/strongest color available/);
   });
 
@@ -100,7 +101,7 @@ describe("generateTheme (WCAG 2)", () => {
 });
 
 describe("generateTheme (APCA)", () => {
-  const theme = generateTheme({ formula: "apca", colors: { brand: "#0066ff" }, modes: { light: {}, dark: { backgroundLightness: 0.08 } } });
+  const theme = generateTheme({ formula: "apca", steps: true, colors: { brand: "#0066ff" }, modes: { light: {}, dark: { backgroundLightness: 0.08 } } });
 
   it("every step reaches its Lc target", () => {
     for (const mode of Object.values(theme.modes)) {

@@ -34,7 +34,7 @@ function token(value: ColorValue, theme: Theme): DtcgColorToken {
   };
 }
 
-/** Design tokens (DTCG format) for one mode. Roles are aliases such as "{color.gray.1400}". */
+/** Design tokens (DTCG format) for one mode. Reference roles are aliases such as "{color.gray.1400}"; generated roles are full tokens. */
 export function toDtcg(theme: Theme, modeName: string = theme.defaultMode): DtcgGroup {
   const mode: ThemeMode | undefined = theme.modes[modeName];
   if (!mode) throw new Error(`Mode "${modeName}" does not exist. Modes: ${Object.keys(theme.modes).join(", ")}.`);
@@ -48,7 +48,7 @@ export function toDtcg(theme: Theme, modeName: string = theme.defaultMode): Dtcg
   for (const [name, value] of Object.entries(mode.surfaces)) surface[name] = token(value, theme);
   color.surface = surface;
   for (const [role, value] of Object.entries(mode.roles))
-    color[role] = { $type: "color", $value: `{color.${value.ref}}` } as DtcgColorToken;
+    color[role] = value.ref ? ({ $type: "color", $value: `{color.${value.ref}}` } as DtcgColorToken) : token(value, theme);
   return { $description: `chromagentic "${mode.name}" mode`, color } as DtcgGroup;
 }
 

@@ -6,6 +6,7 @@ import { MAX_CHROMA } from "../math/colorMath";
 import { MAX_CONTRAST_MULTIPLIER } from "../modes/polarity";
 import { MAX_APCA } from "../math/apca";
 import type { ColorStop } from "../engineTypes";
+import { expandStates, inferKind, normalizeRoleSpec, pairOf, type NormalizedRole, type RoleKind, type RoleSpec } from "./roles";
 
 /** A key color, a list of key colors, or a scale definition. Colors are any CSS color string. */
 export type ColorInput =
@@ -44,10 +45,18 @@ export interface ThemeConfig {
   $schema?: string;
   colors: Record<string, ColorInput>;
   background?: { color?: string; lightness?: number };
-  steps?: number[] | Record<string, StepInput>;
+  /** Full value scales are opt-in: `true` uses the default steps, or list your own contrasts. */
+  steps?: true | number[] | Record<string, StepInput>;
   surfaces?: Record<string, SurfaceInput>;
-  roles?: Record<string, string | null>;
-  status?: Record<string, string> | false;
+  /**
+   * Named UI colors. Each one is a reference like "gray.1400" or "surface.raised",
+   * a role spec like { "tier": "subtle" }, or null to remove a default role.
+   */
+  roles?: Record<string, string | RoleSpec | null>;
+  /** Feedback colors (error, success, warning, info). true = built-in colors, or map each name to a color. */
+  status?: Record<string, string> | boolean;
+  /** Even lightness steps between roles and states. A number fixes the step (OKLCH L); false turns snapping off. */
+  spacing?: number | false;
   modes?: Record<string, ModeInput>;
   defaultMode?: string;
   formula?: ContrastFormula;
@@ -127,9 +136,15 @@ export interface NormalizedConfig {
   backgroundScale: string;
   steps: NormalizedStep[];
   surfaces: { name: string; contrast: number; reference: "base" | "parent"; color?: string }[];
-  roles: Record<string, string>;
+  roles: Record<string, NormalizedRole>;
   modes: NormalizedMode[];
   defaultMode: string;
+  /** True when `steps` was left out: only roles (and steps they reference) are output. */
+  roleFirst: boolean;
+  /** Step names included in the output scales. */
+  outputSteps: string[];
+  /** Lightness step for spacing: a fixed number, undefined to search, or false for none. */
+  spacing: number | false | undefined;
 }
 
 /** Converts a CSS color to a key-color stop (chroma as a percent of 0.4). */
@@ -258,9 +273,11 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
 
   // Status colors
   const statusRoles: Record<string, string> = {};
-  if (config.status !== false) {
-    const status = config.status ?? DEFAULT_STATUS;
-    if (typeof status !== "object" || Array.isArray(status)) problems.push("status must be an object or false.");
+  const roleFirst = config.steps === undefined;
+  const wantStatus = config.status === undefined ? !roleFirst : config.status !== false;
+  if (wantStatus) {
+    const status = config.status === undefined || config.status === true ? DEFAULT_STATUS : config.status;
+    if (typeof status !== "object" || Array.isArray(status)) problems.push("status must be true, false, or an object.");
     else
       for (const [role, value] of Object.entries(status)) {
         if (!NAME.test(role)) {
@@ -287,15 +304,17 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   }
 
   // Steps
-  const defaults = formula === "apca" ? DEFAULT_APCA_STEPS : DEFAULT_WCAG_STEPS;
+  const stepDefaults = formula === "apca" ? DEFAULT_APCA_STEPS : DEFAULT_WCAG_STEPS;
   const maxContrast = formula === "apca" ? MAX_APCA : 21;
   const minContrast = formula === "apca" ? 0 : 1;
   const rawSteps: [string, StepInput][] = Array.isArray(config.steps)
     ? config.steps.map((value, i) => [String((i + 1) * 100), value])
     : config.steps && typeof config.steps === "object"
       ? Object.entries(config.steps)
-      : defaults.map((value, i) => [String((i + 1) * 100), value]);
-  if (config.steps !== undefined && rawSteps.length === 0) problems.push("steps needs at least one contrast value.");
+      : stepDefaults.map((value, i) => [String((i + 1) * 100), value]);
+  if (config.steps !== undefined && config.steps !== true && (typeof config.steps !== "object" || config.steps === null))
+    problems.push("steps must be true (the default full scale), a list of contrasts, or named steps.");
+  else if (config.steps !== undefined && rawSteps.length === 0) problems.push("steps needs at least one contrast value.");
   const steps: NormalizedStep[] = [];
   for (const [name, input] of rawSteps) {
     const contrast = typeof input === "object" && input !== null ? input.contrast : input;
@@ -360,55 +379,92 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   }
 
   // Roles
-  const roles: Record<string, string> = {};
-  if (steps.length > 0 && backgroundScale) {
-    const at = (index: number) => closestStep(steps, defaults, index);
-    const neutral = backgroundScale;
-    Object.assign(roles, {
+  const neutral = backgroundScale;
+  const statusScales = new Set(Object.values(statusRoles));
+  const accentScale = (
+    scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name) && s.name !== neutral) ??
+    scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name)) ??
+    scales.find((s) => !s.builtIn && !isNeutral(s))
+  )?.name;
+  const defaults: Record<string, string | RoleSpec> = {};
+  if (roleFirst) {
+    Object.assign(defaults, { text: {}, "text-subtle": {}, border: {} });
+    if (accentScale) Object.assign(defaults, { accent: { color: accentScale, states: ["hover", "active"] }, "text-on-accent": {} });
+    for (const [role, scale] of Object.entries(statusRoles)) {
+      defaults[role] = { kind: "feedback", color: scale };
+      defaults[`${role}-background`] = { kind: "tint", color: scale };
+    }
+  } else if (steps.length > 0 && neutral) {
+    const at = (index: number) => closestStep(steps, stepDefaults, index);
+    Object.assign(defaults, {
       text: `${neutral}.${at(13)}`,
       "text-subtle": `${neutral}.${at(9)}`,
       "text-disabled": `${neutral}.${at(5)}`,
       border: `${neutral}.${at(3)}`,
       "border-strong": `${neutral}.${at(6)}`,
     });
-    const statusScales = new Set(Object.values(statusRoles));
-    const accent =
-      scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name) && s.name !== neutral) ??
-      scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name)) ??
-      scales.find((s) => !s.builtIn && !isNeutral(s));
-    if (accent) {
-      Object.assign(roles, {
-        accent: `${accent.name}.${at(8)}`,
-        "accent-hover": `${accent.name}.${at(9)}`,
-        "accent-active": `${accent.name}.${at(10)}`,
+    if (accentScale)
+      Object.assign(defaults, {
+        accent: `${accentScale}.${at(8)}`,
+        "accent-hover": `${accentScale}.${at(9)}`,
+        "accent-active": `${accentScale}.${at(10)}`,
         "text-on-accent": `surface.${BASE_SURFACE}`,
       });
-    }
     for (const [role, scale] of Object.entries(statusRoles)) {
-      roles[role] = `${scale}.${at(8)}`;
-      roles[`${role}-background`] = `${scale}.${at(0)}`;
-      roles[`${role}-border`] = `${scale}.${at(6)}`;
+      defaults[role] = `${scale}.${at(8)}`;
+      defaults[`${role}-background`] = `${scale}.${at(0)}`;
+      defaults[`${role}-border`] = `${scale}.${at(6)}`;
     }
   }
-  for (const [role, ref] of Object.entries(config.roles ?? {})) {
-    if (!NAME.test(role)) problems.push(`Role name "${role}" can only use letters, numbers, and dashes.`);
-    if (ref === null) {
-      delete roles[role];
-      continue;
+  const merged: Record<string, string | RoleSpec> = { ...defaults };
+  const userRoles = config.roles ?? {};
+  if (typeof userRoles !== "object" || Array.isArray(userRoles)) problems.push("roles must be an object.");
+  else
+    for (const [role, value] of Object.entries(userRoles)) {
+      if (!NAME.test(role)) problems.push(`Role name "${role}" can only use letters, numbers, and dashes.`);
+      if (value === null) delete merged[role];
+      else merged[role] = value;
     }
-    roles[role] = ref;
+  // A default on-color goes away with the role it sits on.
+  for (const role of Object.keys(merged)) {
+    const pair = pairOf(role);
+    if (typeof merged[role] !== "object" || role in userRoles || !pair) continue;
+    if (!(pair in merged)) delete merged[role];
+    // A fixed-step pair keeps the older default: the page background.
+    else if (typeof merged[pair] === "string") merged[role] = `surface.${BASE_SURFACE}`;
   }
+  const scaleNames = new Set(scales.map((s) => s.name));
   const stepNames = new Set(steps.map((s) => s.name));
   const surfaceNames = new Set([BASE_SURFACE, ...surfaces.map((s) => s.name)]);
   const available = `Your scales are: ${scales.map((s) => s.name).join(", ") || "none"}.`;
-  for (const [role, ref] of Object.entries(roles)) {
-    const [group, item, extra] = typeof ref === "string" ? ref.split(".") : [];
-    const valid =
-      extra === undefined &&
-      (group === "surface" ? surfaceNames.has(item) : scales.some((s) => s.name === group) && stepNames.has(item));
-    if (!valid)
-      problems.push(`roles.${role} "${ref}" must point to a color step like "${backgroundScale ?? "gray"}.${steps.at(-3)?.name ?? "1400"}" or a surface like "surface.${BASE_SURFACE}". ${available}`);
+  const defaultScale = (kind: RoleKind) => (kind === "accent" ? (accentScale ?? neutral) : kind === "feedback" ? undefined : neutral);
+  const normalized: Record<string, NormalizedRole> = {};
+  const specs: Record<string, RoleSpec | undefined> = {};
+  const referencedSteps = new Set<string>();
+  for (const [role, value] of Object.entries(merged)) {
+    if (typeof value === "string") {
+      const [group, item, extra] = value.split(".");
+      const valid =
+        extra === undefined &&
+        (group === "surface" ? surfaceNames.has(item) : scaleNames.has(group) && stepNames.has(item));
+      if (!valid)
+        problems.push(`roles.${role} "${value}" must point to a color step like "${neutral ?? "gray"}.${steps.at(-3)?.name ?? "1400"}" or a surface like "surface.${BASE_SURFACE}". ${available}`);
+      else if (group !== "surface") referencedSteps.add(item);
+      normalized[role] = { name: role, kind: inferKind(role), ref: value, floor: 0 };
+    } else {
+      const result = normalizeRoleSpec(problems, role, value, formula, scaleNames, defaultScale);
+      if (result) {
+        normalized[role] = result;
+        specs[role] = value;
+      }
+    }
   }
+  const roles = expandStates(normalized, specs);
+  for (const role of Object.values(roles))
+    if (role.pair && (!roles[role.pair] || roles[role.pair].kind === "on" || roles[role.pair].ref))
+      problems.push(`roles.${role.name} sits on "${role.pair}", which must be a generated role (not a reference or another on-color).`);
+  if (config.spacing !== undefined && config.spacing !== false && (!isNumber(config.spacing) || config.spacing < 0.01 || config.spacing > 0.2))
+    problems.push("spacing must be false or a lightness step from 0.01 to 0.2.");
 
   // Names must not collide in the output.
   const used = new Map<string, string>();
@@ -433,5 +489,8 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
     roles,
     modes,
     defaultMode,
+    roleFirst,
+    outputSteps: roleFirst ? steps.map((s) => s.name).filter((name) => referencedSteps.has(name)) : steps.map((s) => s.name),
+    spacing: config.spacing,
   };
 }

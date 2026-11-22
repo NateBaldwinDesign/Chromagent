@@ -23,6 +23,8 @@ describe("settings schema", () => {
     [{ colors: { blue: "#00f" }, modes: { dark: { backgroundLightness: 2 } } }],
     [{ colors: { blue: "#00f" }, modes: { dark: { media: true } } }],
     [{ colors: { blue: "#00f" }, colour: "typo" }],
+    [{ colors: { blue: "#00f" }, roles: { text: { tier: "loud" } } }],
+    [{ colors: { blue: "#00f" }, spacing: 1 }],
   ])("rejects bad settings: %j", (config) => {
     expect(validate(config)).toBe(false);
   });

@@ -1,36 +1,26 @@
-import Color from "colorjs.io";
 import { outputColorCss, type LinearRgb } from "../math/colorMath";
 import type { ColorOutputSettings, ColorFormat, ColorGamut } from "../math/outputSettings";
 import { measureOutputContrast, parsedOutputLinear } from "../math/outputContrast";
 import type { ContrastFormula } from "../math/contrast";
 import { MAX_APCA } from "../math/apca";
-import { applyContrastMultiplier, applyPolarityCompensation } from "../modes/polarity";
+import {
+  applyContrastMultiplier,
+  applyPolarityCompensation,
+  effectiveContrast,
+  multiplyContrast,
+  polarityContext,
+} from "../modes/polarity";
 import { buildScaleData } from "../scales/scaleGeneration";
 import { generateColors } from "../scales/generation";
 import { apcaPrefersDark, generateApcaColor } from "../scales/apcaGeneration";
 import { resolvedBackgroundLinear, surfaceLinear } from "./surfaceGeneration";
 import { BASE_SURFACE, normalizeConfig, type NormalizedConfig, type NormalizedMode, type ThemeConfig } from "./config";
 import type { ColorScale, ColorSystemDocument, Surface } from "../engineTypes";
+import { colorValue, describeTarget, round, SAFETY, type ColorValue, type RoleValue } from "./values";
+import { generateRoles, type RoleAdjustment } from "./roleGeneration";
 
-export interface ColorValue {
-  /** The color in the requested output gamut and format. Use this value. */
-  css: string;
-  /** sRGB hex fallback (gamut-mapped). For wide gamuts, its contrast can differ slightly from `css`. */
-  hex: string;
-  /** OKLCH coordinates: lightness 0–1, chroma (0–0.4), hue in degrees. */
-  oklch: [number, number, number];
-  /** Measured contrast of `css` against the base background (surfaces: against their reference surface). */
-  contrast: number;
-  /** The contrast target after the mode's settings were applied. */
-  target: number;
-  /** Present when the target could not be reached; the closest possible color was used instead. */
-  capped?: true;
-}
-
-export interface RoleValue extends ColorValue {
-  /** What the role points to, such as "gray.1400" or "surface.background". */
-  ref: string;
-}
+export type { ColorValue, RoleValue } from "./values";
+export type { RoleAdjustment } from "./roleGeneration";
 
 export interface ThemeMode {
   name: string;
@@ -40,6 +30,8 @@ export interface ThemeMode {
   scales: Record<string, Record<string, ColorValue>>;
   surfaces: Record<string, ColorValue>;
   roles: Record<string, RoleValue>;
+  /** Lightness step (OKLCH L) used to space roles and states evenly. */
+  spacing?: number;
 }
 
 export interface Theme {
@@ -47,41 +39,13 @@ export interface Theme {
   gamut: ColorGamut;
   format: ColorFormat;
   defaultMode: string;
-  /** Step names in order, shared by every scale. */
+  /** Step names in order, shared by every scale. Role-first themes list only the steps that roles reference. */
   steps: string[];
   modes: Record<string, ThemeMode>;
+  /** Role targets that even spacing (or the accent's lightness search) moved, per mode. */
+  adjustments: (RoleAdjustment & { mode: string })[];
   /** Plain-language notes about targets that could not be met. Empty when everything passed. */
   warnings: string[];
-}
-
-const SAFETY = 1.0002;
-const round = (value: number, places: number) => Number(value.toFixed(places));
-// Report contrast rounded down, so a displayed value never overstates what was measured.
-const floor4 = (value: number) => Math.floor(value * 10000 + 1e-7) / 10000;
-
-function hexOf(css: string) {
-  const srgb = new Color(css).toGamut({ space: "srgb", method: "css" }).to("srgb");
-  return `#${srgb.coords
-    .map((c) => Math.round(Math.min(1, Math.max(0, Number(c) || 0)) * 255).toString(16).padStart(2, "0"))
-    .join("")}`;
-}
-
-function oklchOf(css: string): [number, number, number] {
-  const [l, c, h] = new Color(css).to("oklch").coords.map(Number);
-  const chroma = Number.isFinite(c) ? c : 0;
-  return [round(l, 4), round(chroma, 4), chroma < 1e-4 || !Number.isFinite(h) ? 0 : round(h, 2)];
-}
-
-function colorValue(css: string, contrast: number, target: number): ColorValue {
-  const capped = contrast + 1e-6 < target;
-  return {
-    css,
-    hex: hexOf(css),
-    oklch: oklchOf(css),
-    contrast: floor4(contrast),
-    target: round(target, 4),
-    ...(capped && { capped: true as const }),
-  };
 }
 
 function engineDocument(n: NormalizedConfig, mode: NormalizedMode, output: ColorOutputSettings, scales: ColorScale[]) {
@@ -119,11 +83,12 @@ function engineDocument(n: NormalizedConfig, mode: NormalizedMode, output: Color
     },
   };
   // Polarity compensation first, then the contrast multiplier (as in Spectrum Studio).
-  return applyContrastMultiplier(applyPolarityCompensation(document));
-}
-
-function describeTarget(formula: ContrastFormula, value: number) {
-  return formula === "apca" ? `Lc ${round(value, 1)}` : `${round(value, 2)}:1`;
+  const context = polarityContext(document);
+  const adjust =
+    n.formula === "apca"
+      ? (value: number) => Math.min(MAX_APCA, value * mode.contrastMultiplier)
+      : (value: number) => multiplyContrast(effectiveContrast({ value }, context), mode.contrastMultiplier);
+  return { document: applyContrastMultiplier(applyPolarityCompensation(document)), adjust };
 }
 
 /**
@@ -141,10 +106,16 @@ export function generateTheme(config: ThemeConfig): Theme {
     interpolation: s.interpolation,
   }));
   const warnings: string[] = [];
+  const adjustments: Theme["adjustments"] = [];
   const modes: Record<string, ThemeMode> = {};
+  const outputSteps = new Set(n.outputSteps);
+  const generatedRoles = Object.values(n.roles).filter((role) => !role.ref);
+  const keyLightness = (name: string) => n.scales.find((s) => s.name === name)?.stops[0]?.lightness ?? 0.5;
+  const scaleData = (name: string) => buildScaleData(scales.find((s) => s.id === name)!, output);
+  let darkest: { css: string; linear: LinearRgb } | undefined;
 
   for (const mode of n.modes) {
-    const document = engineDocument(n, mode, output, scales);
+    const { document, adjust } = engineDocument(n, mode, output, scales);
     const backgroundCss = outputColorCss(resolvedBackgroundLinear(document), output);
     const background: LinearRgb = parsedOutputLinear(backgroundCss, gamut);
     const apcaDark = n.formula === "apca" ? apcaPrefersDark(background, gamut) : false;
@@ -156,6 +127,7 @@ export function generateTheme(config: ThemeConfig): Theme {
       const data = buildScaleData(scale, output);
       const values: Record<string, ColorValue> = {};
       n.steps.forEach((step, index) => {
+        if (!outputSteps.has(step.name)) return;
         let value: ColorValue;
         if (n.formula === "apca") {
           const target = Math.min(MAX_APCA, step.contrast * mode.contrastMultiplier);
@@ -174,7 +146,7 @@ export function generateTheme(config: ThemeConfig): Theme {
           missed.push(`${scale.name}.${step.name} (wanted ${describeTarget(n.formula, value.target)}, got ${describeTarget(n.formula, value.contrast)})`);
         values[step.name] = value;
       });
-      scaleValues[scale.name] = values;
+      if (Object.keys(values).length > 0) scaleValues[scale.name] = values;
     }
 
     const surfaceValues: ThemeMode["surfaces"] = {};
@@ -193,11 +165,39 @@ export function generateTheme(config: ThemeConfig): Theme {
       parentCss = css;
     }
 
+    let generated: ReturnType<typeof generateRoles> | undefined;
+    if (generatedRoles.length > 0) {
+      if (!darkest) {
+        const g = generateColors(scaleData(n.backgroundScale), [1, 1, 1], 21, document.settings).opaque;
+        darkest = { css: g.css, linear: g.linear };
+      }
+      generated = generateRoles(generatedRoles, {
+        formula: n.formula,
+        output,
+        gamut,
+        settings: document.settings,
+        background,
+        backgroundCss,
+        apcaDark,
+        scaleData,
+        keyLightness,
+        adjust,
+        darkest,
+        spacing: n.spacing,
+      });
+      for (const item of generated.missed)
+        missed.push(`${item.role} (needs at least ${describeTarget(n.formula, item.target)}, got ${describeTarget(n.formula, item.contrast)})`);
+      for (const item of generated.adjustments) adjustments.push({ mode: mode.name, ...item });
+    }
     const roles: ThemeMode["roles"] = {};
-    for (const [role, ref] of Object.entries(n.roles)) {
-      const [group, item] = ref.split(".");
+    for (const [name, role] of Object.entries(n.roles)) {
+      if (!role.ref) {
+        roles[name] = generated!.values[name];
+        continue;
+      }
+      const [group, item] = role.ref.split(".");
       const source = group === "surface" ? surfaceValues[item] : scaleValues[group][item];
-      roles[role] = { ...source, ref };
+      roles[name] = { ...source, ref: role.ref };
     }
 
     if (missed.length > 0) {
@@ -226,6 +226,7 @@ export function generateTheme(config: ThemeConfig): Theme {
       scales: scaleValues,
       surfaces: surfaceValues,
       roles,
+      ...(generated && { spacing: generated.step }),
     };
   }
 
@@ -234,8 +235,9 @@ export function generateTheme(config: ThemeConfig): Theme {
     gamut,
     format: n.format,
     defaultMode: n.defaultMode,
-    steps: n.steps.map((s) => s.name),
+    steps: n.outputSteps,
     modes,
+    adjustments,
     warnings,
   };
 }

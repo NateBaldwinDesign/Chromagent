@@ -74,6 +74,10 @@ async function generate(args: string[], io: CliIO) {
   }
   const theme = generateTheme(config);
   for (const warning of theme.warnings) io.stderr(`Warning: ${warning}\n`);
+  const moved = new Map<string, string[]>();
+  for (const a of theme.adjustments) moved.set(a.role, [...(moved.get(a.role) ?? []), `${a.mode} ${a.requested}→${a.used}`]);
+  if (moved.size > 0)
+    io.stderr(`Note: to keep contrast steps even, these targets moved: ${[...moved].map(([role, list]) => `${role} (${list.join(", ")})`).join("; ")}.\n`);
 
   const outPath = values.out ? resolve(io.cwd, values.out) : undefined;
   if (format === "dtcg") {

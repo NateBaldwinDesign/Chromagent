@@ -25,7 +25,8 @@ describe("generate", () => {
     const t = io();
     expect(await run(["generate", "theme.json"], t.io)).toBe(0);
     expect(t.out()).toContain(":root, [data-theme=\"light\"]");
-    expect(t.out()).toContain("--color-blue-900:");
+    expect(t.out()).toContain("--color-accent:");
+    expect(t.out()).not.toContain("--color-blue-900:");
     expect(t.out()).toContain("[data-theme=\"dark\"]");
   });
 
@@ -48,7 +49,7 @@ describe("generate", () => {
     expect(await run(["generate", "theme.json", "--format", "dtcg", "--out", "tokens"], t.io)).toBe(0);
     expect((await readdir(join(dir, "tokens"))).sort()).toEqual(["dark.tokens.json", "light.tokens.json"]);
     const light = JSON.parse(await readFile(join(dir, "tokens", "light.tokens.json"), "utf8"));
-    expect(light.color.text.$value).toBe("{color.gray.1400}");
+    expect(light.color.text.$value.colorSpace).toBe("oklch");
     expect(t.err()).toContain("Wrote 2 token files");
   });
 

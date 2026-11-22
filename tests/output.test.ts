@@ -65,7 +65,7 @@ describe("toDtcg", () => {
   });
 
   it("uses the gamut's color space for rgb output", () => {
-    const p3 = generateTheme({ colors: { brand: "#FF5A00" }, status: false, output: { gamut: "display-p3", format: "rgb" } });
+    const p3 = generateTheme({ colors: { brand: "#FF5A00" }, steps: true, status: false, output: { gamut: "display-p3", format: "rgb" } });
     const token = (toDtcg(p3) as any).color.brand["900"];
     expect(token.$value.colorSpace).toBe("display-p3");
     for (const c of token.$value.components) expect(c).toBeGreaterThanOrEqual(0);
