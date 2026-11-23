@@ -1,4 +1,4 @@
-# chromagent
+# chromagentic
 
 Accessible, perception-based UI color for AI coding agents.
 
