@@ -23,9 +23,9 @@ const pct = (v: number | null | undefined) => (v == null ? "–" : `${Math.round
 const passes = (p: SwatchPair) => p.ratio >= p.target - 0.005;
 const short = (role: string) => role.replace(/^--(color-)?/, "").slice(0, 18);
 
-/** The run whose overall result is the median for this scenario and condition, so the gallery shows a typical run. */
+/** The run whose core score is the median for this scenario and condition, so the gallery shows a typical run. */
 export function pickRun(results: RunResult[], scenario: string, condition: Condition): RunResult | undefined {
-  const runs = results.filter((r) => r.scenario === scenario && r.condition === condition && r.swatches).sort((a, b) => (a.metrics.result ?? 0) - (b.metrics.result ?? 0));
+  const runs = results.filter((r) => r.scenario === scenario && r.condition === condition && r.swatches).sort((a, b) => (a.metrics.core ?? 0) - (b.metrics.core ?? 0));
   return runs[Math.floor((runs.length - 1) / 2)];
 }
 
@@ -83,7 +83,7 @@ export function originalSwatches(scenario: Scenario): Record<string, SwatchPair[
   return swatches(projectModes(readTextFiles(dir), loadFixture(scenario.fixture).build));
 }
 
-const SCORE_ROWS = ["result", "contrast-light", "contrast-dark", "contrast-high-contrast", "contrast-low-contrast", "fit", "mood", "build", "new-mode", "role-order", "balance", "hue-kept", "original-kept", "switch", "no-full-scale", "text-tiers", "cvd", "harmony", "personal", "switch-wired", "asked"];
+const SCORE_ROWS = ["core", "adherence", "contrast-light", "contrast-dark", "contrast-high-contrast", "contrast-low-contrast", "gamut", "format", "mood", "build", "new-mode", "role-order", "balance", "hue-kept", "original-kept", "switch", "no-full-scale", "text-tiers", "cvd", "harmony", "personal", "switch-wired", "focus", "look-kept", "asked", "accurate", "explains"];
 
 function scoreTable(summary: Summary, scenario: string, agent: string): string {
   const cells = summary.byScenario[scenario]?.[agent];
@@ -107,7 +107,7 @@ export function buildGallery(report: { summary: Summary; results: RunResult[] },
 
   const overview = used.map((s) => {
     const c = runs(s.id)!;
-    const [a, b] = [c.baseline.metrics.result?.mean ?? 0, c.skill.metrics.result?.mean ?? 0];
+    const [a, b] = [c.baseline.metrics.core?.mean ?? 0, c.skill.metrics.core?.mean ?? 0];
     return `| [${s.id}](#${s.id}) | ${pct(a)} | ${pct(b)} | ${b - a >= 0 ? "+" : ""}${Math.round((b - a) * 100)} pts |`;
   });
   const lines = [

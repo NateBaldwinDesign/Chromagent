@@ -1,0 +1,27 @@
+{
+  "scenario": "fix-contrast",
+  "condition": "baseline",
+  "note": "A poor fix: the gray still fails and the brand turned green. Builds and in-gamut colors still count, so the core score only drops to about 70%.",
+  "changed": {
+    "styles.css": ":root {\n  --page: #ffffff;\n  --card: #f4f4f4;\n  --text: #222222;\n  --muted: #777777;\n  --line: #dddddd;\n  --brand: #2e7d32;\n}\n\nbody { margin: 0; font-family: system-ui, sans-serif; background: var(--page); color: var(--text); }\n.site-header { display: flex; justify-content: space-between; padding: 1rem 2rem; border-bottom: 1px solid var(--line); }\n.site-header a { color: var(--brand); }\n.card { margin: 2rem; padding: 1.5rem; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }\n.card p { color: var(--muted); }\n.button { background: var(--brand); color: #ffffff; border: 0; padding: 0.5rem 1rem; border-radius: 6px; }\n.error { color: #e04040; }\n"
+  },
+  "transcript": {
+    "commands": [],
+    "toolArgs": [],
+    "finalMessage": "I changed the brand color."
+  },
+  "expect": {
+    "core": [
+      0.6,
+      0.8
+    ],
+    "look-kept": [
+      0,
+      0
+    ],
+    "contrast": [
+      0.8,
+      0.9
+    ]
+  }
+}

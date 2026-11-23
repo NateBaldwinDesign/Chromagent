@@ -1,4 +1,10 @@
-# chromagentic
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/logo-light.png">
+    <img alt="Chromagentic" src="docs/logo-light.png" width="480">
+  </picture>
+</h1>
 
 Accessible, perception-based UI color for AI coding agents.
 
@@ -20,25 +26,11 @@ More examples, including dark-to-light, button states, and mood prompts like "ca
 
 ## Measured improvement
 
-We ran GitHub Copilot CLI on 13 typical requests across sample projects (plain CSS, Tailwind, design tokens, SwiftUI, Android Compose, and two new apps). Each request ran 3 times with the skill and 3 times without. The score combines contrast in every mode, the right color format and gamut for the platform, a passing build, and, where relevant, mood match, how well a new mode matches the original, and the checks for semantic roles, color-blind-safe feedback colors, personal colors, and all six schemes.
+The evals start a real agent (GitHub Copilot CLI or Claude Code) on 17 typical requests across sample projects (plain CSS, Tailwind, design tokens, SwiftUI, Android Compose, and new apps), with and without the skill, and grade the finished project with code that's separate from the engine.
 
-| Request | Without skill | With skill | Difference |
-|---|---|---|---|
-| Create a color system | 67% | 100% | +33 |
-| Add dark mode | 64% | 97% | +33 |
-| Add a high-contrast mode | 67% | 100% | +33 |
-| Make my brand color accessible | 67% | 100% | +33 |
-| Build a button with all its states | 47% | 100% | +53 |
-| Bright, vivid website | 60% | 88% | +28 |
-| Calm, earthy feel | 67% | 100% | +33 |
-| Light mode → add dark mode | 85% | 96% | +11 |
-| Dark mode → add light mode | 80% | 95% | +15 |
-| Pick the colors for a new app (roles, not a full scale) | 80% | 100% | +20 |
-| Sign-up form with error, success, warning, and info colors | 76% | 100% | +24 |
-| Let people choose their own lightness and contrast | 69% | 100% | +31 |
-| Set up color themes for a new app (six schemes) | 50% | 80% | +30 |
+The headline is a **core score**: outcomes any good answer should reach, such as contrast in every needed mode as an sRGB screen shows it, colors a screen can show, a working build, and the task's own goals (color-blind-safe feedback, visible focus rings, a new mode that keeps the original's look). The skill's own style choices, such as OKLCH syntax, are reported apart. Each difference comes with a 95% interval, so you can tell a real gain from chance.
 
-With the skill, new modes kept the original's contrast order and perceived contrast, and the original mode stayed the same. Feedback colors stayed clearly different in every color-blindness simulation. The six-schemes request loses points because the agent, running unattended, didn't ask whether the user wants personal colors. Details and method: [evals/README.md](evals/README.md).
+**New numbers are coming.** The 0.3.0 table scored the skill's preferred color format as part of the result, so a correct answer in hex lost points. That overstated the gap, and it's been taken down until the evals are run again with the new method. Method and how to run them: [evals/README.md](evals/README.md).
 
 ## Install
 
@@ -46,15 +38,20 @@ With the skill, new modes kept the original's contrast order and perceived contr
 npx skills add NateBaldwinDesign/Chromagentic
 ```
 
-Other ways to install the same skill:
+This works for most agents (GitHub Copilot, Claude Code, Cursor, Codex, Gemini, and others). Or use your agent's own installer:
 
-| Tool | Command |
-|---|---|
-| GitHub CLI | `gh skill install NateBaldwinDesign/Chromagentic chromagentic` |
-| Claude Code | `/plugin marketplace add NateBaldwinDesign/Chromagentic`, then `/plugin install chromagentic@chromagentic` |
-| npm | `npm install --save-dev chromagentic`, then `npx skills experimental_sync -y` |
+| Tool | Install | Update | Remove |
+|---|---|---|---|
+| Skills CLI (any agent) | `npx skills add NateBaldwinDesign/Chromagentic` | `npx skills update chromagentic` | `npx skills remove chromagentic` |
+| GitHub CLI | `gh skill install NateBaldwinDesign/Chromagentic chromagentic` | `gh skill update chromagentic` | Delete the `chromagentic` skill folder |
+| GitHub Copilot CLI | `copilot plugin install NateBaldwinDesign/Chromagentic` | `copilot plugin update chromagentic` | `copilot plugin uninstall chromagentic` |
+| Claude Code | `/plugin marketplace add NateBaldwinDesign/Chromagentic`, then `/plugin install chromagentic@chromagentic` | `/plugin marketplace update chromagentic` | `/plugin uninstall chromagentic` |
 
-The skill includes its own copy of the engine (`scripts/chromagentic.mjs`), so it works offline with just Node.js 20 or newer.
+To stay on one release, pin it: `gh skill install NateBaldwinDesign/Chromagentic chromagentic@v0.3.0`.
+
+If your project already lists `chromagentic` as an npm dev dependency, `npx skills experimental_sync -y` links the skill from `node_modules` (experimental).
+
+The skill includes its own copy of the engine (`scripts/chromagentic.mjs`), so it works offline with just Node.js 22 or newer.
 
 After that, just ask your agent for color work, for example "Create a color system for this app", "Add dark mode", or "Give my app a calm, earthy feel".
 
@@ -77,7 +74,7 @@ Write a settings file, for example `chromagentic.theme.json`:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagentic/main/skills/chromagentic/assets/theme.schema.json",
+  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagentic/v0.3.0/skills/chromagentic/assets/theme.schema.json",
   "colors": { "brand": "#0265dc" },
   "modes": {
     "light": { "backgroundLightness": 1 },
@@ -96,13 +93,15 @@ Useful options:
 
 - `--format css|tailwind|dtcg|json`: CSS custom properties (the default), a Tailwind v4 `@theme`, design tokens (DTCG), or all the data.
 - `--platform ios|android|web|email|…`: picks the right gamut and format for the platform (see below).
-- `--strict`: fail instead of warning when a contrast target can't be reached.
+- `--strict`: fail (exit code 3) when there are warnings, such as a contrast target that can't be reached. Notes never fail.
+- `--json`: print one JSON object with `ok`, `errors`, `warnings` (each with a `code`), `notes`, and `output`.
 
 Other commands:
 
 ```sh
+npx chromagentic validate chromagentic.theme.json # check settings and list warnings, no colors printed
 npx chromagentic suggest "calm and earthy"     # candidate key colors for mood words
-npx chromagentic describe "#c8a03c"            # "rich, golden and warm"
+npx chromagentic describe "#c8a03c"            # "bright, earthy and playful"
 npx chromagentic contrast "#767676" "#ffffff"  # 4.54
 npx chromagentic feedback "#6d28d9"            # error, success, warning, info that suit the brand
 npx chromagentic check-cvd "#d03030" "#3a9a30" # are these distinct for color-blind people?
@@ -141,16 +140,20 @@ const css = toCss(theme);       // CSS custom properties for every mode
 const tokens = toDtcg(theme);   // DTCG design tokens
 
 suggestColors("bright vivid").colors; // candidate key colors
-describeColor("#c8a03c").summary;     // "rich, golden and warm"
+describeColor("#c8a03c").summary;     // "bright, earthy and playful"
 contrast("#767676", "#fff");          // 4.54 (WCAG 2)
 checkCvd({ error: "#d03030", success: "#3a9a30" }).pass; // false: too close for color-blind people
 ```
 
-For personal colors in the browser, `chromagentic/runtime` rebuilds the same roles from a lightness and contrast choice and writes them as CSS variables (about 99 KB, 39 KB gzipped):
+For personal colors in the browser, `chromagentic/runtime` rebuilds the same roles from a lightness and contrast choice and writes them as CSS variables (about 90 KB, 35 KB gzipped):
 
 ```js
-import { personalize } from "chromagentic/runtime";
+import { createPersonalizer, personalize } from "chromagentic/runtime";
 personalize(settings, { backgroundLightness: 0.15, contrast: 1.3 });
+
+// For sliders: check the settings once and reuse recent results.
+const personalizer = createPersonalizer(settings);
+slider.oninput = () => personalizer.apply({ backgroundLightness: Number(slider.value) });
 ```
 
 The words-to-colors data is English and written from a Western point of view. Treat it as a starting point, not a rule.
@@ -171,4 +174,4 @@ npm run eval           # agent evals (uses AI credits; see evals/README.md)
 
 ## License and credits
 
-Apache-2.0. The color engine is adapted from the Spectrum Studio color system (Copyright Adobe, Apache-2.0). Descriptive color features use [color-description](https://github.com/words/color-description) (MIT). See [NOTICE](NOTICE).
+Apache-2.0. The color engine is adapted from the Spectrum Studio color system (Copyright Adobe, Apache-2.0). Color conversion uses [colorjs.io](https://colorjs.io) (MIT). See [NOTICE](NOTICE).

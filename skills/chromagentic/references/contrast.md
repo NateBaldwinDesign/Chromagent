@@ -55,16 +55,16 @@ Source: colorandcontrast.com/relative-luminance/
 
 ## APCA
 
-The Accessible Perceptual Contrast Algorithm (APCA) is a newer contrast method in development for WCAG 3. It models perception more closely than WCAG 2. It accounts for spatial frequency (text size and stroke width), surrounding contrast, and light and dark adaptation.
+The Accessible Perceptual Contrast Algorithm (APCA) is a newer, independent contrast method. It was explored for WCAG 3 but removed from the drafts in 2023; current WCAG 3 drafts say the contrast method is still to be decided, so WCAG 2 is the only contrast test with legal weight. APCA models perception more closely than WCAG 2. It accounts for spatial frequency (text size and stroke width), surrounding contrast, and light and dark adaptation.
 
 APCA reports a lightness contrast value (Lc). Values run from 0 to about 106 for dark text on light backgrounds. Light text on dark backgrounds gives negative values down to about −108. Compare the absolute value against targets.
 
 | Lc (absolute) | Typical use |
 |---|---|
 | 90 | Preferred for body text |
-| 75 | Minimum for body text |
-| 60 | Other content text |
-| 45 | Large text, headlines, and non-text UI (icons, component edges) |
+| 75 | Minimum for body text (the `strong` tier) |
+| 60 | Other content text (the engine's hard minimum for any text) |
+| 45 | Large text, headlines, and non-text UI such as icons and component edges (the engine's minimum for borders, icons, and accents) |
 | 30 | Placeholder text and disabled-like elements |
 | 15 | Non-semantic dividers and decoration |
 

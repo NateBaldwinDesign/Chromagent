@@ -1,5 +1,5 @@
 // Copyright 2026 Adobe. All rights reserved.
-import Color from "colorjs.io";
+import Color from "./color";
 import {
   colorJsSpace,
   isColorOutputSettings,
@@ -8,7 +8,7 @@ import {
 } from "./outputSettings";
 
 export const COLOR_OUTPUT_MAPPING_METHOD = "css";
-export const COLOR_OUTPUT_PRECISION = 2;
+const COLOR_OUTPUT_PRECISION = 2;
 
 function number(value: number) {
   if (!Number.isFinite(value))
@@ -85,7 +85,23 @@ function serializeOklch(
 }
 
 /** In-gamut opaque RGB needs conversion, but no gamut mapping or Color object. */
+const serializedCache = new Map<string, string>();
+
+/** Serializing is the slowest step (gamut searches), and themes ask for the same colors many times. */
 export function serializeLinearOutputColor(
+  linear: readonly [number, number, number],
+  settings: ColorOutputSettings,
+): string {
+  const key = `${linear.join(",")}|${JSON.stringify(settings)}`;
+  const cached = serializedCache.get(key);
+  if (cached !== undefined) return cached;
+  const css = serializeLinearUncached(linear, settings);
+  serializedCache.set(key, css);
+  if (serializedCache.size > 4096) serializedCache.delete(serializedCache.keys().next().value!);
+  return css;
+}
+
+function serializeLinearUncached(
   linear: readonly [number, number, number],
   settings: ColorOutputSettings,
 ): string {
@@ -111,7 +127,7 @@ export function serializeLinearOutputColor(
   );
 }
 
-export function mapOutputColor(
+function mapOutputColor(
   source: Color,
   settings: ColorOutputSettings,
 ): Color {

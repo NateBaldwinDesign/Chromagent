@@ -3,13 +3,13 @@ import type { ColorOutputSettings } from "../math/outputSettings";
 import { measureOutputContrast } from "../math/outputContrast";
 import { apcaContrast, apcaFromLuminance, MAX_APCA } from "../math/apca";
 import type { ContrastFormula } from "../math/contrast";
-import { generateColors, type DynamicGenerationSettings } from "../scales/generation";
+import { generateColors } from "../scales/colorAtContrast";
 import { apcaLuminanceOfLinear, generateApcaColor } from "../scales/apcaGeneration";
-import type { ScaleData } from "../scales/scaleGeneration";
+import type { ScaleData } from "../scales/scaleData";
 import { ROLE_FLOORS, type NormalizedRole } from "./roles";
 import { DEFAULT_STEP, lightnessScale, snapToSteps } from "./spacing";
 import { colorValue, oklchOf, round, SAFETY, type RoleValue } from "./values";
-import { separateFeedback, type CvdReport, type Oklch } from "./feedback";
+import { separateFeedback, type CvdReport, type Oklch } from "./feedbackHues";
 
 export interface Swatch {
   css: string;
@@ -21,7 +21,6 @@ export interface RoleContext {
   formula: ContrastFormula;
   output: ColorOutputSettings;
   gamut: RgbGamut;
-  settings: DynamicGenerationSettings;
   background: LinearRgb;
   backgroundCss: string;
   apcaDark: boolean;
@@ -53,8 +52,8 @@ export interface RoleResult {
   feedback?: CvdReport & { changed: string[] };
 }
 
-/** Generates every spec-based role for one mode: targets, accent lightness, even spacing, states, and on-colors. */
-export function generateRoles(roles: NormalizedRole[], ctx: RoleContext): RoleResult {
+/** Shared measuring and generating helpers for one mode's roles. */
+function roleTools(roles: NormalizedRole[], ctx: RoleContext) {
   const { formula, gamut } = ctx;
   const max = formula === "apca" ? MAX_APCA : 21;
   const dark = formula === "apca" ? ctx.apcaDark : luminance(ctx.background, gamut) > 0.1791;
@@ -79,7 +78,7 @@ export function generateRoles(roles: NormalizedRole[], ctx: RoleContext): RoleRe
         const g = generateApcaColor(data, ctx.background, ctx.backgroundCss, aim, ctx.output, ctx.apcaDark);
         swatch = { css: g.css, linear: g.linear, contrast: g.measuredContrast };
       } else {
-        const g = generateColors(data, ctx.background, aim, ctx.settings).opaque;
+        const g = generateColors(data, ctx.background, aim).opaque;
         swatch = { css: g.css, linear: g.linear, contrast: g.measuredContrast };
       }
       cache.set(key, swatch);
@@ -111,6 +110,72 @@ export function generateRoles(roles: NormalizedRole[], ctx: RoleContext): RoleRe
     return { ...best, passes: passes(best.min) };
   };
 
+  return { max, scale, floorOf, statesOf, onFloor, gen, fast, measure, pickOn };
+}
+
+type RoleTools = ReturnType<typeof roleTools>;
+
+interface Painted {
+  values: Record<string, RoleValue>;
+  swatches: Record<string, Swatch>;
+  missed: RoleResult["missed"];
+}
+
+/** Feedback colors: keep every pair distinct for typical vision and color vision deficiencies. */
+function separateFeedbackRoles(generated: NormalizedRole[], ctx: RoleContext, tools: RoleTools, step: number, painted: Painted): RoleResult["feedback"] {
+  const { gamut } = ctx;
+  const { floorOf, fast, pickOn, onFloor, measure } = tools;
+  const { values, swatches, missed } = painted;
+  const feedbackRoles = generated.filter((r) => r.kind === "feedback" && !r.base && swatches[r.name]);
+  if (feedbackRoles.length < 2) return undefined;
+  const realize = ([l, c, h]: Oklch) => gamutClamp(l, c, h, gamut);
+  const result = separateFeedback(
+    Object.fromEntries(feedbackRoles.map((r) => [r.name, [...linearToOklch(convertLinearGamut(swatches[r.name].linear, gamut, "srgb"))] as Oklch])),
+    {
+      realize: (value) => convertLinearGamut(realize(value), gamut, "srgb"),
+      accepts: (name, value) => {
+        const role = feedbackRoles.find((r) => r.name === name)!;
+        const linear = realize(value);
+        if (fast(linear, ctx.background) < floorOf(role) * SAFETY) return false;
+        const hasOn = generated.some((r) => r.kind === "on" && r.pair === name);
+        return !hasOn || pickOn([{ css: "", linear, contrast: 0 }], onFloor(name)).passes;
+      },
+      lightnessStep: step,
+    },
+  );
+  for (const name of result.changed) {
+    const role = feedbackRoles.find((r) => r.name === name)!;
+    const linear = realize(result.colors[name]);
+    const css = outputColorCss(linear, ctx.output);
+    const contrast = measure(css, ctx.backgroundCss);
+    swatches[name] = { css, linear, contrast };
+    const target = contrast >= values[name].target ? values[name].target : floorOf(role);
+    values[name] = { ...values[name], ...colorValue(css, contrast, target) };
+    if (contrast >= target) delete values[name].capped;
+    if (contrast + 1e-6 < floorOf(role)) missed.push({ role: name, target: floorOf(role), contrast });
+  }
+  return { ...result.report, changed: result.changed };
+}
+
+/** Picks each on-color so it reads on its role and every state of that role. */
+function pickOnColors(generated: NormalizedRole[], tools: RoleTools, painted: Painted) {
+  const { floorOf, statesOf, pickOn, measure } = tools;
+  const { values, swatches, missed } = painted;
+  for (const role of generated) {
+    if (role.kind !== "on") continue;
+    const surfaces = [role.pair!, ...statesOf(role.pair!).map((s) => s.name)].filter((name) => swatches[name]);
+    const minimum = floorOf(role);
+    const pick = pickOn(surfaces.map((name) => swatches[name]), minimum);
+    const measured = Math.min(...surfaces.map((name) => measure(pick.option.css, swatches[name].css)));
+    values[role.name] = { ...colorValue(pick.option.css, measured, minimum), minimum: round(minimum, 4), against: role.pair };
+    if (measured + 1e-6 < minimum) missed.push({ role: role.name, target: minimum, contrast: measured });
+  }
+}
+
+/** Generates every spec-based role for one mode: targets, accent lightness, even spacing, states, and on-colors. */
+export function generateRoles(roles: NormalizedRole[], ctx: RoleContext): RoleResult {
+  const tools = roleTools(roles, ctx);
+  const { max, scale, floorOf, statesOf, onFloor, gen, pickOn } = tools;
   const generated = roles.filter((r) => !r.ref);
   const requested: Record<string, number> = {};
   for (const role of generated) {
@@ -193,46 +258,8 @@ export function generateRoles(roles: NormalizedRole[], ctx: RoleContext): RoleRe
     if (!role.base && Math.abs(target - requested[role.name]) > 0.005 * requested[role.name])
       adjustments.push({ role: role.name, requested: round(requested[role.name], 2), used: round(target, 2) });
   }
-  // Feedback colors: keep every pair distinct for typical vision and color vision deficiencies.
-  const feedbackRoles = generated.filter((r) => r.kind === "feedback" && !r.base && swatches[r.name]);
-  let feedback: RoleResult["feedback"];
-  if (feedbackRoles.length > 1) {
-    const realize = ([l, c, h]: Oklch) => gamutClamp(l, c, h, gamut);
-    const result = separateFeedback(
-      Object.fromEntries(feedbackRoles.map((r) => [r.name, [...linearToOklch(convertLinearGamut(swatches[r.name].linear, gamut, "srgb"))] as Oklch])),
-      {
-        realize: (value) => convertLinearGamut(realize(value), gamut, "srgb"),
-        accepts: (name, value) => {
-          const role = feedbackRoles.find((r) => r.name === name)!;
-          const linear = realize(value);
-          if (fast(linear, ctx.background) < floorOf(role) * SAFETY) return false;
-          const hasOn = generated.some((r) => r.kind === "on" && r.pair === name);
-          return !hasOn || pickOn([{ css: "", linear, contrast: 0 }], onFloor(name)).passes;
-        },
-        lightnessStep: step,
-      },
-    );
-    for (const name of result.changed) {
-      const role = feedbackRoles.find((r) => r.name === name)!;
-      const linear = realize(result.colors[name]);
-      const css = outputColorCss(linear, ctx.output);
-      const contrast = measure(css, ctx.backgroundCss);
-      swatches[name] = { css, linear, contrast };
-      const target = contrast >= values[name].target ? values[name].target : floorOf(role);
-      values[name] = { ...values[name], ...colorValue(css, contrast, target) };
-      if (contrast >= target) delete values[name].capped;
-      if (contrast + 1e-6 < floorOf(role)) missed.push({ role: name, target: floorOf(role), contrast });
-    }
-    feedback = { ...result.report, changed: result.changed };
-  }
-  for (const role of generated) {
-    if (role.kind !== "on") continue;
-    const surfaces = [role.pair!, ...statesOf(role.pair!).map((s) => s.name)].filter((name) => swatches[name]);
-    const minimum = floorOf(role);
-    const pick = pickOn(surfaces.map((name) => swatches[name]), minimum);
-    const measured = Math.min(...surfaces.map((name) => measure(pick.option.css, swatches[name].css)));
-    values[role.name] = { ...colorValue(pick.option.css, measured, minimum), minimum: round(minimum, 4), against: role.pair };
-    if (measured + 1e-6 < minimum) missed.push({ role: role.name, target: minimum, contrast: measured });
-  }
+  const painted = { values, swatches, missed };
+  const feedback = separateFeedbackRoles(generated, ctx, tools, step, painted);
+  pickOnColors(generated, tools, painted);
   return { values, step, adjustments, missed, ...(feedback && { feedback }) };
 }

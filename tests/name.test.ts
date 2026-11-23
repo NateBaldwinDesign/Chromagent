@@ -8,7 +8,9 @@ describe("project name", () => {
       .split("\n")
       .filter((f) => f && existsSync(f) && f !== "CHANGELOG.md" && f !== "tests/name.test.ts");
     const old = /chromagent(?!ic)/i;
-    const leftovers = files.filter((f) => old.test(f) || old.test(readFileSync(f, "utf8")));
+    // The marketplace "renames" map must name the old plugin so existing installs migrate.
+    const text = (f: string) => readFileSync(f, "utf8").replace(/"renames":\s*\{[^}]*\}/, "");
+    const leftovers = files.filter((f) => old.test(f) || old.test(text(f)));
     expect(leftovers).toEqual([]);
   });
 });

@@ -14,6 +14,8 @@ function roleTarget(ref: string, prefix: string) {
 
 /** The CSS custom properties for one mode, in output order. Role references point at their scale or surface variable. */
 export function cssVariables(mode: ThemeMode, prefix = "color"): Record<string, string> {
+  if (typeof prefix !== "string" || !/^[a-z][a-z0-9-]*$/i.test(prefix))
+    throw new Error(`The CSS variable prefix must start with a letter and use only letters, numbers, and dashes (got ${JSON.stringify(prefix)}).`);
   const vars: Record<string, string> = {};
   for (const [scale, steps] of Object.entries(mode.scales))
     for (const [step, value] of Object.entries(steps)) vars[`--${prefix}-${scale}-${step}`] = value.css;

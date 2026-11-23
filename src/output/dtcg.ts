@@ -1,4 +1,4 @@
-import Color from "colorjs.io";
+import Color from "../math/color";
 import type { Theme, ThemeMode, ColorValue } from "../theme/generateTheme";
 
 /** A Design Tokens Community Group (DTCG 2025.10) color token. */

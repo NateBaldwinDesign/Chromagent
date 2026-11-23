@@ -1,12 +1,14 @@
-import { generateTheme, type ColorValue } from "./generateTheme";
+import { generateTheme, type ColorValue, type ThemeIssue } from "./generateTheme";
 import type { ThemeConfig } from "./config";
-import type { CvdReport } from "./feedback";
+import type { CvdReport } from "./feedbackHues";
 import { FEEDBACK_NAMES } from "./roles";
 
 export interface FeedbackColors {
   /** Per mode: error, success, warning, and info colors, plus their color-vision check. */
   modes: Record<string, { colors: Record<string, ColorValue>; check?: CvdReport & { changed: string[] } }>;
   warnings: string[];
+  /** The same warnings with a code, mode, and the colors involved. */
+  issues: ThemeIssue[];
 }
 
 /**
@@ -27,5 +29,5 @@ export function feedbackColors(
     }
     modes[name] = { colors, ...(mode.feedback && { check: mode.feedback }) };
   }
-  return { modes, warnings: theme.warnings };
+  return { modes, warnings: theme.warnings, issues: theme.issues };
 }

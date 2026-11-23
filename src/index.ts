@@ -1,5 +1,5 @@
 export { generateTheme } from "./theme/generateTheme";
-export type { Theme, ThemeMode, ColorValue, RoleValue, RoleAdjustment } from "./theme/generateTheme";
+export type { Theme, ThemeMode, ThemeIssue, ThemeIssueCode, ColorValue, RoleValue, RoleAdjustment } from "./theme/generateTheme";
 export type { RoleSpec, RoleKind, RoleTier, RoleState } from "./theme/roles";
 export {
   normalizeConfig,
@@ -26,8 +26,8 @@ export { platformOutput, PLATFORMS } from "./output/platform";
 export type { Platform, PlatformOutput } from "./output/platform";
 export { feedbackColors } from "./theme/feedbackColors";
 export type { FeedbackColors } from "./theme/feedbackColors";
-export { checkCvd, harmonizeFeedback, FEEDBACK_HUES, MIN_FEEDBACK_DELTA_E } from "./theme/feedback";
-export type { CvdReport, CvdPair } from "./theme/feedback";
+export { checkCvd, harmonizeFeedback, FEEDBACK_HUES, MIN_FEEDBACK_DELTA_E } from "./theme/feedbackHues";
+export type { CvdReport, CvdPair } from "./theme/feedbackHues";
 export { simulateCvd, deltaE2000, VISIONS } from "./math/cvd";
 export type { Vision } from "./math/cvd";
 export { cssVariables } from "./output/css";

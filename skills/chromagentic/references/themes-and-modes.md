@@ -83,7 +83,7 @@ Source: colorandcontrast.com/adaptive-color-theme/, colorandcontrast.com/persona
 
 ## Adaptation, light sensitivity, and glare
 
-**Light and dark adaptation** is a process of the visual system to raise or lower light sensitivity in response to surrounding light. Color appearance shifts during adaptation (Hunt effect, Bezold–Brücke shift, and Purkinje shift). Many devices adjust brightness for ambient light, but settings still help.
+**Light and dark adaptation** is a process of the visual system to raise or lower light sensitivity in response to surrounding light. Color appearance also changes with light level (Hunt effect, Bezold–Brücke shift, and, in very dim light, the Purkinje shift). Many devices adjust brightness for ambient light, but settings still help.
 
 **Dynamic range** is the difference between the lightest and darkest areas in a view. Large changes in it can hurt legibility.
 
@@ -138,16 +138,16 @@ Colors for a theme that people switch to should be a "color table": one row per 
 
 Some people need more contrast than the high-contrast scheme gives, or a softer, darker background than the dark scheme. Personalization lets them choose.
 
-Always ask the user before adding it. If they want it, use the runtime (`<skill-dir>/scripts/chromagentic-runtime.mjs`, or `chromagentic/runtime` from npm). It regenerates the same roles live from two choices: background lightness (0–1) and contrast (0.5–2). It writes the same CSS variables as the static CSS, so components don't change, and the floors still hold. Keep the six static schemes loaded as the fallback for people who don't personalize and for when scripts don't run. Save the choice (for example in `localStorage`) and apply it on load. See `<skill-dir>/assets/personalize-example.html`.
+Always ask the user before adding it. If they want it, use the runtime (`<skill-dir>/scripts/chromagentic-runtime.mjs`, or `chromagentic/runtime` from npm). It regenerates the same roles live from two choices: background lightness (0–1) and contrast (0.5–2). It writes the same CSS variables as the static CSS, so components don't change, and the floors still hold. Keep the six static schemes loaded as the fallback for people who don't personalize and for when scripts don't run. Save the choice (for example in `localStorage`) and apply it on load. For a slider, create one personalizer and apply each change to it (it checks the settings once and remembers recent choices). See `<skill-dir>/assets/personalize-example.html`, and the code in `references/engine.md`, "JavaScript API".
 
-The runtime is about 99 KB (about 39 KB compressed). Load it only on pages with the settings control, or after the page has loaded.
+The runtime is about 90 KB (about 35 KB compressed). Load it only on pages with the settings control, or after the page has loaded.
 
 ## Typical values
 
 | Mode | Background lightness (0–1) | Contrast multiplier |
 |---|---|---|
 | Light | 1 (white), or about 0.97–1 | 1 |
-| Dark | About 0.08–0.2 | 1, with polarity compensation |
+| Dark | About 0.12–0.2 (default 0.15) | 1, with polarity compensation |
 | High or increased contrast | Same as light or dark | About 1.5–2 |
 | Low contrast | Same as light or dark | About 0.7–0.85 |
 

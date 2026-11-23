@@ -74,7 +74,7 @@ export interface Paint {
 
 export interface Pair {
   key: string;
-  kind: "text" | "large-text" | "border" | "control-border" | "icon";
+  kind: "text" | "large-text" | "border" | "control-border" | "icon" | "focus";
   fg: Paint;
   bg: Paint;
   target: number;
@@ -132,7 +132,7 @@ function merge(a: Condition, b: Condition): Condition {
   };
 }
 
-export function applies(cond: Condition, mode: Mode) {
+function applies(cond: Condition, mode: Mode) {
   if (cond.never) return false;
   if (cond.scheme && cond.scheme !== mode.scheme) return false;
   if (cond.contrast && cond.contrast !== mode.contrast) return false;
@@ -143,6 +143,18 @@ const weight = (c: Condition) => Number(Boolean(c.scheme)) + Number(Boolean(c.co
 
 function stripComments(css: string) {
   return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+const FOCUS = /:focus(?:-visible)?(?![\w-])/;
+const FOCUS_ALL = /:focus(?:-visible)?(?![\w-])/g;
+
+/** From a `:focus` rule body, just the outline, renamed so it never counts as an always-on style. */
+function focusOnly(body: string) {
+  return body
+    .split(";")
+    .filter((part) => /^\s*outline(?:-color)?\s*:/i.test(part))
+    .map((part) => part.replace(/^\s*outline(?:-color)?\s*:/i, "focus-outline:"))
+    .join(";");
 }
 
 function parseCss(css: string, site: Site, counter: { n: number }) {
@@ -181,12 +193,15 @@ function parseCss(css: string, site: Site, counter: { n: number }) {
         for (const raw of prelude.split(",")) {
           const { cond: sel, rest } = selectorCondition(raw);
           const all = merge(cond, sel);
-          const path = rest.replace(/>/g, " ").split(" ").filter(Boolean);
+          // Keyboard focus styles: keep only the outline color, as its own property.
+          const focus = FOCUS.test(rest);
+          const path = rest.replace(FOCUS_ALL, "").replace(/>/g, " ").split(" ").filter(Boolean);
           if (path.some((p) => /:(?!root\b)|\[/.test(p))) {
             declarations(body, [], { ...all, never: true });
             continue;
           }
-          declarations(body.replace(/\{[^{}]*\}/g, ""), path.length ? path : [":root"], all);
+          const own = body.replace(/\{[^{}]*\}/g, "");
+          declarations(focus ? focusOnly(own) : own, path.length ? path : [":root"], all);
         }
       }
       i = j;
@@ -290,7 +305,7 @@ function substitute(site: Site, value: string, mode: Mode, depth: number): strin
 }
 
 /** The first color in a value like `1px solid var(--line)`, with the variable it came from. */
-export function paintOf(site: Site, value: string, mode: Mode): Paint | undefined {
+function paintOf(site: Site, value: string, mode: Mode): Paint | undefined {
   const direct = /^var\(\s*(--[\w-]+)/.exec(value.trim());
   const resolved = substitute(site, value, mode, 0);
   if (!resolved) return undefined;
@@ -305,7 +320,7 @@ export function paintOf(site: Site, value: string, mode: Mode): Paint | undefine
   return undefined;
 }
 
-const UTILITY = /^(bg|text|border(?:-[trblxy])?|fill|stroke|outline)-(.+)$/;
+const UTILITY = /^(bg|text|border(?:-[trblxy])?|fill|stroke|outline|ring)-(.+)$/;
 
 /** Tailwind classes as CSS declarations, for one mode. */
 function utilityDecls(site: Site, el: Element, mode: Mode): Map<string, { value: string; weight: number }> {
@@ -314,8 +329,10 @@ function utilityDecls(site: Site, el: Element, mode: Mode): Map<string, { value:
     const parts = cls.split(":");
     const name = parts.pop()!;
     const cond: Condition = {};
+    let focus = false;
     for (const v of parts) {
-      if (v === "dark") cond.scheme = "dark";
+      if (v === "focus" || v === "focus-visible") focus = true;
+      else if (v === "dark") cond.scheme = "dark";
       else if (v === "contrast-more") cond.contrast = "more";
       else if (v === "contrast-less") cond.contrast = "less";
       else cond.never = true;
@@ -327,7 +344,8 @@ function utilityDecls(site: Site, el: Element, mode: Mode): Map<string, { value:
     const arbitrary = shorthand ? `var(${shorthand})` : /^\[(?:color:)?(.+)\]$/.exec(m[2])?.[1]?.replace(/_/g, " ");
     if (!arbitrary && resolveVar(site, `--color-${m[2]}`, mode) === undefined) continue;
     const value = arbitrary ?? `var(--color-${m[2]})`;
-    const prop = m[1] === "bg" ? "background-color" : m[1] === "text" ? "color" : m[1].startsWith("border") ? "border-color" : m[1];
+    if (focus && m[1] !== "outline" && m[1] !== "ring") continue;
+    const prop = focus ? "focus-outline" : m[1] === "bg" ? "background-color" : m[1] === "text" ? "color" : m[1].startsWith("border") ? "border-color" : m[1];
     const w = weight(cond);
     if ((out.get(prop)?.weight ?? -1) <= w) out.set(prop, { value, weight: w });
   }
@@ -374,6 +392,7 @@ interface Computed {
   text?: Paint;
   bg?: Paint;
   border?: Paint;
+  focus?: Paint;
   backdrop: Paint;
   color: Paint;
 }
@@ -381,7 +400,7 @@ interface Computed {
 const CANVAS = { light: new Color("#ffffff"), dark: new Color("#121212") };
 const CANVAS_TEXT = { light: new Color("#000000"), dark: new Color("#ffffff") };
 
-export function computeAll(site: Site, mode: Mode): Map<Element, Computed> {
+function computeAll(site: Site, mode: Mode): Map<Element, Computed> {
   const out = new Map<Element, Computed>();
   // Without a `color-scheme` setting, browsers draw a white page with black text in every mode.
   const declaredScheme = site.rules.filter((r) => applies(r.cond, mode) && r.decls.has("color-scheme")).at(-1)?.decls.get("color-scheme") ?? "";
@@ -399,13 +418,25 @@ export function computeAll(site: Site, mode: Mode): Map<Element, Computed> {
     const border = borderValue && !/^(0|none)\b/.test(borderValue) ? paintOf(site, borderValue, mode) : undefined;
     const backdrop = bg ?? parent?.backdrop ?? canvas;
     const color = text ?? parent?.color ?? canvasText;
-    out.set(el, { text, bg, border, backdrop, color });
+    const focusValue = d.get("focus-outline");
+    const focus = !focusValue || /^(0|none)\b/.test(focusValue) ? undefined : /currentcolor/i.test(focusValue) ? color : paintOf(site, focusValue, mode);
+    out.set(el, { text, bg, border, focus, backdrop, color });
   }
   return out;
 }
 
 const LARGE = new Set(["h1", "h2"]);
 const CONTROLS = new Set(["input", "select", "textarea"]);
+/** Elements that take keyboard focus. */
+export const FOCUSABLE = new Set(["a", "button", "input", "select", "textarea", "summary"]);
+
+/** How a color looks on an sRGB screen: colors outside sRGB are mapped in, as browsers do. */
+const shown = (c: Color) => c.to("srgb").toGamut();
+
+/** WCAG 2 contrast as an sRGB screen shows the pair. */
+export function contrastRatio(p: Pair): number {
+  return Color.contrast(shown(p.fg.color), shown(p.bg.color), "WCAG21");
+}
 
 /** Every text, icon, and border pair on the page in one mode. */
 export function pairs(site: Site, mode: Mode): Pair[] {
@@ -424,6 +455,11 @@ export function pairs(site: Site, mode: Mode): Pair[] {
     if (c.border && !(c.bg && c.border.color.deltaE(c.bg.color, "OK") < 0.01)) {
       const control = CONTROLS.has(el.tag);
       out.push({ key: `${el.key}:border`, kind: control ? "control-border" : "border", fg: c.border, bg: c.backdrop, target: control ? 3 : 1.2 });
+    }
+    // A focus ring is drawn just outside the element, so it has to stand out from what's around it (WCAG 1.4.11).
+    if (c.focus && FOCUSABLE.has(el.tag)) {
+      const around = (el.parent && computed.get(el.parent)?.backdrop) || c.backdrop;
+      out.push({ key: `${el.key}:focus`, kind: "focus", fg: c.focus, bg: around, target: 3 });
     }
   }
   return out;

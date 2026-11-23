@@ -84,11 +84,20 @@
     },
     "roles": {
       "type": "object",
-      "description": "Semantic roles described by intent. Default: text (strongest), text-subtle, border, accent with hover and active states, and text-on-accent. A role can also point to a scale step (\"gray.1400\") or a surface (\"surface.raised\"). Use null to remove a default role.",
+      "description": "Semantic roles described by intent. Default: text (strongest), text-subtle, border, accent with hover and active states, and text-on-accent. A role can also point to a scale step (\"gray.1400\") or a surface (\"surface.raised\"), checked against the minimum for its kind; write { \"ref\": \"gray.200\", \"kind\": \"tint\" } for a decorative step. Use null to remove a default role.",
       "additionalProperties": {
         "oneOf": [
           { "type": "null" },
           { "type": "string" },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ref"],
+            "properties": {
+              "ref": { "type": "string", "description": "A scale step (\"gray.200\") or surface (\"surface.raised\") to use as-is." },
+              "kind": { "enum": ["text", "icon", "border", "accent", "feedback", "tint", "on"], "description": "Sets the minimum contrast the step is checked against. Use \"tint\" for decorative colors." }
+            }
+          },
           {
             "type": "object",
             "additionalProperties": false,
@@ -115,7 +124,7 @@
     "modes": {
       "type": "object",
       "minProperties": 1,
-      "description": "Each mode is built from global settings. Default: light (background lightness 1) and dark (0.08).",
+      "description": "Each mode is built from global settings. Default: light (background lightness 1) and dark (0.15).",
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,

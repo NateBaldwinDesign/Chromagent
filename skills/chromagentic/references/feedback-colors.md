@@ -47,7 +47,7 @@ chromagentic check-cvd error=#d32f2f success=#388e3c warning=#f57c00 info=#1976d
 chromagentic check-cvd error=#d32f2f success=#388e3c --min 11
 ```
 
-`check-cvd` prints each pair's worst difference and exits with an error when any pair is too close. Use it to check existing feedback colors before converting a theme.
+`check-cvd` prints each pair's worst difference and exits with code 3 when any pair is too close. Use it to check existing feedback colors before converting a theme.
 
 In settings:
 

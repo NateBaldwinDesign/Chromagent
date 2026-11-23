@@ -10,28 +10,8 @@ export interface ColorOutputSettings {
   mapOutputsToSrgb: boolean;
 }
 
-export const DEFAULT_COLOR_OUTPUT: Readonly<ColorOutputSettings> = {
-  authoringGamut: "srgb",
-  outputFormat: "rgb",
-  mapOutputsToSrgb: false,
-};
-
-export const GAMUT_LABELS: Record<ColorGamut, string> = {
-  srgb: "sRGB",
-  "display-p3": "Display P3",
-  rec2020: "Rec 2020",
-};
 export function outputGamut(settings: ColorOutputSettings): ColorGamut {
   return settings.mapOutputsToSrgb ? "srgb" : settings.authoringGamut;
-}
-
-export function isFormatAvailable(
-  settings: ColorOutputSettings,
-  format: ColorFormat,
-): boolean {
-  return (
-    outputGamut(settings) === "srgb" || format === "rgb" || format === "oklch"
-  );
 }
 
 export function isColorOutputSettings(

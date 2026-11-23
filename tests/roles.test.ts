@@ -172,3 +172,47 @@ describe("role-first themes", () => {
     expect(n.roles["text-on-accent"].ref).toBe("surface.background");
   });
 });
+
+describe("reference roles", () => {
+  const base = { colors: { brand: "#0066ff" }, steps: true, status: false } as const;
+
+  it("warns when a reference you write is below the minimum for its kind", () => {
+    const t = generateTheme({ ...base, roles: { border: "gray.300" } });
+    expect(t.warnings.join()).toMatch(/border → gray\.300 \(needs at least 3:1 for border/);
+    expect(t.modes.light.roles.border.minimum).toBe(3);
+  });
+
+  it("lets decorative references opt out with a kind", () => {
+    const t = generateTheme({ ...base, roles: { border: { ref: "gray.300", kind: "tint" } } });
+    expect(t.warnings).toEqual([]);
+    expect(t.modes.light.roles.border.ref).toBe("gray.300");
+    expect(problems({ ...base, roles: { border: { ref: "gray.300", kind: "nope" } } })).toMatch(/roles.border.kind must be one of/);
+  });
+
+  it("does not check disabled text, surfaces, or the built-in steps defaults", () => {
+    expect(generateTheme({ ...base, roles: { "text-disabled": "gray.500", panel: "surface.raised" } }).warnings).toEqual([]);
+    expect(generateTheme(base).warnings).toEqual([]);
+  });
+});
+
+describe("hex fallbacks", () => {
+  it("meet every role minimum even when the main colors are wide-gamut", () => {
+    const t = generateTheme({ colors: { brand: "#0066ff" }, status: true, output: { gamut: "display-p3", format: "oklch" } });
+    expect(t.warnings).toEqual([]);
+    for (const mode of Object.values(t.modes))
+      for (const [name, role] of Object.entries(mode.roles)) {
+        if (role.minimum === undefined || role.against) continue;
+        expect(ratio(role.hex, mode.background.hex), `${mode.name} ${name}`).toBeGreaterThanOrEqual(role.minimum - 1e-4);
+      }
+  });
+});
+
+describe("APCA minimums", () => {
+  it("gives borders the same Lc 45 minimum as icons and accents", () => {
+    const t = generateTheme({ colors: { brand: "#0066ff" }, formula: "apca" });
+    for (const mode of Object.values(t.modes)) {
+      expect(mode.roles.border.minimum).toBeGreaterThanOrEqual(45);
+      expect(Math.abs(contrast(mode.roles.border.css, mode.background.css, "apca"))).toBeGreaterThanOrEqual(45 - 1e-3);
+    }
+  });
+});

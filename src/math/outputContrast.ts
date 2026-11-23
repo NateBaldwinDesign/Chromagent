@@ -1,5 +1,5 @@
 // Copyright 2026 Adobe. All rights reserved.
-import Color from "colorjs.io";
+import Color from "./color";
 import {
   contrastRatio,
   luminance,
@@ -11,30 +11,10 @@ import {
 } from "./colorMath";
 import {
   colorJsSpace,
-  GAMUT_LABELS,
   outputGamut,
   type ColorOutputSettings,
 } from "./outputSettings";
 import { serializeLinearOutputColor } from "./outputSerialization";
-
-export interface ColorOutputFailure {
-  requestedContrast: number;
-  achievableContrast: number;
-  gamut: RgbGamut;
-  background: string;
-  source: string;
-  observedColor?: string;
-  tokenId?: string;
-}
-
-export class ColorOutputError extends Error {
-  constructor(public readonly details: ColorOutputFailure) {
-    super(
-      `${details.source} cannot reach ${details.requestedContrast}:1 contrast against ${details.background} in ${GAMUT_LABELS[details.gamut]}. The achievable contrast is ${details.achievableContrast.toFixed(2)}:1. Change the target, background or contrast side before exporting.`,
-    );
-    this.name = "ColorOutputError";
-  }
-}
 
 interface ParsedOutput {
   color: Color;
@@ -80,7 +60,7 @@ export function parsedOutputLinear(css: string, gamut: RgbGamut): LinearRgb {
   return [...entry.linear];
 }
 
-export function renderedOutputLinear(
+function renderedOutputLinear(
   css: string,
   backgroundCss: string,
   gamut: RgbGamut,

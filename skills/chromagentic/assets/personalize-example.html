@@ -14,20 +14,27 @@
     <label>Contrast <input id="contrast" type="range" min="0.5" max="2" step="0.1" /></label>
     <button id="reset">Use my system settings</button>
     <script type="module">
-      import { personalize } from "./chromagentic-runtime.mjs";
+      import { createPersonalizer } from "./chromagentic-runtime.mjs";
       // The same settings used for the static CSS (chromagentic.theme.json).
       const config = { colors: { gray: "#6b7280", brand: "#2563eb" }, background: { color: "gray" } };
+      // Checks the settings once and remembers recent choices, so slider moves stay quick.
+      const personalizer = createPersonalizer(config);
       const KEY = "chromagentic-personal";
-      const saved = JSON.parse(localStorage.getItem(KEY) ?? "null");
+      let saved = null;
+      try {
+        saved = JSON.parse(localStorage.getItem(KEY) ?? "null");
+      } catch {
+        localStorage.removeItem(KEY);
+      }
       const lightness = document.getElementById("lightness");
       const contrast = document.getElementById("contrast");
       lightness.value = saved?.backgroundLightness ?? 1;
       contrast.value = saved?.contrast ?? 1;
-      if (saved) personalize(config, saved);
+      if (saved) personalizer.apply(saved);
       const update = () => {
         const choice = { backgroundLightness: Number(lightness.value), contrast: Number(contrast.value) };
         localStorage.setItem(KEY, JSON.stringify(choice));
-        personalize(config, choice);
+        personalizer.apply(choice);
       };
       lightness.addEventListener("input", update);
       contrast.addEventListener("input", update);

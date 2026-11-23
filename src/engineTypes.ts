@@ -3,7 +3,6 @@
 import type { ColorOutputSettings } from "./math/outputSettings";
 import type { ColorScaleInterpolation } from "./scales/scaleInterpolation";
 
-export type ContrastSide = "auto" | "light" | "dark";
 export type ContrastReference = "light" | "dark";
 
 /** A key color. Chroma is a percent where 100 = OKLCH chroma 0.4. */
@@ -39,9 +38,6 @@ export interface Surface {
 }
 
 export interface EngineSettings {
-  side: ContrastSide;
-  backgroundBlend: number;
-  colorSourceCurveOffset: number;
   colorOutput: ColorOutputSettings;
   contrastReference?: ContrastReference;
   polarityCompensation?: number;

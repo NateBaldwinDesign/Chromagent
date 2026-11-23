@@ -1,0 +1,26 @@
+# Trigger suite: `npm run eval -- --triggers`. Each prompt runs in the css fixture with the skill
+# installed; the report gives precision (it loaded only when it should) and recall (it loaded when it should).
+fixture: css
+prompts:
+  # Should load the skill
+  - { expect: true, prompt: "Add a dark mode to this page." }
+  - { expect: true, prompt: "Our gray text is hard to read. Can you fix the contrast?" }
+  - { expect: true, prompt: "Create a color palette for this app based on our brand blue." }
+  - { expect: true, prompt: "Make the colors feel calmer and more earthy." }
+  - { expect: true, prompt: "Add hover and pressed colors for the button." }
+  - { expect: true, prompt: "Set up color tokens for light and dark themes." }
+  - { expect: true, prompt: "Does this page pass WCAG AA for color contrast?" }
+  - { expect: true, prompt: "Add a high contrast theme for people with low vision." }
+  - { expect: true, prompt: "Pick error, warning, and success colors that work for color-blind users." }
+  - { expect: true, prompt: "Let users choose their own accent color." }
+  # Should not load the skill
+  - { expect: false, prompt: "Pick colors for the bars in a sales chart." }
+  - { expect: false, prompt: "Convert our logo colors to CMYK for the print shop." }
+  - { expect: false, prompt: "Remove the red-eye from this photo." }
+  - { expect: false, prompt: "Add a sign-up form with an email field to this page." }
+  - { expect: false, prompt: "Make the header sticky when scrolling." }
+  - { expect: false, prompt: "Change the font to Inter and tighten the line height." }
+  - { expect: false, prompt: "Write a unit test for a function that adds two numbers." }
+  - { expect: false, prompt: "Add alt text to the images on this page." }
+  - { expect: false, prompt: "Explain what the CSS :has() selector does." }
+  - { expect: false, prompt: "Rename the .card class to .panel everywhere." }

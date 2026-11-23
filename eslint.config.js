@@ -11,4 +11,5 @@ export default tseslint.config(
     },
   },
   { files: ["tests/**"], rules: { "@typescript-eslint/no-explicit-any": "off" } },
+  { files: ["scripts/*.mjs"], languageOptions: { globals: { console: "readonly", process: "readonly" } } },
 );

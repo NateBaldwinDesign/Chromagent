@@ -1,0 +1,6 @@
+id: fix-contrast
+fixture: css
+prompt: An accessibility audit says some text on this page fails WCAG AA contrast. Fix it, and keep the look as close to the original as you can.
+expectReferences: [contrast.md]
+scores: [repair]
+rubric: The gray card text (#777777 on #f4f4f4, about 4.1:1) fails 4.5:1. The error line is gray too, because `.card p` overrides `.error`. A good fix darkens the gray just enough (or fixes the override) and keeps the blue brand color.

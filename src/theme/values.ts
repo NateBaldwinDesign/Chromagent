@@ -1,4 +1,4 @@
-import Color from "colorjs.io";
+import Color from "../math/color";
 import type { ContrastFormula } from "../math/contrast";
 
 export interface ColorValue {
@@ -31,9 +31,9 @@ export interface RoleValue extends ColorValue {
 export const SAFETY = 1.0002;
 export const round = (value: number, places: number) => Number(value.toFixed(places));
 // Report contrast rounded down, so a displayed value never overstates what was measured.
-export const floor4 = (value: number) => Math.floor(value * 10000 + 1e-7) / 10000;
+const floor4 = (value: number) => Math.floor(value * 10000 + 1e-7) / 10000;
 
-export function hexOf(css: string) {
+function hexOf(css: string) {
   const srgb = new Color(css).toGamut({ space: "srgb", method: "css" }).to("srgb");
   return `#${srgb.coords
     .map((c) => Math.round(Math.min(1, Math.max(0, Number(c) || 0)) * 255).toString(16).padStart(2, "0"))
@@ -60,4 +60,21 @@ export function colorValue(css: string, contrast: number, target: number): Color
 
 export function describeTarget(formula: ContrastFormula, value: number) {
   return formula === "apca" ? `Lc ${round(value, 1)}` : `${round(value, 2)}:1`;
+}
+
+/**
+ * Moves an sRGB hex color's OKLCH lightness away from `against`, in small steps, until `measure` reaches `minimum`.
+ * Returns the original hex if it already passes, or undefined if no lightness passes.
+ */
+export function strengthenHex(hex: string, against: string, minimum: number, measure: (hex: string, against: string) => number) {
+  if (measure(hex, against) + 1e-6 >= minimum) return hex;
+  const [l, c, h] = new Color(hex).to("oklch").coords.map((v) => Number(v) || 0);
+  const darker = Number(new Color(against).to("oklch").coords[0]) > l;
+  for (let i = 1; i <= 200; i += 1) {
+    const lightness = darker ? l - i * 0.002 : l + i * 0.002;
+    if (lightness < 0 || lightness > 1) break;
+    const candidate = hexOf(new Color("oklch", [lightness, c, h]).toString());
+    if (measure(candidate, against) >= minimum * SAFETY) return candidate;
+  }
+  return undefined;
 }

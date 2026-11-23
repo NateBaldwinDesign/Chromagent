@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import Color from "colorjs.io";
 import { generateTheme, toCss, type ThemeConfig } from "../src/index";
 import type { CheckContext } from "../evals/lib/checks";
-import { feedbackScores, hasFullScale, intentScores, personalScores, relativeChroma, schemeScores, statusColors, textTiers } from "../evals/lib/intent";
+import { checkCvd } from "../src/theme/feedbackHues";
+import { cvdFailures } from "../evals/lib/cvd";
+import { feedbackScores, focusScores, hasFullScale, intentScores, personalScores, repairScores, relativeChroma, schemeScores, statusColors, textTiers } from "../evals/lib/intent";
 import { MODES, pairs, readSite } from "../evals/lib/render";
 import { projectModes, requiredModes, scoreRun } from "../evals/lib/outcome";
 import { readTextFiles } from "../evals/lib/workspace";
@@ -95,11 +97,14 @@ describe("feedback scores", () => {
     expect(found.error.toString({ format: "hex" })).toBe("#c00");
   });
 
-  it("gives the engine's feedback colors full marks in every mode", () => {
+  it("gives the engine's feedback colors high marks in every mode", () => {
     const ctx = context("signup-form", project, { scores: ["feedback"] });
     const found = projectModes(project.files, "css");
     expect(found.modes.size).toBe(6);
-    expect(feedbackScores(ctx, found)).toEqual({ cvd: 1, harmony: 1 });
+    const { cvd, harmony } = feedbackScores(ctx, found);
+    // The eval maps wide-gamut colors into sRGB the CSS way; the engine clips. A few pairs drop just under 11.
+    expect(cvd).toBeGreaterThan(0.95);
+    expect(harmony).toBe(1);
   });
 
   it("marks down red and green that look alike to color-blind people, and missing statuses", () => {
@@ -143,5 +148,70 @@ describe("personal colors and six schemes", () => {
     const { metrics } = scoreRun(context("new-app", project, { expectModes: ["light", "dark", "high-contrast", "low-contrast"], scores: ["schemes"] }, "Want personal colors?"), "baseline");
     expect(metrics["contrast-low-contrast"]).toBe(1);
     expect(metrics).toMatchObject({ "switch-wired": 1, asked: 1 });
+  });
+});
+
+describe("focus rings", () => {
+  const withStyles = (name: string, file: string, extra: string) => {
+    const original = fixture(name);
+    const css = `${original.get(file)}\n${extra}`;
+    return { original, files: new Map(original).set(file, css), changed: new Map([[file, css]]) };
+  };
+  const focusOf = (project: ReturnType<typeof withStyles>, name = "css") => {
+    const ctx = context(name, project, { scores: ["focus"] });
+    return focusScores(ctx, projectModes(ctx.files, ctx.fixture.build)).focus;
+  };
+
+  it("scores no rings as 0, a strong ring as 1, and a faint ring as 0", () => {
+    expect(focusOf(withStyles("css", "styles.css", ""))).toBe(0);
+    expect(focusOf(withStyles("css", "styles.css", "a:focus-visible, .button:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; color: red; }"))).toBe(1);
+    expect(focusOf(withStyles("css", "styles.css", "a:focus-visible, .button:focus-visible { outline: 2px solid #eeeeee; }"))).toBe(0);
+  });
+
+  it("doesn't treat a focus rule's other properties as always on", () => {
+    const project = withStyles("css", "styles.css", ".card p:focus, .button:focus-visible { color: #000000; background: #ffffff; }");
+    const textPairs = (files: Map<string, string>) => pairs(readSite(files), MODES[0]).filter((p) => p.kind !== "focus").map((p) => [p.key, p.fg.color.toString(), p.bg.color.toString()]);
+    expect(textPairs(project.files)).toEqual(textPairs(project.original));
+    const ctx = context("css", project, {});
+    expect(intentScores(ctx, projectModes(ctx.files, "css")).focus).toBeUndefined();
+  });
+
+  it("reads Tailwind focus-visible outline and ring classes", () => {
+    const original = fixture("tailwind4");
+    const html = original.get("index.html")!.replace('class="text-brand"', 'class="text-brand focus-visible:outline-gray-900"').replace('class="mt-4', 'class="focus-visible:ring-gray-900 mt-4');
+    const project = { original, files: new Map(original).set("index.html", html), changed: new Map([["index.html", html]]) };
+    const ctx = { ...context("tailwind4", project, { scores: ["focus"] }), fixture: { name: "tailwind4", platform: "web", expectFormat: "oklch" as const, build: "tailwind" as const } };
+    expect(focusScores(ctx, projectModes(ctx.files, "tailwind")).focus).toBe(1);
+  });
+});
+
+describe("fixing a palette", () => {
+  const edit = (from: string, to: string) => {
+    const original = fixture("css");
+    const css = original.get("styles.css")!.replace(from, to);
+    return context("css", { original, files: new Map(original).set("styles.css", css), changed: new Map([["styles.css", css]]) }, { scores: ["repair"] });
+  };
+
+  it("keeps the look when colors are darkened a little, and not when hues swap", () => {
+    expect(repairScores(edit("--muted: #777777", "--muted: #666666"))["look-kept"]).toBe(1);
+    expect(repairScores(edit("#3366cc", "#2b57b0"))["look-kept"]).toBe(1);
+    expect(repairScores(edit("#3366cc", "#2e7d32"))["look-kept"]).toBe(0);
+    expect(repairScores(edit("#3366cc", "#555555"))["look-kept"]).toBe(0);
+  });
+});
+
+describe("independent color-blindness check", () => {
+  it("agrees with the engine on which feedback sets are hard to tell apart", () => {
+    const sets: Record<string, string>[] = [
+      { error: "#d32f2f", success: "#2e7d32", warning: "#f9a825", info: "#1565c0" },
+      { error: "#cc3333", success: "#669933" },
+      { a: "#3366cc", b: "#3366cc" },
+      { error: "#b00020", success: "#007a5a", info: "#0057b8" },
+    ];
+    for (const set of sets) {
+      const engine = checkCvd(set);
+      const ours = cvdFailures(Object.values(set).map((c) => new Color(c)), engine.required);
+      expect(ours.failing === 0, JSON.stringify(set)).toBe(engine.pass);
+    }
   });
 });

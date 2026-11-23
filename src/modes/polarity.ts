@@ -5,12 +5,12 @@ import type {
   ContrastReference,
   ContrastToken,
 } from "../engineTypes";
-import { resolveScaleColorAtLightness } from "../scales/scaleGeneration";
+import { resolveScaleColorAtLightness } from "../scales/scaleData";
 
-export const DEFAULT_CONTRAST_REFERENCE: ContrastReference = "light";
-export const DEFAULT_POLARITY_COMPENSATION = 0;
+const DEFAULT_CONTRAST_REFERENCE: ContrastReference = "light";
+const DEFAULT_POLARITY_COMPENSATION = 0;
 /** CIE L* points added at 100% strength. */
-export const MAX_POLARITY_OFFSET = 12;
+const MAX_POLARITY_OFFSET = 12;
 // Higher values keep the boost flat longer before converging on 21:1.
 const ROLLOFF_EXPONENT = 2;
 // L* scale over which the boost ramps up from 1:1; smaller widens the lowest steps more.
@@ -65,22 +65,22 @@ function unboost(target: number, offset: number) {
   return (low + high) / 2;
 }
 
-export function contrastReference(
+function contrastReference(
   document: ColorSystemDocument,
 ): ContrastReference {
   return document.settings.contrastReference ?? DEFAULT_CONTRAST_REFERENCE;
 }
 
-export function polarityCompensation(document: ColorSystemDocument) {
+function polarityCompensation(document: ColorSystemDocument) {
   return (
     document.settings.polarityCompensation ?? DEFAULT_POLARITY_COMPENSATION
   );
 }
 
-export const DEFAULT_CONTRAST_MULTIPLIER = 1;
+const DEFAULT_CONTRAST_MULTIPLIER = 1;
 export const MAX_CONTRAST_MULTIPLIER = 3;
 
-export function contrastMultiplier(document: ColorSystemDocument) {
+function contrastMultiplier(document: ColorSystemDocument) {
   return document.settings.contrastMultiplier ?? DEFAULT_CONTRAST_MULTIPLIER;
 }
 
@@ -148,7 +148,7 @@ export interface PolarityContext {
   reference: ContrastReference;
 }
 
-export function oppositeContrast(
+function oppositeContrast(
   contrast: Pick<ContrastToken, "value" | "oppositeValue">,
   context: PolarityContext,
 ) {

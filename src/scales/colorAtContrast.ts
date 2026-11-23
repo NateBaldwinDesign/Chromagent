@@ -13,7 +13,7 @@ import {
   type LinearRgb,
 } from "../math/colorMath";
 import { enforceOutputContrast, parsedOutputLinear } from "../math/outputContrast";
-import { readAnchors, type ScaleData } from "./scaleGeneration";
+import { readAnchors, type ScaleData } from "./scaleData";
 
 export interface GeneratedColor {
   linear: LinearRgb;
@@ -34,13 +34,8 @@ export interface GeneratedColors {
   chromaDeltaE: number;
 }
 
-export interface DynamicGenerationSettings {
-  side: "auto" | "light" | "dark";
-  backgroundBlend: number;
-  colorSourceCurveOffset: number;
-}
-
-const generationCache = new WeakMap<ScaleData, Map<string, GeneratedColors>>();
+// Keyed by the anchors, which stay the same object when buildScaleData reuses a cached scale.
+const generationCache = new WeakMap<ScaleData["anchors"], Map<string, GeneratedColors>>();
 
 function createGeneratedColor(
   linear: LinearRgb,
@@ -62,19 +57,11 @@ export function generateColors(
   scaleData: ScaleData,
   background: LinearRgb,
   targetContrast: number,
-  settings: DynamicGenerationSettings,
   sideOverride?: boolean,
 ): GeneratedColors {
-  const cacheKey = JSON.stringify([
-    background,
-    targetContrast,
-    settings.side,
-    settings.backgroundBlend,
-    settings.colorSourceCurveOffset,
-    sideOverride,
-  ]);
+  const cacheKey = JSON.stringify([background, targetContrast, sideOverride]);
   const cache =
-    generationCache.get(scaleData) ?? new Map<string, GeneratedColors>();
+    generationCache.get(scaleData.anchors) ?? new Map<string, GeneratedColors>();
   const cached = cache.get(cacheKey);
   if (cached) return cached;
   const backgroundCss = outputColorCss(
@@ -85,10 +72,7 @@ export function generateColors(
   if (typeof scaleData.output === "object")
     background = parsedOutputLinear(backgroundCss, scaleData.gamut);
   const backgroundLuminance = luminance(background, scaleData.gamut);
-  const isDark =
-    sideOverride ??
-    (settings.side === "dark" ||
-      (settings.side === "auto" && backgroundLuminance > 0.1791));
+  const isDark = sideOverride ?? backgroundLuminance > 0.1791;
   const desiredLuminance = targetLuminance(
     backgroundLuminance,
     targetContrast,
@@ -96,10 +80,7 @@ export function generateColors(
   );
   const extremity = scaleData.neutral
     ? 1
-    : clamp01(
-        settings.backgroundBlend +
-          (settings.colorSourceCurveOffset * (targetContrast - 1)) / 11,
-      );
+    : clamp01((1 - targetContrast) / 11);
   const endpoint = isDark ? 0 : 1;
   const sourceLuminance = clamp01(
     desiredLuminance + extremity * (endpoint - desiredLuminance),
@@ -165,6 +146,6 @@ export function generateColors(
   };
   cache.set(cacheKey, result);
   if (cache.size > 128) cache.delete(cache.keys().next().value!);
-  generationCache.set(scaleData, cache);
+  generationCache.set(scaleData.anchors, cache);
   return result;
 }

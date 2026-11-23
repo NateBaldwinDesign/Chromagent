@@ -1,12 +1,14 @@
 export type AgentName = "copilot" | "claude";
 
 /** What a practice project expects. Lives in `evals/fixtures/<name>/eval.json` (not copied into the workspace). */
+export type ColorFormat = "oklch" | "p3" | "hex";
+
 export interface FixtureInfo {
   name: string;
   /** The `--platform` that fits this project. */
   platform: string;
   /** "oklch" for web and tokens, "p3" for Apple and Android. */
-  expectFormat: "oklch" | "p3";
+  expectFormat: ColorFormat;
   /** Which lightweight build check to run. */
   build: "css" | "tailwind" | "dtcg" | "swift" | "none";
 }
@@ -26,7 +28,11 @@ export interface Scenario {
   /** For mode conversions: the mode the project already has, and the one the agent should add. */
   conversion?: { from: "light" | "dark"; to: "light" | "dark" };
   /** Extra result scores: semantic roles, feedback colors, personalization, or the six schemes. */
-  scores?: ("roles" | "feedback" | "personal" | "schemes")[];
+  scores?: ("roles" | "feedback" | "personal" | "schemes" | "focus" | "repair")[];
+  /** When the user asks for a syntax (like hex), use it instead of the fixture's usual format. */
+  expectFormat?: ColorFormat;
+  /** Contrast target for body text when the user asks for more than 4.5:1 (like 7 for AAA). */
+  textTarget?: number;
 }
 
 export interface SwatchPair {
@@ -52,6 +58,20 @@ export interface Transcript {
   toolArgs: string[];
   finalMessage: string;
   error?: string;
+  /** The model the agent used, and the agent CLI's version, when the transcript says. */
+  model?: string;
+  agentVersion?: string;
+  /** Skills the agent had available at the start (Copilot lists these). */
+  skillsLoaded?: string[];
+  usage?: Usage;
+}
+
+/** What a run cost, as far as the agent reports it. */
+export interface Usage {
+  premiumRequests?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  costUsd?: number;
 }
 
 export interface CheckResult {
@@ -71,6 +91,11 @@ export interface RunResult {
   checks: CheckResult[];
   passed: boolean;
   metrics: Metrics;
+  model?: string;
+  agentVersion?: string;
+  usage?: Usage;
+  /** Set when a run without the skill could see it anyway; these runs are left out of the summary. */
+  contaminated?: string;
   /** The color pairs found in each mode of the finished project, for the gallery. */
   swatches?: Record<string, SwatchPair[]>;
 }

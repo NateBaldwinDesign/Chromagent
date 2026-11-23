@@ -9,6 +9,6 @@ exports[`generate > explains invalid JSON and invalid settings 1`] = `
 
 exports[`generate > reports warnings and fails with --strict 1`] = `
 "Warning: In "mid" mode, 2 colors could not reach the contrast target, so the closest possible color was used: brand.200 (wanted 21:1, got 6:1); gray.200 (wanted 21:1, got 6:1). To fix this, lower those targets or the contrast multiplier, or move the background lightness closer to white or black.
-Some colors missed their contrast targets (--strict).
+Failed --strict: 1 warning above.
 "
 `;

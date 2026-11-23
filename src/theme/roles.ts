@@ -28,17 +28,17 @@ export const ROLE_TIERS: RoleTier[] = ["subtle", "strong", "strongest"];
 export const ROLE_STATES: RoleState[] = ["hover", "active", "selected", "focus"];
 export const FEEDBACK_NAMES = ["error", "success", "warning", "info"];
 
-/** Hard minimums per kind. WCAG 2: text 4.5:1, non-text 3:1. APCA: body text Lc 60, large or non-text Lc 45, borders Lc 30. */
+/** Hard minimums per kind. WCAG 2: text 4.5:1, non-text 3:1. APCA: any text Lc 60, non-text (icons, accents, component edges) Lc 45. */
 export const ROLE_FLOORS: Record<ContrastFormula, Record<RoleKind, number>> = {
   wcag2: { text: 4.5, icon: 3, border: 3, accent: 3, feedback: 4.5, tint: 1, on: 4.5 },
-  apca: { text: 60, icon: 45, border: 30, accent: 45, feedback: 60, tint: 0, on: 60 },
+  apca: { text: 60, icon: 45, border: 45, accent: 45, feedback: 60, tint: 0, on: 60 },
 };
-export const TIER_CONTRAST: Record<ContrastFormula, Record<RoleTier, number>> = {
+const TIER_CONTRAST: Record<ContrastFormula, Record<RoleTier, number>> = {
   wcag2: { subtle: 4.5, strong: 7.5, strongest: 12 },
   apca: { subtle: 60, strong: 75, strongest: 90 },
 };
 /** Default contrast for tinted backgrounds (such as error-background). */
-export const TINT_CONTRAST: Record<ContrastFormula, number> = { wcag2: 1.15, apca: 7.5 };
+const TINT_CONTRAST: Record<ContrastFormula, number> = { wcag2: 1.15, apca: 7.5 };
 
 export interface NormalizedRole {
   name: string;

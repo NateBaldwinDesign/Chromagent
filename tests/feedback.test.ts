@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { deltaE2000, MACHADO, simulateCvd } from "../src/math/cvd";
-import { checkCvd, FEEDBACK_HUES, harmonizeFeedback, separateFeedback, type Oklch } from "../src/theme/feedback";
+import { checkCvd, FEEDBACK_HUES, harmonizeFeedback, separateFeedback, type Oklch } from "../src/theme/feedbackHues";
 import { feedbackColors } from "../src/theme/feedbackColors";
 import { generateTheme } from "../src/theme/generateTheme";
 import { gamutClamp } from "../src/math/colorMath";
@@ -121,6 +121,14 @@ describe("feedback colors in themes", () => {
     }
   }, 20000);
 
+  it.each(["#ff5a00", "#e8590c", "#ff3b30"])("keeps error red, not brown or peach, for warm brands (%s)", (brand) => {
+    for (const mode of Object.values(feedbackColors(brand).modes)) {
+      const [lightness] = mode.colors.error.oklch;
+      expect(lightness).toBeGreaterThanOrEqual(0.4);
+      expect(lightness).toBeLessThanOrEqual(0.85);
+    }
+  }, 20000);
+
   it("keeps a brand-free or explicit set of status colors and still checks them", () => {
     const theme = generateTheme({ colors: { gray: "#777" }, status: true, modes: { light: {} } });
     expect(theme.modes.light.feedback?.pass).toBe(true);
@@ -166,27 +174,27 @@ describe("CLI feedback and check-cvd", () => {
 
   it("explains bad feedback input", async () => {
     const { out, io: cli } = io();
-    expect(await run(["feedback"], cli)).toBe(1);
-    expect(await run(["feedback", "#06f", "--formula", "x"], cli)).toBe(1);
-    expect(await run(["feedback", "notacolor"], cli)).toBe(1);
+    expect(await run(["feedback"], cli)).toBe(2);
+    expect(await run(["feedback", "#06f", "--formula", "x"], cli)).toBe(2);
+    expect(await run(["feedback", "notacolor"], cli)).toBe(2);
     expect(out.stderr).toMatch(/brand color/);
   });
 
-  it("checks named and unnamed colors and exits 1 when too close", async () => {
+  it("checks named and unnamed colors and exits 3 when too close", async () => {
     const pass = io();
     expect(await run(["check-cvd", "error=#b00020", "info=#0057d9", "--min", "5"], pass.io)).toBe(0);
     expect(JSON.parse(pass.out.stdout).pass).toBe(true);
     const fail = io();
-    expect(await run(["check-cvd", "#d32f2f", "#388e3c"], fail.io)).toBe(1);
+    expect(await run(["check-cvd", "#d32f2f", "#388e3c"], fail.io)).toBe(3);
     expect(JSON.parse(fail.out.stdout).failing[0].a).toBe("color1");
     expect(fail.out.stderr).toMatch(/too similar/);
   });
 
   it("explains bad check-cvd input", async () => {
     const { out, io: cli } = io();
-    expect(await run(["check-cvd", "#fff"], cli)).toBe(1);
-    expect(await run(["check-cvd", "#fff", "#000", "--min", "0"], cli)).toBe(1);
-    expect(await run(["check-cvd", "a=nope", "b=#000"], cli)).toBe(1);
+    expect(await run(["check-cvd", "#fff"], cli)).toBe(2);
+    expect(await run(["check-cvd", "#fff", "#000", "--min", "0"], cli)).toBe(2);
+    expect(await run(["check-cvd", "a=nope", "b=#000"], cli)).toBe(2);
     expect(out.stderr).toMatch(/two or more|--min|CSS color/);
   });
 });

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { normalizeConfig, ThemeConfigError, type ThemeConfig } from "../src/theme/config";
+import { readFileSync } from "node:fs";
+import { CONFIG_KEYS, FORMATS, GAMUTS, normalizeConfig, ThemeConfigError, type ThemeConfig } from "../src/theme/config";
+import { ROLE_KINDS, ROLE_STATES, ROLE_TIERS } from "../src/theme/roles";
+import { MAX_CONTRAST_MULTIPLIER } from "../src/modes/polarity";
 
 function problems(config: unknown) {
   try {
@@ -37,11 +40,11 @@ describe("normalizeConfig", () => {
     expect(n.steps[0]).toEqual({ name: "100", contrast: 1.06 });
     expect(n.modes.map((m) => [m.name, m.backgroundLightness, m.contrastMultiplier, m.polarityCompensation])).toEqual([
       ["light", 1, 1, 0.1],
-      ["dark", 0.08, 1, 0.1],
+      ["dark", 0.15, 1, 0.1],
       ["light-high-contrast", 1, 1.5, 0.1],
-      ["dark-high-contrast", 0.08, 1.5, 0.1],
+      ["dark-high-contrast", 0.15, 1.5, 0.1],
       ["light-low-contrast", 1, 0.8, 0.1],
-      ["dark-low-contrast", 0.08, 0.8, 0.1],
+      ["dark-low-contrast", 0.15, 0.8, 0.1],
     ]);
     expect(n.defaultMode).toBe("light");
     expect(n.roles.accent.ref).toBe("brand.900");
@@ -148,6 +151,13 @@ describe("normalizeConfig", () => {
     expect(list.join("\n")).toMatch(/roles.link/);
   });
 
+  it("rejects media queries that could break out of the CSS rule", () => {
+    for (const media of ["screen { } body { display: none", "(min-width: 1px); x", "url(x)"])
+      expect(problems({ colors: { a: "red" }, modes: { dark: { media } } }).join()).toMatch(/media must be a CSS media query/);
+    const ok = normalizeConfig({ colors: { a: "red" }, modes: { light: {}, dark: { media: "(prefers-color-scheme: dark) and (min-width: 40em)" } } });
+    expect(ok.modes[1].media).toBe("(prefers-color-scheme: dark) and (min-width: 40em)");
+  });
+
   it("rejects empty or missing settings", () => {
     expect(problems(null)).toEqual(["The theme settings must be an object."]);
     expect(problems({ colors: {} }).join()).toMatch(/at least one named color/);
@@ -170,5 +180,60 @@ describe("normalizeConfig", () => {
     expect(list).toMatch(/reference must be/);
     expect(list).toMatch(/surfaces.card.color/);
     expect(list).toMatch(/must be an object/);
+  });
+});
+
+describe("unknown settings", () => {
+  it("rejects misspelled or misplaced keys, with a hint when one is close", () => {
+    const list = problems({
+      colors: { brand: { keys: "#0066ff", interpolaton: "rgb" } },
+      backgroundLightness: 0.1,
+      modes: { dark: { backgroundLightnes: 0.15 } },
+      roles: { divider: { ref: "gray.200", kind: "tint", contrast: 1.3 }, text: { tone: "subtle" } },
+      output: { gamut: "srgb", formats: "hex" },
+    }).join("\n");
+    expect(list).toMatch(/"interpolaton" in colors.brand. Did you mean "interpolation"/);
+    expect(list).toMatch(/Unknown setting "backgroundLightness"\. It belongs in each mode/);
+    expect(list).toMatch(/"backgroundLightnes" in modes.dark. Did you mean "backgroundLightness"/);
+    expect(list).toMatch(/"contrast" in roles.divider. Allowed: ref, kind/);
+    expect(list).toMatch(/"tone" in roles.text/);
+    expect(list).toMatch(/"formats" in output. Did you mean "format"/);
+  });
+});
+
+describe("theme.schema.json matches the engine", () => {
+  const schema = JSON.parse(readFileSync("skills/chromagentic/assets/theme.schema.json", "utf8"));
+  const p = schema.properties;
+  const roleForms = p.roles.additionalProperties.oneOf;
+  const keysOf = (node: { properties: object; additionalProperties: unknown }) => {
+    expect(node.additionalProperties).toBe(false);
+    return Object.keys(node.properties).sort();
+  };
+
+  it("allows the same keys in every section", () => {
+    const sections: [keyof typeof CONFIG_KEYS, { properties: object; additionalProperties: unknown }][] = [
+      ["top", schema],
+      ["color", p.colors.additionalProperties.oneOf[2]],
+      ["background", p.background],
+      ["step", p.steps.oneOf[2].additionalProperties.oneOf[1]],
+      ["surface", p.surfaces.additionalProperties],
+      ["roleRef", roleForms[2]],
+      ["role", roleForms[3]],
+      ["mode", p.modes.additionalProperties],
+      ["output", p.output],
+    ];
+    for (const [name, node] of sections) expect(keysOf(node), name).toEqual([...CONFIG_KEYS[name]].sort());
+  });
+
+  it("lists the same choices and ranges", () => {
+    const sorted = (list: readonly string[]) => [...list].sort();
+    expect(sorted(roleForms[2].properties.kind.enum)).toEqual(sorted(ROLE_KINDS));
+    expect(sorted(roleForms[3].properties.kind.enum)).toEqual(sorted(ROLE_KINDS));
+    expect(sorted(roleForms[3].properties.tier.enum)).toEqual(sorted(ROLE_TIERS));
+    expect(sorted(roleForms[3].properties.states.items.enum)).toEqual(sorted(ROLE_STATES));
+    expect(sorted(p.output.properties.gamut.enum)).toEqual(sorted(GAMUTS));
+    expect(sorted(p.output.properties.format.enum)).toEqual(sorted(FORMATS));
+    expect(sorted(p.formula.enum)).toEqual(["apca", "wcag2"]);
+    expect(p.modes.additionalProperties.properties.contrastMultiplier.maximum).toBe(MAX_CONTRAST_MULTIPLIER);
   });
 });

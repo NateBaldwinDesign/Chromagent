@@ -4,7 +4,7 @@ import type { ColorOutputSettings } from "../math/outputSettings";
 import { outputGamut } from "../math/outputSettings";
 import { serializeLinearOutputColor } from "../math/outputSerialization";
 import { parsedOutputLinear } from "../math/outputContrast";
-import { readAnchors, type ScaleData } from "./scaleGeneration";
+import { readAnchors, type ScaleData } from "./scaleData";
 import { luminance } from "../math/colorMath";
 
 function encodeSrgb(channel: number) {

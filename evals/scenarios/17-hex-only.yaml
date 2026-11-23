@@ -1,0 +1,7 @@
+id: hex-only
+fixture: css
+prompt: Add a dark mode. Our email templates reuse these colors, so keep every color a plain hex code.
+expectModes: [light, dark]
+expectReferences: [themes-and-modes.md, platforms.md]
+expectFormat: hex
+rubric: The user asked for hex, so sRGB hex is correct here instead of OKLCH. Dark mode should follow prefers-color-scheme or the app's switch.

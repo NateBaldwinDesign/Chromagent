@@ -1,5 +1,6 @@
-import Color from "colorjs.io";
-import ColorDescription from "color-description";
+import Color from "../math/color";
+import { adjectivesOf, familyOf, temperatureOf } from "./words";
+import { round } from "../theme/values";
 
 export interface ColorWords {
   /** A short plain-language summary, such as "rich, golden and warm". */
@@ -76,33 +77,41 @@ export function promptWords(prompt: string) {
 
 const tokens = (phrase: string) => phrase.toLowerCase().split(/[^a-z]+/).filter(Boolean);
 
-const round = (value: number, places: number) => Number(value.toFixed(places));
 
-function describe(css: string) {
-  return new ColorDescription(css);
+/** "a, b and c" */
+function list(words: string[]) {
+  return words.length < 2 ? (words[0] ?? "") : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
+}
+
+function wordsFor(l: number, c: number, h: number): ColorWords {
+  const family = familyOf(l, c, h);
+  const temperature = temperatureOf(c, h);
+  const nouns = [...((l >= 0.78 && family.light) || (l < 0.45 && family.dark) || []), ...family.nouns];
+  const words = adjectivesOf(l, c, family, temperature);
+  if (words.length === 0) words.push(family.name);
+  return {
+    summary: list(words.slice(0, 3)),
+    words,
+    nouns,
+    meanings: family.meanings,
+    effects: family.effects,
+    usage: family.usage,
+    temperature: [temperature],
+  };
 }
 
 /** Describes a CSS color in plain words. Use it to explain color choices and check they fit the brief. */
 export function describeColor(color: string): ColorWords {
-  // color-description works in sRGB; map wide-gamut colors into sRGB first.
-  const srgb = new Color(color).toGamut({ space: "srgb", method: "css" }).to("srgb").toString({ format: "hex" });
-  const d = describe(srgb);
-  return {
-    summary: d.getDescriptiveList(false, 3),
-    words: d.descriptiveWords,
-    nouns: d.nouns,
-    meanings: d.meanings,
-    effects: d.effects,
-    usage: d.usage,
-    temperature: d.temperatureWords?.descriptive ?? [],
-  };
+  // The word table is tuned for colors people can see on ordinary screens, so map wide-gamut colors into sRGB first.
+  const [l, c, h] = new Color(color).toGamut({ space: "srgb", method: "css" }).to("oklch").coords.map((v) => Number(v) || 0);
+  return wordsFor(l, c, h);
 }
 
 interface GridEntry {
   css: string;
   oklch: [number, number, number];
   lab: [number, number, number];
-  categories: { weight: number; tokens: Set<string>; prose?: true }[];
+  categories: { weight: number; tokens: Set<string> }[];
   summary: string;
 }
 
@@ -118,31 +127,29 @@ function colorGrid() {
         const color = new Color("oklch", [l, c, h]);
         if (!color.inGamut("srgb")) continue;
         const css = `oklch(${round(l * 100, 2)}% ${round(c, 3)} ${h})`;
-        const d = describe(css);
-        const words = (list: string[] | undefined) => new Set((list ?? []).flatMap(tokens));
+        const d = wordsFor(l, c, h);
+        const words = (items: string[]) => new Set(items.flatMap(tokens));
         const lab = color.to("oklab").coords.map(Number) as [number, number, number];
         grid.push({
           css,
           oklch: [round(l, 4), round(c, 4), h],
           lab,
           categories: [
-            { weight: 1, tokens: words(d.descriptiveWords.slice(0, 3)) },
-            { weight: 3, tokens: words(d.descriptiveWords) },
+            { weight: 1, tokens: words(d.words.slice(0, 3)) },
+            { weight: 3, tokens: words(d.words) },
             { weight: 3, tokens: words(d.nouns) },
-            { weight: 2, tokens: words([...d.meanings, ...d.effects, ...d.usage]) },
-            { weight: 1, tokens: words(d.description), prose: true },
+            { weight: 2, tokens: words([...d.meanings, ...d.effects, ...d.usage, ...d.temperature]) },
           ],
-          summary: d.getDescriptiveList(false, 3),
+          summary: d.summary,
         });
       }
   return grid;
 }
 
 /** Adds up the weight of every category the word appears in, so stronger associations rank higher. */
-function scoreWord(entry: GridEntry, word: string, useProse: boolean) {
+function scoreWord(entry: GridEntry, word: string) {
   let total = 0;
   for (const category of entry.categories) {
-    if (category.prose && !useProse) continue;
     for (const token of category.tokens)
       if (wordsMatch(word, token)) {
         total += category.weight;
@@ -186,16 +193,12 @@ export function suggestColors(prompt: string, options: SuggestOptions = {}): Sug
   const words = promptWords(prompt);
   const matchedWords = new Set<string>();
   const entries = colorGrid();
-  // The long prose descriptions are noisy, so only search them for words the word lists don't know.
-  const useProse = new Map(
-    words.map((word) => [word, !entries.some((entry) => scoreWord(entry, word, false) > 0)]),
-  );
   const scored = entries
     .map((entry) => {
       const matched: string[] = [];
       let score = 0;
       for (const word of words) {
-        const value = scoreWord(entry, word, useProse.get(word) ?? false);
+        const value = scoreWord(entry, word);
         if (value > 0) {
           matched.push(word);
           matchedWords.add(word);

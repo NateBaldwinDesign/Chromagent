@@ -64,6 +64,20 @@ describe("describeColor", () => {
     expect(words.meanings.length).toBeGreaterThan(0);
   });
 
+  it("names muted warm colors brown, olive, or tan, and puts light or dark names first", () => {
+    expect(describeColor("#8b4513").nouns[0]).toBe("brown");
+    expect(describeColor("#808000").nouns[0]).toBe("olive");
+    expect(describeColor("#d2b48c").nouns[0]).toBe("tan");
+    expect(describeColor("navy").nouns[0]).toBe("navy");
+    expect(describeColor("lavender").nouns[0]).toBe("lavender");
+    expect(describeColor("#777")).toMatchObject({ summary: "neutral", temperature: ["neutral"] });
+  });
+
+  it("ranks lively colors first for lively moods", () => {
+    for (const color of suggestColors("playful kids", { count: 3 }).colors) expect(color.oklch[1]).toBeGreaterThanOrEqual(0.12);
+    for (const color of suggestColors("cozy bakery", { count: 3 }).colors) expect(describeColor(color.css).temperature).toEqual(["warm"]);
+  });
+
   it("accepts wide-gamut colors", () => {
     expect(describeColor("color(display-p3 0 1 0)").words).toContain("vivid");
     expect(describeColor("oklch(90% 0.04 250)").summary).toMatch(/pale|light|soft/);

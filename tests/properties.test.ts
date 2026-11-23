@@ -36,7 +36,7 @@ describe("rules that always hold", () => {
           if (value.capped) capped++;
           else expect(contrast(value.css, background, formula)).toBeGreaterThanOrEqual(value.target - TOLERANCE);
         });
-        expect(t.warnings.length > 0).toBe(capped > 0);
+        expect(t.warnings.length + t.notes.length > 0).toBe(capped > 0);
       }),
       RUNS,
     );

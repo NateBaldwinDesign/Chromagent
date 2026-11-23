@@ -1,7 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { describeColor, generateTheme } from "../../src/index";
+import { generateTheme } from "../../src/index";
+import { moodText } from "./moodWords";
 import type { ThemeConfig, Theme } from "../../src/index";
 import { engineColors, extractColors, matchesEngine, type ColorLiteral } from "./colors";
 import type { CheckResult, FixtureInfo, Scenario, Transcript } from "./types";
@@ -55,7 +56,7 @@ export function findSettings(files: Map<string, string>): FoundSettings | undefi
   return undefined;
 }
 
-export function checkUsedEngine(ctx: CheckContext): CheckResult {
+function checkUsedEngine(ctx: CheckContext): CheckResult {
   const ran = ctx.transcript.commands.find((c) => GENERATE.test(c));
   if (ran) return pass("used-engine", `Ran: ${ran.slice(0, 120)}`);
   const npmScript = [...ctx.changed].find(([path, text]) => path.endsWith("package.json") && GENERATE.test(text));
@@ -73,12 +74,12 @@ export function checkUsedEngine(ctx: CheckContext): CheckResult {
   return fail("used-engine", "Never ran `chromagentic generate` or called generateTheme.");
 }
 
-export function checkSettings(settings: FoundSettings | undefined): CheckResult {
+function checkSettings(settings: FoundSettings | undefined): CheckResult {
   if (!settings) return fail("settings-file", `No working ${SETTINGS_NAME} (or other settings file) was saved.`);
   return pass("settings-file", `Found ${settings.path}.`);
 }
 
-export function checkContrast(ctx: CheckContext, settings: FoundSettings | undefined): CheckResult {
+function checkContrast(ctx: CheckContext, settings: FoundSettings | undefined): CheckResult {
   if (!settings) return fail("contrast", "No settings file, so contrast can't be confirmed.");
   const { theme } = settings;
   const short: string[] = [];
@@ -110,7 +111,7 @@ export function gradedColors(ctx: CheckContext, settingsPath?: string): { path: 
   return out;
 }
 
-export function checkEngineColors(ctx: CheckContext, settings: FoundSettings | undefined): CheckResult {
+function checkEngineColors(ctx: CheckContext, settings: FoundSettings | undefined): CheckResult {
   const name = "engine-colors";
   if (!settings) return fail(name, "No settings file, so colors can't be traced back to the engine.");
   const colors = gradedColors(ctx, settings.path);
@@ -123,13 +124,13 @@ export function checkEngineColors(ctx: CheckContext, settings: FoundSettings | u
   return fail(name, `${detail}. Not from the engine: ${misses.slice(0, 4).map((m) => `${m.literal.text} (${m.path})`).join(", ")}`);
 }
 
-export function checkFormat(ctx: CheckContext, settings: FoundSettings | undefined): CheckResult {
+function checkFormat(ctx: CheckContext, settings: FoundSettings | undefined): CheckResult {
   const name = "format";
   const colors = gradedColors(ctx, settings?.path);
   if (colors.length === 0) return fail(name, "No new colors to check.");
-  const want = ctx.fixture.expectFormat;
+  const want = ctx.scenario.expectFormat ?? ctx.fixture.expectFormat;
   const right = colors.filter(({ literal }) => literal.kind === want).length;
-  const detail = `${pct(right, colors.length)} of colors are ${want === "p3" ? "Display P3" : "OKLCH"} (wanted for ${ctx.fixture.platform})`;
+  const detail = `${pct(right, colors.length)} of colors are ${want === "p3" ? "Display P3" : want === "hex" ? "hex" : "OKLCH"} (wanted for ${ctx.scenario.expectFormat ? "this request" : ctx.fixture.platform})`;
   return right / colors.length >= 0.8 ? pass(name, `${detail}.`) : fail(name, `${detail}.`);
 }
 
@@ -171,8 +172,7 @@ export function checkDescriptive(ctx: CheckContext, settings: FoundSettings | un
   const keys = keyColors(settings.config);
   if (!keys.length) return fail(name, "No key colors besides grays and status colors.");
   const matching = keys.filter((key) => {
-    const d = describeColor(key);
-    const text = [d.summary, ...d.words, ...d.nouns, ...d.meanings, ...d.effects, ...d.usage, ...d.temperature].join(" ").toLowerCase();
+    const text = moodText(key);
     return wanted.some((w) => text.includes(w.toLowerCase()));
   });
   const detail = `${matching.length} of ${keys.length} key colors match "${wanted.slice(0, 3).join(", ")}…"`;

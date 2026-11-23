@@ -2,7 +2,7 @@ import { outputColorCss, type LinearRgb } from "../math/colorMath";
 import type { ColorOutputSettings, ColorFormat, ColorGamut } from "../math/outputSettings";
 import { measureOutputContrast, parsedOutputLinear } from "../math/outputContrast";
 import type { ContrastFormula } from "../math/contrast";
-import { MAX_APCA } from "../math/apca";
+import { apcaContrast, MAX_APCA } from "../math/apca";
 import {
   applyContrastMultiplier,
   applyPolarityCompensation,
@@ -10,15 +10,15 @@ import {
   multiplyContrast,
   polarityContext,
 } from "../modes/polarity";
-import { buildScaleData } from "../scales/scaleGeneration";
-import { generateColors } from "../scales/generation";
+import { buildScaleData } from "../scales/scaleData";
+import { generateColors } from "../scales/colorAtContrast";
 import { apcaPrefersDark, generateApcaColor } from "../scales/apcaGeneration";
 import { resolvedBackgroundLinear, surfaceLinear } from "./surfaceGeneration";
 import { BASE_SURFACE, normalizeConfig, type NormalizedConfig, type NormalizedMode, type ThemeConfig } from "./config";
 import type { ColorScale, ColorSystemDocument, Surface } from "../engineTypes";
-import { colorValue, describeTarget, round, SAFETY, type ColorValue, type RoleValue } from "./values";
+import { colorValue, describeTarget, round, SAFETY, strengthenHex, type ColorValue, type RoleValue } from "./values";
 import { generateRoles, type RoleAdjustment } from "./roleGeneration";
-import type { CvdReport } from "./feedback";
+import type { CvdReport } from "./feedbackHues";
 
 export type { ColorValue, RoleValue } from "./values";
 export type { RoleAdjustment } from "./roleGeneration";
@@ -47,8 +47,23 @@ export interface Theme {
   modes: Record<string, ThemeMode>;
   /** Role targets that even spacing (or the accent's lightness search) moved, per mode. */
   adjustments: (RoleAdjustment & { mode: string })[];
-  /** Plain-language notes about targets that could not be met. Empty when everything passed. */
+  /** Plain-language problems: targets or minimums that were not met. Empty when everything passed. `--strict` fails on these. */
   warnings: string[];
+  /** Plain-language information that needs no action, such as high-contrast steps that reached pure black or white. */
+  notes: string[];
+  /** The same warnings and notes with a stable code, the mode, and the roles or steps involved, for scripts and CI. */
+  issues: ThemeIssue[];
+}
+
+export type ThemeIssueCode = "target-missed" | "feedback-too-similar" | "reference-below-minimum" | "hex-below-minimum" | "maxed-out";
+
+export interface ThemeIssue {
+  level: "warning" | "note";
+  code: ThemeIssueCode;
+  mode: string;
+  /** Role names, or scale steps like "gray.1600". */
+  colors: string[];
+  message: string;
 }
 
 function engineDocument(n: NormalizedConfig, mode: NormalizedMode, output: ColorOutputSettings, scales: ColorScale[]) {
@@ -76,9 +91,6 @@ function engineDocument(n: NormalizedConfig, mode: NormalizedMode, output: Color
         : [],
     surfaces,
     settings: {
-      side: "auto",
-      backgroundBlend: 0,
-      colorSourceCurveOffset: -1,
       colorOutput: output,
       contrastReference: "light",
       polarityCompensation: mode.polarityCompensation,
@@ -109,6 +121,12 @@ export function generateTheme(config: ThemeConfig): Theme {
     interpolation: s.interpolation,
   }));
   const warnings: string[] = [];
+  const notes: string[] = [];
+  const issues: ThemeIssue[] = [];
+  const report = (level: ThemeIssue["level"], code: ThemeIssueCode, mode: string, colors: string[], message: string) => {
+    (level === "warning" ? warnings : notes).push(message);
+    issues.push({ level, code, mode, colors, message });
+  };
   const adjustments: Theme["adjustments"] = [];
   const modes: Record<string, ThemeMode> = {};
   const outputSteps = new Set(n.outputSteps);
@@ -123,6 +141,7 @@ export function generateTheme(config: ThemeConfig): Theme {
     const background: LinearRgb = parsedOutputLinear(backgroundCss, gamut);
     const apcaDark = n.formula === "apca" ? apcaPrefersDark(background, gamut) : false;
     const missed: string[] = [];
+    const missedNames: string[] = [];
     let maxedOut = 0;
 
     const scaleValues: ThemeMode["scales"] = {};
@@ -140,13 +159,15 @@ export function generateTheme(config: ThemeConfig): Theme {
           const target = document.contrasts[index].value;
           // Aim a hair above the target so tiny differences between contrast checkers never flip a pass to a fail.
           const aim = Math.min(21, target * SAFETY);
-          const generated = generateColors(data, background, aim, document.settings).opaque;
+          const generated = generateColors(data, background, aim).opaque;
           value = colorValue(generated.css, generated.measuredContrast, target);
         }
         const isEndpoint = value.oklch[1] === 0 && (value.oklch[0] >= 0.9999 || value.oklch[0] <= 0.0001);
         if (value.capped && isEndpoint && mode.contrastMultiplier > 1) maxedOut += 1;
-        else if (value.capped)
+        else if (value.capped) {
+          missedNames.push(`${scale.name}.${step.name}`);
           missed.push(`${scale.name}.${step.name} (wanted ${describeTarget(n.formula, value.target)}, got ${describeTarget(n.formula, value.contrast)})`);
+        }
         values[step.name] = value;
       });
       if (Object.keys(values).length > 0) scaleValues[scale.name] = values;
@@ -171,14 +192,13 @@ export function generateTheme(config: ThemeConfig): Theme {
     let generated: ReturnType<typeof generateRoles> | undefined;
     if (generatedRoles.length > 0) {
       if (!darkest) {
-        const g = generateColors(scaleData(n.backgroundScale), [1, 1, 1], 21, document.settings).opaque;
+        const g = generateColors(scaleData(n.backgroundScale), [1, 1, 1], 21).opaque;
         darkest = { css: g.css, linear: g.linear };
       }
       generated = generateRoles(generatedRoles, {
         formula: n.formula,
         output,
         gamut,
-        settings: document.settings,
         background,
         backgroundCss,
         apcaDark,
@@ -188,16 +208,25 @@ export function generateTheme(config: ThemeConfig): Theme {
         darkest,
         spacing: n.spacing,
       });
-      for (const item of generated.missed)
+      for (const item of generated.missed) {
+        missedNames.push(item.role);
         missed.push(`${item.role} (needs at least ${describeTarget(n.formula, item.target)}, got ${describeTarget(n.formula, item.contrast)})`);
+      }
       for (const item of generated.adjustments) adjustments.push({ mode: mode.name, ...item });
       const cvd = generated.feedback;
       if (cvd && !cvd.pass && cvd.worst)
-        warnings.push(
+        report(
+          "warning",
+          "feedback-too-similar",
+          mode.name,
+          [cvd.worst.a, cvd.worst.b],
           `In "${mode.name}" mode, the feedback colors ${cvd.worst.a} and ${cvd.worst.b} are too similar${cvd.worst.vision === "normal" ? "" : ` for people with ${cvd.worst.vision} color vision`} (difference ${cvd.worst.deltaE}, needs ${cvd.required}). Try a different brand color, or set the feedback colors yourself in "status".`,
         );
     }
     const roles: ThemeMode["roles"] = {};
+    const maxContrast = n.formula === "apca" ? MAX_APCA : 21;
+    const weakRefs: string[] = [];
+    const weakRefNames = new Set<string>();
     for (const [name, role] of Object.entries(n.roles)) {
       if (!role.ref) {
         roles[name] = generated!.values[name];
@@ -205,19 +234,86 @@ export function generateTheme(config: ThemeConfig): Theme {
       }
       const [group, item] = role.ref.split(".");
       const source = group === "surface" ? surfaceValues[item] : scaleValues[group][item];
-      roles[name] = { ...source, ref: role.ref };
+      if (role.floor <= 0) {
+        roles[name] = { ...source, ref: role.ref };
+        continue;
+      }
+      const minimum = Math.min(maxContrast, Math.max(role.floor, adjust(role.floor)));
+      roles[name] = { ...source, ref: role.ref, minimum: round(minimum, 4) };
+      if (source.contrast + 1e-6 < minimum) {
+        weakRefNames.add(name);
+        weakRefs.push(`${name} → ${role.ref} (needs at least ${describeTarget(n.formula, minimum)} for ${role.kind}, got ${describeTarget(n.formula, source.contrast)})`);
+      }
     }
+
+    if (weakRefs.length > 0)
+      report(
+        "warning",
+        "reference-below-minimum",
+        mode.name,
+        [...weakRefNames],
+        `In "${mode.name}" mode, ${weakRefs.length} role${weakRefs.length === 1 ? " points" : "s point"} to a step below the minimum contrast for its kind: ${weakRefs.slice(0, 4).join("; ")}${weakRefs.length > 4 ? `; and ${weakRefs.length - 4} more` : ""}. Point it to a stronger step, or if it is decorative, write it as { "ref": "...", "kind": "tint" }.`,
+      );
+
+    // The hex fallback is gamut-mapped to sRGB, so check that it still meets each role's minimum.
+    const measureHex = (hex: string, against: string) =>
+      n.formula === "apca" ? Math.abs(apcaContrast(hex, against)) : measureOutputContrast(hex, against, "srgb");
+    const hexMissed: string[] = [];
+    const hexMissedNames: string[] = [];
+    // On-colors last, so they are checked against their pair's final hex.
+    const byPair = Object.entries(roles).sort(([, a], [, b]) => Number(Boolean(a.against)) - Number(Boolean(b.against)));
+    for (const [name, value] of byPair) {
+      if (value.minimum === undefined || weakRefNames.has(name)) continue;
+      const against = value.against ? roles[value.against]?.hex : surfaceValues[BASE_SURFACE].hex;
+      if (!against) continue;
+      // Generated roles get a slightly stronger hex when gamut mapping cost contrast; references keep their step's hex.
+      const fixed = value.ref ? undefined : strengthenHex(value.hex, against, value.minimum, measureHex);
+      if (fixed) {
+        value.hex = fixed;
+        continue;
+      }
+      // An on-color that can't move further (such as white) can be fixed by moving its pair instead, if the pair still passes.
+      const pair = value.against ? roles[value.against] : undefined;
+      if (pair && !pair.ref && pair.minimum !== undefined) {
+        const moved = strengthenHex(pair.hex, value.hex, value.minimum, measureHex);
+        if (moved && measureHex(moved, surfaceValues[BASE_SURFACE].hex) + 1e-6 >= pair.minimum) {
+          pair.hex = moved;
+          continue;
+        }
+      }
+      const contrast = measureHex(value.hex, against);
+      if (contrast + 1e-6 < value.minimum) {
+        hexMissedNames.push(name);
+        hexMissed.push(`${name} (${value.hex}: ${describeTarget(n.formula, Math.floor(contrast * 100) / 100)}, needs ${describeTarget(n.formula, value.minimum)})`);
+      }
+    }
+    if (hexMissed.length > 0)
+      report(
+        "warning",
+        "hex-below-minimum",
+        mode.name,
+        hexMissedNames,
+        `In "${mode.name}" mode, the sRGB hex fallback for ${hexMissed.length} role${hexMissed.length === 1 ? "" : "s"} falls below the minimum contrast: ${hexMissed.slice(0, 4).join("; ")}${hexMissed.length > 4 ? `; and ${hexMissed.length - 4} more` : ""}. Use the "css" values, or set "output.gamut" to "srgb" if you must ship hex.`,
+      );
 
     if (missed.length > 0) {
       const shown = missed.slice(0, 4).join("; ");
       const more = missed.length > 4 ? `; and ${missed.length - 4} more` : "";
-      warnings.push(
+      report(
+        "warning",
+        "target-missed",
+        mode.name,
+        missedNames,
         `In "${mode.name}" mode, ${missed.length} color${missed.length === 1 ? "" : "s"} could not reach the contrast target, so the closest possible color was used: ${shown}${more}. To fix this, lower those targets or the contrast multiplier, or move the background lightness closer to white or black.`,
       );
     }
 
     if (maxedOut > 0) {
-      warnings.push(
+      report(
+        "note",
+        "maxed-out",
+        mode.name,
+        [],
         `In "${mode.name}" mode, the contrast multiplier asked for more contrast than is possible on ${maxedOut} step${maxedOut === 1 ? "" : "s"}, so ${maxedOut === 1 ? "it uses" : "they use"} the strongest color available (pure black or white). This is expected for high-contrast modes.`,
       );
     }
@@ -248,5 +344,7 @@ export function generateTheme(config: ThemeConfig): Theme {
     modes,
     adjustments,
     warnings,
+    notes,
+    issues,
   };
 }

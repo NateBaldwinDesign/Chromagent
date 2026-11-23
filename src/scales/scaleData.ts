@@ -20,19 +20,11 @@ import type { ColorScale, ColorStop } from "../engineTypes";
 import { scaleInterpolation } from "./scaleInterpolation";
 import { MAX_CHROMA as COLOR_MAX } from "../math/colorMath";
 
-export function stopOklch(
-  stop: Pick<ColorStop, "lightness" | "chroma" | "hue">,
-): readonly [number, number, number] {
-  return [stop.lightness, (stop.chroma / 100) * COLOR_MAX, stop.hue];
-}
 const NEUTRAL_CHROMA = 2;
 const RAMP_STEPS = 33;
 const ANCHOR_INDICES = [4, 9, 14, 19, 24, 28] as const;
 // RGB paths bend at each key color, so they need more anchors to stay close to the ramp.
 const RGB_ANCHOR_INDICES = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29] as const;
-const REFERENCE_LEVELS = [
-  0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95,
-] as const;
 
 export interface RampColor {
   lightness: number;
@@ -52,7 +44,6 @@ export interface ScaleData {
   neutral: boolean;
   ramp: RampColor[];
   anchors: ColorAnchor[];
-  referencePalette: Record<number, string>;
   gamut: RgbGamut;
   output: OutputColorSpace;
 }
@@ -77,7 +68,7 @@ function sortStops(stops: ColorStop[]) {
   return [...stops].sort((first, second) => first.lightness - second.lightness);
 }
 
-export function scaleHueChromaAt(stops: ColorStop[], lightness: number) {
+function scaleHueChromaAt(stops: ColorStop[], lightness: number) {
   const sortedStops = sortStops(stops);
   if (sortedStops.length === 0) {
     throw new Error("A color scale requires at least one stop.");
@@ -210,7 +201,7 @@ export function resolveScaleColorAtLightness(
   };
 }
 
-export function buildRamp(
+function buildRamp(
   scale: ColorScale,
   output: OutputColorSpace = "srgb",
 ): RampColor[] {
@@ -244,7 +235,7 @@ export function buildRamp(
   }).sort((first, second) => first.luminance - second.luminance);
 }
 
-export function rampAnchors(
+function rampAnchors(
   ramp: RampColor[],
   keyColors: readonly ColorAnchor[] = [],
 ): ColorAnchor[] {
@@ -318,18 +309,11 @@ export function buildScaleData(
       : [];
   const anchors = rampAnchors(ramp, keyColors);
   const neutral = scale.stops.every((stop) => stop.chroma < NEUTRAL_CHROMA);
-  const referencePalette = Object.fromEntries(
-    REFERENCE_LEVELS.map((level) => [
-      Math.round(level * 1000),
-      outputColorCss(readAnchors(anchors, level), output, gamut),
-    ]),
-  );
   const result = {
     scale,
     neutral,
     ramp,
     anchors,
-    referencePalette,
     gamut,
     output,
   };

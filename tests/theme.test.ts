@@ -85,7 +85,8 @@ describe("generateTheme (WCAG 2)", () => {
 
   it("explains maxed-out high-contrast steps separately", () => {
     const hc = generateTheme({ colors: { brand: "#FF5A00" }, steps: true, modes: { dark: { backgroundLightness: 0.08, contrastMultiplier: 2 } } });
-    expect(hc.warnings.join()).toMatch(/strongest color available/);
+    expect(hc.notes.join()).toMatch(/strongest color available/);
+    expect(hc.warnings.join()).not.toMatch(/strongest color available/);
   });
 
   it("supports narrower gamuts and other formats", () => {

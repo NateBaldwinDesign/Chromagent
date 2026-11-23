@@ -12,8 +12,10 @@ import {
   definesMode,
   moodMatch,
   passShare,
-  platformFit,
+  formatFit,
+  gamutFit,
   projectModes,
+  raiseTextTarget,
   requiredModes,
   scoreRun,
   skillTriggered,
@@ -171,9 +173,14 @@ describe("outcome scores", () => {
   };
 
   it("grades format, gamut, and mood from the colors written", () => {
-    expect(platformFit(ctx({ "a.css": ":root { --a: oklch(60% 0.2 30); --b: #336699; }" }))).toBe(0.5);
-    expect(platformFit(ctx({ "a.css": ":root { --a: oklch(60% 0.5 30); }" }))).toBe(0);
-    expect(platformFit(ctx({}))).toBe(0);
+    const mixed = ctx({ "a.css": ":root { --a: oklch(60% 0.2 30); --b: #336699; }" });
+    expect(gamutFit(mixed)).toBe(1);
+    expect(formatFit(mixed)).toBe(0.5);
+    expect(gamutFit(ctx({ "a.css": ":root { --a: oklch(60% 0.5 30); }" }))).toBe(0);
+    expect(gamutFit(ctx({}))).toBe(0);
+    // When the user asks for hex, hex is the right syntax.
+    const hexWanted = ctx({ "a.css": ":root { --b: #336699; }" }, { scenario: { id: "t", fixture: "css", prompt: "x", expectFormat: "hex" } });
+    expect(formatFit(hexWanted)).toBe(1);
     expect(moodMatch(ctx({ "a.css": ":root { --a: oklch(65% 0.25 145); --b: #888888; }" }))).toBe(1);
     expect(moodMatch(ctx({ "a.css": ":root { --a: oklch(65% 0.06 60); }" }))).toBe(0);
     expect(moodMatch(ctx({}, { scenario: { id: "t", fixture: "css", prompt: "x" } }))).toBeNull();
@@ -182,7 +189,20 @@ describe("outcome scores", () => {
   it("notices the skill triggering from a file read or the bundled engine", () => {
     expect(skillTriggered(ctx({}, { transcript: { commands: [], toolArgs: ['{"path":".github/skills/chromagentic/SKILL.md"}'], finalMessage: "" } }))).toBe(1);
     expect(skillTriggered(ctx({}, { transcript: { commands: ["node .agents/skills/chromagentic/scripts/chromagentic.mjs contrast #fff #000"], toolArgs: [], finalMessage: "" } }))).toBe(1);
+    expect(skillTriggered(ctx({}, { transcript: { commands: [], toolArgs: ['skill {"skill":"chromagentic"}'], finalMessage: "" } }))).toBe(1);
     expect(skillTriggered(ctx({}))).toBe(0);
+  });
+
+  it("raises text targets for AAA scenarios and leaves other pairs alone", () => {
+    const base = { fg: new Color("#000"), bg: new Color("#fff"), ratio: 21 };
+    const found = { modes: new Map([["light", [
+      { ...base, key: "t", kind: "text", target: 4.5 },
+      { ...base, key: "l", kind: "large-text", target: 3 },
+      { ...base, key: "b", kind: "border", target: 3 },
+    ]]]) } as unknown as Parameters<typeof raiseTextTarget>[0];
+    const targets = (t?: number) => raiseTextTarget(found, t).modes.get("light")!.map((p) => p.target);
+    expect(targets(7)).toEqual([7, 4.5, 3]);
+    expect(targets()).toEqual([4.5, 3, 3]);
   });
 
   it("scores a light-to-dark conversion", () => {
@@ -210,7 +230,7 @@ describe("outcome scores", () => {
     expect(conversionScores(orig, withDark(orig, goodDark), "light", "dark", 0).switch).toBe(0);
   });
 
-  it("scores a whole run with result and process scores", () => {
+  it("scores a whole run with core, adherence, and process scores", () => {
     const orig = fixture("light-only");
     const files = withDark(orig, goodDark.replace(/#[0-9a-f]{6}/g, "oklch(50% 0.1 270)"));
     const run = ctx(Object.fromEntries([...files].filter(([k, v]) => orig.get(k) !== v)), {
@@ -220,14 +240,15 @@ describe("outcome scores", () => {
       original: orig,
     });
     const skill = scoreRun(run, "skill");
-    expect(Object.keys(skill.metrics)).toEqual(expect.arrayContaining(["contrast-light", "contrast-dark", "fit", "build", "new-mode", "balance", "result", "triggered", "engine"]));
-    expect(skill.metrics.fit).toBe(1);
+    expect(Object.keys(skill.metrics)).toEqual(expect.arrayContaining(["contrast-light", "contrast-dark", "gamut", "format", "build", "new-mode", "balance", "core", "adherence", "triggered", "engine"]));
+    expect(skill.metrics.gamut).toBe(1);
+    expect(skill.metrics.format).toBe(1);
     expect(skill.metrics.mood).toBeNull();
     expect(skill.metrics.engine).toBe(0);
     expect(Object.keys(skill.swatches)).toEqual(["light", "dark"]);
     const baseline = scoreRun(run, "baseline");
     expect(baseline.metrics.triggered).toBeNull();
-    expect(baseline.metrics.result).toBe(skill.metrics.result);
+    expect(baseline.metrics.core).toBe(skill.metrics.core);
   });
 });
 
@@ -235,7 +256,7 @@ describe("gallery", () => {
   const pair = (ratio: number, role = "--ink"): SwatchPair => ({ role, kind: "text", fg: "oklch(20% 0 0)", bg: "oklch(100% 0 0)", ratio, target: 4.5 });
   const run = (scenario: string, condition: "skill" | "baseline", result: number, n = 1): RunResult => ({
     scenario, condition, run: n, agent: "copilot", fixture: "light-only", durationMs: 1, workspace: "", checks: [], passed: true,
-    metrics: { result }, swatches: { light: [pair(result * 10)], dark: [pair(3, "--muted <b>")] },
+    metrics: { core: result }, swatches: { light: [pair(result * 10)], dark: [pair(3, "--muted <b>")] },
   });
 
   it("shows the median run and marks pairs that pass or fail", () => {

@@ -10,12 +10,12 @@ How to write Chromagentic settings and run the engine, with the command-line too
 - Warnings and notes
 - Measuring, suggesting, and describing colors
 - Feedback colors and color-blind checks
-- JavaScript API
 - Recipes
+- JavaScript API (npm package)
 
 ## Setup
 
-The command-line tool is bundled in this skill at `<skill-dir>/scripts/chromagentic.mjs` (`<skill-dir>` is the folder holding `SKILL.md`). Run it with `node <skill-dir>/scripts/chromagentic.mjs <command>`. It needs Node.js 20 or newer and nothing else, so it works in any project, including Swift and Android ones. Below, `chromagentic <command>` is short for that. If the project has the npm package (`npm install --save-dev chromagentic`), `chromagentic <command>` also works, and the JavaScript API is available.
+The command-line tool is bundled in this skill at `<skill-dir>/scripts/chromagentic.mjs` (`<skill-dir>` is the folder holding `SKILL.md`). Run it with `node <skill-dir>/scripts/chromagentic.mjs <command>`. It needs Node.js 22 or newer and nothing else, so it works in any project, including Swift and Android ones. Below, `chromagentic <command>` is short for that. If the project has the npm package (`npm install --save-dev chromagentic`), `chromagentic <command>` also works, and the JavaScript API is available.
 
 ## The settings file
 
@@ -23,7 +23,7 @@ Keep the settings in `chromagentic.theme.json` at the project root. Only `colors
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagentic/main/skills/chromagentic/assets/theme.schema.json",
+  "$schema": "https://raw.githubusercontent.com/NateBaldwinDesign/Chromagentic/v0.3.0/skills/chromagentic/assets/theme.schema.json",
   "colors": {
     "brand": "#ff5a00",
     "slate": ["#f4f6f8", "#5b6672", "#1b2027"]
@@ -74,11 +74,11 @@ Default modes (six schemes for new apps):
 ```json
 "modes": {
   "light": { "backgroundLightness": 1 },
-  "dark": { "backgroundLightness": 0.08 },
+  "dark": { "backgroundLightness": 0.15 },
   "light-high-contrast": { "backgroundLightness": 1, "contrastMultiplier": 1.5 },
-  "dark-high-contrast": { "backgroundLightness": 0.08, "contrastMultiplier": 1.5 },
+  "dark-high-contrast": { "backgroundLightness": 0.15, "contrastMultiplier": 1.5 },
   "light-low-contrast": { "backgroundLightness": 1, "contrastMultiplier": 0.8 },
-  "dark-low-contrast": { "backgroundLightness": 0.08, "contrastMultiplier": 0.8 }
+  "dark-low-contrast": { "backgroundLightness": 0.15, "contrastMultiplier": 0.8 }
 }
 ```
 
@@ -103,7 +103,12 @@ chromagentic generate chromagentic.theme.json --platform web --out src/styles/co
 | `--format json` | Everything: every color with its CSS string, hex, OKLCH, contrast, and target |
 | `--platform <name>` | Sets the gamut and color format for a platform (`references/platforms.md`) |
 | `--out <path>` | Write to a file instead of the screen |
-| `--strict` | Fail if any color misses its target |
+| `--strict` | Fail on any warning (notes don't count) |
+| `--json` | Print one JSON object instead: `{ ok, engineVersion, errors, warnings, notes, output }`. Each warning has a `code` (such as `target-missed`), the `mode`, and the `colors` involved |
+
+Use `-` as the file name to read settings from standard input. To check settings without printing colors, run `chromagentic validate <theme.json>`; it accepts `--strict` and `--json` too. Unknown or misspelled settings are errors, with a "did you mean" hint.
+
+Exit codes: `0` success, `2` bad input or settings (fix the command or the file), `3` a check failed (`--strict` warnings, or `check-cvd` found colors too similar).
 
 CSS names are `--color-{role}` and `--color-surface-{name}` (plus `--color-{scale}-{step}` when steps are on). The default mode is set on `:root`. Other modes turn on with their media query (`prefers-color-scheme`, `prefers-contrast: more` or `less`), or with attributes on any element:
 
@@ -120,7 +125,9 @@ In the JSON output, each color looks like this:
 
 ## Warnings and notes
 
-The engine warns when a target can't be reached, for example 7:1 text on a middle-gray background, and uses the closest color it can. It also warns when feedback colors are too similar for color-blind users, and notes when a high-contrast mode pushes colors to pure black or white. Read each warning to the user and fix the settings: lower the target or multiplier, or move the background closer to white or black. Use `--strict` in CI; it fails on any warning.
+The engine warns when a target can't be reached, for example 7:1 text on a middle-gray background, and uses the closest color it can. It also warns when feedback colors are too similar for color-blind users, when a role you point to a scale step (like `"border": "gray.300"`) is below the minimum for its kind, and when the sRGB hex fallback loses contrast that the `css` value has. Read each warning to the user and fix the settings: lower the target or multiplier, move the background closer to white or black, or point the role to a stronger step.
+
+Notes are information, not problems. For example, a high-contrast mode can push colors to pure black or white. Use `--strict` in CI; it fails on warnings but not notes.
 
 A note (not a warning) lists targets that even spacing moved, such as `text-subtle (light 4.5→4.85)`. The JSON output has them under `adjustments`. Mention them when explaining the colors.
 
@@ -139,12 +146,36 @@ Use `contrast` for any color the engine didn't make, such as an existing brand c
 
 ```sh
 chromagentic feedback "#0d9488"                      # brand-harmonized error, success, warning, info per mode
-chromagentic check-cvd error=#d32f2f success=#388e3c # exits with an error if any pair is under ΔE 11
+chromagentic check-cvd error=#d32f2f success=#388e3c # exits with code 3 if any pair is under ΔE 11
 ```
 
 See `references/feedback-colors.md`.
 
-## JavaScript API
+## Recipes
+
+**Make a brand color accessible.** Use the brand color as the accent's key color and leave the accent's contrast unset. The engine keeps it as close to the brand as the rules allow and picks white or dark text for it. Tell the user how far it moved in each mode (compare `chromagentic describe` of both, or the hex values). Keep the exact brand color for decorative areas without text.
+
+**Button states.** `"accent": { "states": ["hover", "active", "focus"] }` and `"text-on-accent": {}`. Add a `focus-ring` border role if the focus outline sits on the page. For disabled, add `"text-disabled": { "kind": "tint", "contrast": 2 }` with a subtle fill. Don't show state with color alone; keep the label, and add an outline for focus.
+
+**Add a mode.** Add an entry under `modes` and generate again. Don't edit generated colors.
+
+**Convert a hand-made light theme to dark (or dark to light).** Measure each existing color against its background, then use those colors as key colors and those contrasts as named steps, so the original mode comes back almost the same:
+
+```json
+{
+  "colors": { "gray": ["#d1d5db", "#4b5563", "#111827"], "brand": "#2563eb" },
+  "background": { "color": "gray" },
+  "steps": { "border": 1.47, "muted": 7.55, "text": 17.73, "accent": 5.16 },
+  "roles": { "text": "gray.text", "text-subtle": "gray.muted", "border": { "ref": "gray.border", "kind": "tint" }, "accent": "brand.accent" },
+  "modes": { "light": { "backgroundLightness": 1 }, "dark": { "backgroundLightness": 0.12 } }
+}
+```
+
+Fixed steps aren't moved by even spacing, so the original values stay. A role that points to a step is still checked against its kind's minimum, so a faint border like this one (1.47:1) gets a warning. If it is only a decorative divider, write it as `{ "ref": "gray.border", "kind": "tint" }` as above. If people need to see it to use a control, point it to a step of at least 3:1 instead. Default roles that aren't listed point to the closest named step. Set a role to `null` to drop it.
+
+## JavaScript API (npm package)
+
+Only for projects that install the `chromagentic` npm package. Agents should use the command-line tool above.
 
 ```js
 import { generateTheme, toCss, toDtcg, platformOutput, contrast, feedbackColors, checkCvd } from "chromagentic";
@@ -172,26 +203,4 @@ import { personalize } from "chromagentic/runtime"; // or "<skill-dir>/scripts/c
 personalize(settings, { backgroundLightness: 0.15, contrast: 1.3 }); // writes the same --color-* variables on <html>
 ```
 
-`backgroundLightness` is 0–1 and `contrast` is a multiplier from 0.5 to 2. Floors still hold. Load the generated static CSS too, as the fallback. `<skill-dir>/assets/personalize-example.html` shows saving the choice in `localStorage`.
-
-## Recipes
-
-**Make a brand color accessible.** Use the brand color as the accent's key color and leave the accent's contrast unset. The engine keeps it as close to the brand as the rules allow and picks white or dark text for it. Tell the user how far it moved in each mode (compare `chromagentic describe` of both, or the hex values). Keep the exact brand color for decorative areas without text.
-
-**Button states.** `"accent": { "states": ["hover", "active", "focus"] }` and `"text-on-accent": {}`. Add a `focus-ring` border role if the focus outline sits on the page. For disabled, add `"text-disabled": { "kind": "tint", "contrast": 2 }` with a subtle fill. Don't show state with color alone; keep the label, and add an outline for focus.
-
-**Add a mode.** Add an entry under `modes` and generate again. Don't edit generated colors.
-
-**Convert a hand-made light theme to dark (or dark to light).** Measure each existing color against its background, then use those colors as key colors and those contrasts as named steps, so the original mode comes back almost the same:
-
-```json
-{
-  "colors": { "gray": ["#d1d5db", "#4b5563", "#111827"], "brand": "#2563eb" },
-  "background": { "color": "gray" },
-  "steps": { "border": 1.47, "muted": 7.55, "text": 17.73, "accent": 5.16 },
-  "roles": { "text": "gray.text", "text-subtle": "gray.muted", "border": "gray.border", "accent": "brand.accent" },
-  "modes": { "light": { "backgroundLightness": 1 }, "dark": { "backgroundLightness": 0.12 } }
-}
-```
-
-Fixed steps aren't moved by even spacing, so the original values stay. Default roles that aren't listed point to the closest named step. Set a role to `null` to drop it.
+For sliders, create one `createPersonalizer(settings)` and call its `.apply(choice)` on each change. When and how to offer personal colors: `references/themes-and-modes.md`, "Personal colors".

@@ -1,5 +1,5 @@
 // Copyright 2026 Adobe. All rights reserved.
-import Color from "colorjs.io";
+import Color from "./color";
 import {
   colorJsSpace,
   outputGamut,
@@ -40,11 +40,6 @@ export const RGB_TRANSFER = {
   },
 } as const;
 
-export function formatColorNumber(value: number, decimals = 2) {
-  const rounded = Number(value.toFixed(decimals));
-  return Object.is(rounded, -0) ? "0" : String(rounded);
-}
-
 export function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -81,17 +76,6 @@ export function toGamma(channel: number, gamut: RgbGamut = "srgb") {
   return gamut === "rec2020" ? Math.sign(channel) * encoded : encoded;
 }
 
-export function hexToLinear(hex: string): LinearRgb {
-  const normalized = hex.replace("#", "");
-  if (!/^[\da-f]{6}$/i.test(normalized)) {
-    throw new Error(`Expected a six-digit hex color, received "${hex}".`);
-  }
-
-  const channel = (index: number) =>
-    toLinear(Number.parseInt(normalized.slice(index, index + 2), 16) / 255);
-  return [channel(0), channel(2), channel(4)];
-}
-
 export function convertLinearGamut(
   color: LinearRgb,
   from: RgbGamut,
@@ -108,7 +92,7 @@ export function linearToXyzD65(
   return applyMatrix(TO_XYZ[gamut], [red, green, blue]);
 }
 
-export function xyzD65ToLinear(
+function xyzD65ToLinear(
   [x, y, z]: LinearRgb,
   gamut: RgbGamut = "srgb",
 ): LinearRgb {
@@ -125,11 +109,7 @@ export function linearToHex(color: LinearRgb, gamut: RgbGamut = "srgb") {
   return `#${channels.join("")}`;
 }
 
-export function linearToCss(color: LinearRgb, gamut: RgbGamut = "srgb") {
-  return serializeLinearOutputColor(color, colorOutputSettings(gamut));
-}
-
-export function colorOutputSettings(
+function colorOutputSettings(
   output: OutputColorSpace,
 ): ColorOutputSettings {
   if (typeof output === "object") return output;
@@ -220,7 +200,7 @@ export function linearToOklab([red, green, blue]: LinearRgb): Oklab {
   ];
 }
 
-export function oklabToLinear([lightness, a, b]: Oklab): LinearRgb {
+function oklabToLinear([lightness, a, b]: Oklab): LinearRgb {
   const longRoot = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
   const mediumRoot = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
   const shortRoot = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
@@ -238,13 +218,13 @@ export function oklabToLinear([lightness, a, b]: Oklab): LinearRgb {
   ];
 }
 
-export function oklabToOklch([lightness, a, b]: Oklab): Oklch {
+function oklabToOklch([lightness, a, b]: Oklab): Oklch {
   const chroma = Math.hypot(a, b);
   const hue = ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360;
   return [lightness, chroma, hue];
 }
 
-export function oklchToOklab([lightness, chroma, hue]: Oklch): Oklab {
+function oklchToOklab([lightness, chroma, hue]: Oklch): Oklab {
   const hueRadians = (hue * Math.PI) / 180;
   return [
     lightness,
@@ -257,11 +237,11 @@ export function linearToOklch(color: LinearRgb) {
   return oklabToOklch(linearToOklab(color));
 }
 
-export function oklchToLinear(color: Oklch) {
+function oklchToLinear(color: Oklch) {
   return oklabToLinear(oklchToOklab(color));
 }
 
-export function isInSrgbGamut(color: LinearRgb) {
+function isInSrgbGamut(color: LinearRgb) {
   return color.every((channel) => channel >= 0 && channel <= 1);
 }
 

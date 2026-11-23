@@ -1,18 +1,23 @@
 /**
- * Outcome scores for one agent run, from 0 to 1. Result scores look only at the finished project,
- * so they grade runs with and without the skill the same way. Process scores (did the skill
- * trigger, did the agent use the engine) only apply to runs with the skill.
+ * Scores for one agent run, from 0 to 1. They look only at the finished project, so they grade runs
+ * with and without the skill the same way.
+ * - `core` (the headline) averages outcomes any good answer should reach: contrast as shown on an sRGB
+ *   screen, colors a screen can show, the asked-for mood, a working build, faithful mode conversions,
+ *   color-blind-safe feedback, and working switches and personal colors.
+ * - `adherence` averages house-style choices the skill teaches (OKLCH or P3 syntax, roles instead of a
+ *   full scale, text tiers, feedback chroma, asking about personal colors). A good answer can skip these.
+ * Process scores (did the skill trigger, did the agent use the engine) only apply to runs with the skill.
  */
 import Color from "colorjs.io";
-import { describeColor } from "../../src/index";
+import { moodText } from "./moodWords";
 import { checkBuild, findSettings, gradedColors, GENERATE, SUGGEST, type CheckContext } from "./checks";
 import { engineColors, matchesEngine } from "./colors";
-import { INTENT_KEYS, intentScores } from "./intent";
+import { ADHERENCE_INTENT_KEYS, CORE_INTENT_KEYS, intentScores } from "./intent";
 import { composeModes, dtcgModes, namedPairs, swiftModes } from "./palette";
-import { MODES, pairs, paints, readSite, type Mode, type Pair, type Site } from "./render";
+import { contrastRatio, MODES, pairs, paints, readSite, type Mode, type Pair, type Site } from "./render";
 import type { Condition, Metrics, SwatchPair } from "./types";
 
-const ratio = (p: Pair) => Color.contrast(p.fg.color, p.bg.color, "WCAG21");
+const ratio = contrastRatio;
 const passes = (p: Pair) => ratio(p) >= p.target - 0.005;
 const L = (c: Color) => c.to("oklch").coords[0] ?? 0;
 const C = (c: Color) => c.to("oklch").coords[1] ?? 0;
@@ -101,12 +106,19 @@ export function requiredModes(expect: string[] = [], original: ModePairs): strin
   return [...out];
 }
 
-/** Share of new colors in the right format for the platform and inside its gamut. */
-export function platformFit(ctx: CheckContext, settingsPath?: string): number {
+/** Share of new colors that today's wide-gamut screens (Display P3) can show. Plain sRGB hex counts. */
+export function gamutFit(ctx: CheckContext, settingsPath?: string): number {
   const colors = gradedColors(ctx, settingsPath);
   if (!colors.length) return 0;
-  const gamut = ctx.fixture.expectFormat === "p3" ? "p3" : "rec2020";
-  return share(colors, ({ literal }) => literal.kind === ctx.fixture.expectFormat && literal.color.inGamut(gamut, { epsilon: 0.0005 }))!;
+  return share(colors, ({ literal }) => literal.color.inGamut("p3", { epsilon: 0.0005 }))!;
+}
+
+/** Share of new colors written in the syntax the skill recommends for the platform (or the one the user asked for). */
+export function formatFit(ctx: CheckContext, settingsPath?: string): number {
+  const colors = gradedColors(ctx, settingsPath);
+  if (!colors.length) return 0;
+  const want = ctx.scenario.expectFormat ?? ctx.fixture.expectFormat;
+  return share(colors, ({ literal }) => literal.kind === want)!;
 }
 
 /** Share of the new colorful colors whose description matches the words the user asked for. */
@@ -119,23 +131,26 @@ export function moodMatch(ctx: CheckContext, settingsPath?: string): number | nu
     .filter((c) => C(c) >= 0.05 && !seen.has(hex(c)) && seen.add(hex(c)));
   return (
     share(colors, (c) => {
-      const d = describeColor(c.toString());
-      const text = [d.summary, ...d.words, ...d.nouns, ...d.meanings, ...d.effects, ...d.usage, ...d.temperature].join(" ").toLowerCase();
+      const text = moodText(c.toString());
       return wanted.some((w) => text.includes(w.toLowerCase()));
     }) ?? 0
   );
 }
 
-/** Did the skill load without being named: the agent opened SKILL.md or ran the bundled engine. */
+/** Did the skill load without being named: the agent called its skill tool, opened SKILL.md, or ran the bundled engine. */
 export function skillTriggered(ctx: CheckContext): number {
   const used = [...ctx.transcript.toolArgs, ...ctx.transcript.commands].some(
-    (t) => /skills\/chromagentic\/(SKILL\.md|references\/|scripts\/chromagentic\.mjs)/.test(t) || GENERATE.test(t) || SUGGEST.test(t),
+    (t) =>
+      /skills\/chromagentic\/(SKILL\.md|references\/|scripts\/chromagentic\.mjs)/.test(t) ||
+      /^skill\s.*"chromagentic"/i.test(t) ||
+      GENERATE.test(t) ||
+      SUGGEST.test(t),
   );
   return used ? 1 : 0;
 }
 
 /** Share of new colors that came from the engine (0 when there's no settings file to trace them to). */
-export function engineShare(ctx: CheckContext): number {
+function engineShare(ctx: CheckContext): number {
   const settings = findSettings(ctx.files);
   if (!settings) return 0;
   const colors = gradedColors(ctx, settings.path);
@@ -218,13 +233,22 @@ export function swatches(found: ModePairs): Record<string, SwatchPair[]> {
   return out;
 }
 
-const RESULT_KEYS = ["contrast", "fit", "mood", "build", "new-mode", "role-order", "balance", "hue-kept", "original-kept", "switch", ...INTENT_KEYS];
+/** When the user asks for stronger text contrast (like 7:1 for AAA), grade text against that. Large text gets 4.5:1 at AAA. */
+export function raiseTextTarget(found: ModePairs, target?: number): ModePairs {
+  if (!target) return found;
+  const large = target >= 7 ? 4.5 : 3;
+  const raise = (p: Pair): Pair => (p.kind === "text" ? { ...p, target: Math.max(p.target, target) } : p.kind === "large-text" ? { ...p, target: Math.max(p.target, large) } : p);
+  return { modes: new Map([...found.modes].map(([name, list]) => [name, list.map(raise)])) };
+}
 
-/** Every score for one run, plus `result`: the average of the result scores that apply. */
+export const CORE_KEYS = ["contrast", "gamut", "mood", "build", "new-mode", "role-order", "balance", "hue-kept", "original-kept", "switch", ...CORE_INTENT_KEYS];
+export const ADHERENCE_KEYS = ["format", ...ADHERENCE_INTENT_KEYS];
+
+/** Every score for one run, plus `core` and `adherence`: the averages of the scores in each group that apply. */
 export function scoreRun(ctx: CheckContext, condition: Condition): { metrics: Metrics; swatches: Record<string, SwatchPair[]> } {
   const settings = findSettings(ctx.files);
   const build = ctx.fixture.build;
-  const found = projectModes(ctx.files, build, settings?.path);
+  const found = raiseTextTarget(projectModes(ctx.files, build, settings?.path), ctx.scenario.textTarget);
   const original = projectModes(ctx.original, build);
   const required = ctx.scenario.conversion ? [ctx.scenario.conversion.from, ctx.scenario.conversion.to] : requiredModes(ctx.scenario.expectModes, original);
   const perMode = contrastScores(found, required);
@@ -233,13 +257,16 @@ export function scoreRun(ctx: CheckContext, condition: Condition): { metrics: Me
   const metrics: Metrics = {
     ...perMode,
     contrast: mean(Object.values(perMode).filter((v): v is number => v !== null)),
-    fit: platformFit(ctx, settings?.path),
+    gamut: gamutFit(ctx, settings?.path),
+    format: formatFit(ctx, settings?.path),
     mood: moodMatch(ctx, settings?.path),
     build: built,
   };
   Object.assign(metrics, intentScores(ctx, found));
   if (ctx.scenario.conversion) Object.assign(metrics, conversionScores(ctx.original, ctx.files, ctx.scenario.conversion.from, ctx.scenario.conversion.to, built));
-  metrics.result = mean(RESULT_KEYS.map((k) => metrics[k]).filter((v): v is number => typeof v === "number"));
+  const average = (keys: string[]) => mean(keys.map((k) => metrics[k]).filter((v): v is number => typeof v === "number"));
+  metrics.core = average(CORE_KEYS);
+  metrics.adherence = average(ADHERENCE_KEYS);
   metrics.triggered = condition === "skill" ? skillTriggered(ctx) : null;
   metrics.engine = condition === "skill" ? engineShare(ctx) : null;
   return { metrics, swatches: swatches(found) };

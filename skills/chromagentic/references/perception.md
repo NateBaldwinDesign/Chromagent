@@ -51,7 +51,7 @@ Source: colorandcontrast.com/helmholtz-kohlrausch-effect/
 
 Colors look more colorful as light intensity increases.
 
-In UI: Colors look less colorful on dim screens. Lowering chroma in dark mode can look more natural.
+In UI: Dim screens and dark colors look less colorful than bright ones with the same chroma. Many dark themes still lower chroma for light, saturated colors, but that is to reduce glare against the dark surround, not because of the Hunt effect.
 
 Source: colorandcontrast.com/hunt-effect/
 

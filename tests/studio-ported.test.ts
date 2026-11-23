@@ -15,15 +15,15 @@ import {
   polarityWeight,
   type PolarityContext,
 } from "../src/modes/polarity";
-import { buildScaleData } from "../src/scales/scaleGeneration";
-import { generateColors } from "../src/scales/generation";
+import { buildScaleData } from "../src/scales/scaleData";
+import { generateColors } from "../src/scales/colorAtContrast";
 import { scaleInterpolation } from "../src/scales/scaleInterpolation";
 import { measureOutputContrast } from "../src/math/outputContrast";
 import type { ColorScale, ColorSystemDocument } from "../src/engineTypes";
 
 const CONTRASTS = [1.06, 1.15, 1.32, 1.6, 2, 2.6, 3.22, 3.95, 4.79, 6.29, 7.9, 10, 12.3, 14.8, 17, 19.5];
 const output = { authoringGamut: "srgb", outputFormat: "rgb", mapOutputsToSrgb: false } as const;
-const settings = { side: "auto", backgroundBlend: 0, colorSourceCurveOffset: -1, colorOutput: output } as const;
+const settings = { colorOutput: output } as const;
 
 const red: ColorScale = {
   id: "red",
@@ -140,7 +140,7 @@ describe("scale interpolation (from Studio)", () => {
   it("passes contrast targets and runs through each key color on the RGB path", () => {
     const data = buildScaleData(red, output);
     CONTRASTS.forEach((target) => {
-      const css = generateColors(data, [1, 1, 1], target, settings).dynamic.css;
+      const css = generateColors(data, [1, 1, 1], target).dynamic.css;
       expect(measureOutputContrast(css, "rgb(255 255 255)", "srgb")).toBeGreaterThanOrEqual(target - 0.01);
     });
     for (const stop of red.stops) {

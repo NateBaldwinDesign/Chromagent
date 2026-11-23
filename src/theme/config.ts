@@ -1,4 +1,4 @@
-import Color from "colorjs.io";
+import Color from "../math/color";
 import type { ColorFormat, ColorGamut } from "../math/outputSettings";
 import type { ContrastFormula } from "../math/contrast";
 import type { ColorScaleInterpolation } from "../scales/scaleInterpolation";
@@ -6,8 +6,18 @@ import { MAX_CHROMA } from "../math/colorMath";
 import { MAX_CONTRAST_MULTIPLIER } from "../modes/polarity";
 import { MAX_APCA } from "../math/apca";
 import type { ColorStop } from "../engineTypes";
-import { harmonizeFeedback } from "./feedback";
-import { expandStates, inferKind, normalizeRoleSpec, pairOf, type NormalizedRole, type RoleKind, type RoleSpec } from "./roles";
+import { harmonizeFeedback } from "./feedbackHues";
+import {
+  expandStates,
+  inferKind,
+  normalizeRoleSpec,
+  pairOf,
+  ROLE_FLOORS,
+  ROLE_KINDS,
+  type NormalizedRole,
+  type RoleKind,
+  type RoleSpec,
+} from "./roles";
 
 /** A key color, a list of key colors, or a scale definition. Colors are any CSS color string. */
 export type ColorInput =
@@ -51,9 +61,10 @@ export interface ThemeConfig {
   surfaces?: Record<string, SurfaceInput>;
   /**
    * Named UI colors. Each one is a reference like "gray.1400" or "surface.raised",
+   * a reference with a kind like { "ref": "gray.200", "kind": "tint" },
    * a role spec like { "tier": "subtle" }, or null to remove a default role.
    */
-  roles?: Record<string, string | RoleSpec | null>;
+  roles?: Record<string, string | RoleRef | RoleSpec | null>;
   /** Feedback colors (error, success, warning, info). true = harmonized with the brand (built-in colors with `steps`), or map each name to a color. */
   status?: Record<string, string> | boolean;
   /** Even lightness steps between roles and states. A number fixes the step (OKLCH L); false turns snapping off. */
@@ -64,6 +75,12 @@ export interface ThemeConfig {
   polarityCompensation?: number;
   interpolation?: ColorScaleInterpolation;
   output?: OutputInput;
+}
+
+/** A role that points at a fixed step or surface. `kind` sets which minimum contrast it is checked against. */
+export interface RoleRef {
+  ref: string;
+  kind?: RoleKind;
 }
 
 export class ThemeConfigError extends Error {
@@ -87,11 +104,11 @@ export const DEFAULT_SURFACES: Record<string, SurfaceInput> = {
 /** Six schemes: light and dark, each at regular, high, and low contrast. */
 export const DEFAULT_MODES: Record<string, ModeInput> = {
   light: { backgroundLightness: 1 },
-  dark: { backgroundLightness: 0.08 },
+  dark: { backgroundLightness: 0.15 },
   "light-high-contrast": { backgroundLightness: 1, contrastMultiplier: 1.5 },
-  "dark-high-contrast": { backgroundLightness: 0.08, contrastMultiplier: 1.5 },
+  "dark-high-contrast": { backgroundLightness: 0.15, contrastMultiplier: 1.5 },
   "light-low-contrast": { backgroundLightness: 1, contrastMultiplier: 0.8 },
-  "dark-low-contrast": { backgroundLightness: 0.08, contrastMultiplier: 0.8 },
+  "dark-low-contrast": { backgroundLightness: 0.15, contrastMultiplier: 0.8 },
 };
 export const DEFAULT_STATUS: Record<string, string> = {
   success: "green",
@@ -100,7 +117,7 @@ export const DEFAULT_STATUS: Record<string, string> = {
   info: "blue",
 };
 /** Built-in key colors (Spectrum Studio defaults) used when a status scale is not defined. */
-export const BUILT_IN_SCALES: Record<string, [number, number, number][]> = {
+const BUILT_IN_SCALES: Record<string, [number, number, number][]> = {
   gray: [[0.5692623996686854, 0, 0]],
   red: [[0.675, 30.1, 53.3], [0.5779, 30.4, 51.1], [0.3001, 31.5, 25.5]],
   orange: [[0.7736, 65.1, 43.4], [0.7319, 53, 46.5], [0.49, 42.3, 36.7]],
@@ -110,8 +127,78 @@ export const BUILT_IN_SCALES: Record<string, [number, number, number][]> = {
 export const BASE_SURFACE = "background";
 
 const NAME = /^[a-z0-9][a-z0-9-]*$/i;
-const GAMUTS = ["srgb", "display-p3", "rec2020"];
-const FORMATS = ["oklch", "rgb", "hex", "hsl"];
+/** Media queries: words, numbers, parentheses, colons, commas, dots, and dashes only, so they can't break out of the CSS rule. */
+const MEDIA = /^[a-z0-9\s():,.-]+$/i;
+export const GAMUTS = ["srgb", "display-p3", "rec2020"];
+export const FORMATS = ["oklch", "rgb", "hex", "hsl"];
+
+/** The keys allowed in each settings section. A test checks that theme.schema.json allows the same ones. */
+export const CONFIG_KEYS = {
+  top: ["$schema", "colors", "background", "steps", "surfaces", "roles", "spacing", "status", "modes", "defaultMode", "formula", "polarityCompensation", "interpolation", "output"],
+  color: ["keys", "interpolation"],
+  background: ["color", "lightness"],
+  step: ["contrast", "opposite"],
+  surface: ["contrast", "reference", "color"],
+  roleRef: ["ref", "kind"],
+  role: ["kind", "color", "contrast", "min", "tier", "states"],
+  mode: ["backgroundLightness", "contrastMultiplier", "polarityCompensation", "media"],
+  output: ["gamut", "format"],
+} as const;
+
+const KEY_HOMES: Partial<Record<keyof typeof CONFIG_KEYS, string>> = {
+  mode: "each mode, like modes.dark",
+  background: "background",
+  output: "output",
+  role: "a role, like roles.accent",
+  surface: "a surface, like surfaces.raised",
+};
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+function editDistance(a: string, b: string) {
+  let row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    row = next;
+  }
+  return row[b.length];
+}
+
+function checkKeys(problems: string[], path: string, value: unknown, allowed: readonly string[], hintHome = true) {
+  if (!isObject(value)) return;
+  for (const key of Object.keys(value)) {
+    if (allowed.includes(key)) continue;
+    const close = allowed.find((name) => name.toLowerCase() === key.toLowerCase() || editDistance(name.toLowerCase(), key.toLowerCase()) <= 2);
+    const where = path ? ` in ${path}` : "";
+    const home = !hintHome ? undefined : Object.entries(KEY_HOMES).find(([section]) => CONFIG_KEYS[section as keyof typeof CONFIG_KEYS].includes(key as never))?.[1];
+    problems.push(
+      close
+        ? `Unknown setting "${key}"${where}. Did you mean "${close}"?`
+        : home
+          ? `Unknown setting "${key}"${where}. It belongs in ${home}.`
+          : `Unknown setting "${key}"${where}. Allowed: ${allowed.join(", ")}.`,
+    );
+  }
+}
+
+/** Flags misspelled or misplaced settings, which would otherwise be ignored without a word. */
+function checkAllKeys(problems: string[], config: ThemeConfig) {
+  const each = (section: unknown, path: string, allowed: readonly string[] | ((value: unknown) => readonly string[])) => {
+    if (!isObject(section)) return;
+    for (const [name, value] of Object.entries(section))
+      checkKeys(problems, `${path}.${name}`, value, typeof allowed === "function" ? allowed(value) : allowed, path !== "roles");
+  };
+  checkKeys(problems, "", config, CONFIG_KEYS.top);
+  each(config.colors, "colors", CONFIG_KEYS.color);
+  checkKeys(problems, "background", config.background, CONFIG_KEYS.background);
+  if (!Array.isArray(config.steps)) each(config.steps, "steps", CONFIG_KEYS.step);
+  each(config.surfaces, "surfaces", CONFIG_KEYS.surface);
+  each(config.roles, "roles", (value) => (isRef(value) ? CONFIG_KEYS.roleRef : CONFIG_KEYS.role));
+  each(config.modes, "modes", CONFIG_KEYS.mode);
+  checkKeys(problems, "output", config.output, CONFIG_KEYS.output);
+}
 
 export interface NormalizedScale {
   name: string;
@@ -154,7 +241,7 @@ export interface NormalizedConfig {
 }
 
 /** Converts a CSS color to a key-color stop (chroma as a percent of 0.4). */
-export function keyColorStop(css: string, id: string): ColorStop {
+function keyColorStop(css: string, id: string): ColorStop {
   const [lightness, chroma, hue] = new Color(css).to("oklch").coords.map((value) => Number(value));
   const safeChroma = Number.isFinite(chroma) ? chroma : 0;
   return {
@@ -163,6 +250,10 @@ export function keyColorStop(css: string, id: string): ColorStop {
     chroma: (safeChroma / MAX_CHROMA) * 100,
     hue: Number.isFinite(hue) && safeChroma > 1e-6 ? hue : 0,
   };
+}
+
+function isRef(value: unknown): value is string | RoleRef {
+  return typeof value === "string" || (typeof value === "object" && value !== null && "ref" in value);
 }
 
 function isNumber(value: unknown): value is number {
@@ -220,50 +311,45 @@ function closestStep(steps: NormalizedStep[], defaults: number[], index: number)
   ).name;
 }
 
-/** Checks a theme configuration and fills in defaults. Throws ThemeConfigError listing every problem. */
-export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
-  const problems: string[] = [];
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
-    throw new ThemeConfigError(["The theme settings must be an object."]);
-  }
-  const formula = config.formula ?? "wcag2";
-  if (formula !== "wcag2" && formula !== "apca") problems.push(`formula must be "wcag2" or "apca".`);
-  const gamut = config.output?.gamut ?? "rec2020";
-  const format = config.output?.format ?? "oklch";
-  if (!GAMUTS.includes(gamut)) problems.push(`output.gamut must be one of ${GAMUTS.join(", ")}.`);
-  if (!FORMATS.includes(format)) problems.push(`output.format must be one of ${FORMATS.join(", ")}.`);
-  if ((format === "hex" || format === "hsl") && gamut !== "srgb")
-    problems.push(`output.format "${format}" only works with output.gamut "srgb". Use "oklch" or "rgb" for wide gamuts.`);
-  const interpolation = config.interpolation ?? "oklch";
-  if (interpolation !== "oklch" && interpolation !== "rgb") problems.push(`interpolation must be "oklch" or "rgb".`);
-  inRange(problems, "polarityCompensation", config.polarityCompensation, 0, 1);
+type Problems = string[];
+type RoleValue = string | RoleRef | RoleSpec;
 
-  // Scales
+/** Records a problem and returns false when a name uses characters CSS variables can't hold. */
+function validName(problems: Problems, label: string, name: string) {
+  if (NAME.test(name)) return true;
+  problems.push(`${label} name "${name}" can only use letters, numbers, and dashes.`);
+  return false;
+}
+
+function isNeutral(scale: NormalizedScale) {
+  return scale.stops.every((stop) => stop.chroma < 2);
+}
+
+function addBuiltIn(scales: NormalizedScale[], name: string, interpolation: ColorScaleInterpolation) {
+  scales.push({
+    name,
+    stops: BUILT_IN_SCALES[name].map(([lightness, hue, chroma], i) => ({ id: `${name}-${i}`, lightness, hue, chroma })),
+    interpolation: name === "gray" ? interpolation : "rgb",
+    builtIn: true,
+  });
+}
+
+function normalizeColors(problems: Problems, config: ThemeConfig, interpolation: ColorScaleInterpolation) {
   const scales: NormalizedScale[] = [];
   const colors = config.colors;
   if (!colors || typeof colors !== "object" || Array.isArray(colors) || Object.keys(colors).length === 0) {
     problems.push(`colors needs at least one named color, for example { "brand": "#0066ff" }.`);
-  } else {
-    for (const [name, input] of Object.entries(colors)) {
-      if (!NAME.test(name)) {
-        problems.push(`Color name "${name}" can only use letters, numbers, and dashes.`);
-        continue;
-      }
-      const parsed = parseKeys(problems, name, input, interpolation);
-      if (parsed) scales.push({ name, ...parsed, builtIn: false });
-    }
+    return scales;
   }
-  const addBuiltIn = (name: string) => {
-    scales.push({
-      name,
-      stops: BUILT_IN_SCALES[name].map(([lightness, hue, chroma], i) => ({ id: `${name}-${i}`, lightness, hue, chroma })),
-      interpolation: name === "gray" ? interpolation : "rgb",
-      builtIn: true,
-    });
-  };
-  const isNeutral = (scale: NormalizedScale) => scale.stops.every((stop) => stop.chroma < 2);
+  for (const [name, input] of Object.entries(colors)) {
+    if (!validName(problems, "Color", name)) continue;
+    const parsed = parseKeys(problems, name, input, interpolation);
+    if (parsed) scales.push({ name, ...parsed, builtIn: false });
+  }
+  return scales;
+}
 
-  // Background
+function pickBackground(problems: Problems, config: ThemeConfig, scales: NormalizedScale[], interpolation: ColorScaleInterpolation) {
   let backgroundScale = config.background?.color;
   if (backgroundScale !== undefined && !scales.some((s) => s.name === backgroundScale)) {
     problems.push(`background.color "${backgroundScale}" must be the name of one of your colors.`);
@@ -272,52 +358,59 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
     backgroundScale = scales.find(isNeutral)?.name;
     if (!backgroundScale && scales.length > 0) {
       backgroundScale = "gray";
-      if (!scales.some((s) => s.name === "gray")) addBuiltIn("gray");
+      if (!scales.some((s) => s.name === "gray")) addBuiltIn(scales, "gray", interpolation);
     }
   }
   inRange(problems, "background.lightness", config.background?.lightness, 0, 1);
+  return backgroundScale;
+}
 
-  // Status colors
+/** Adds the status scales and returns which scale each status role uses. */
+function normalizeStatus(
+  problems: Problems,
+  config: ThemeConfig,
+  scales: NormalizedScale[],
+  backgroundScale: string | undefined,
+  roleFirst: boolean,
+  interpolation: ColorScaleInterpolation,
+) {
   const statusRoles: Record<string, string> = {};
-  const roleFirst = config.steps === undefined;
   const wantStatus = config.status === undefined ? !roleFirst : config.status !== false;
-  if (wantStatus) {
-    // Role-first themes draw feedback colors from the brand: same chroma, harmonious hues.
-    const brand = scales.find((s) => !s.builtIn && !isNeutral(s) && s.name !== backgroundScale);
-    const harmonized =
-      roleFirst && config.status === true && brand
-        ? Object.fromEntries(
-            Object.entries(harmonizeFeedback(`oklch(${brand.stops[0].lightness} ${(brand.stops[0].chroma / 100) * MAX_CHROMA} ${brand.stops[0].hue})`)).map(([name, [l, c, h]]) => [name, `oklch(${l} ${c.toFixed(4)} ${h})`]),
-          )
-        : undefined;
-    const status = harmonized ?? (config.status === undefined || config.status === true ? DEFAULT_STATUS : config.status);
-    if (typeof status !== "object" || Array.isArray(status)) problems.push("status must be true, false, or an object.");
-    else
-      for (const [role, value] of Object.entries(status)) {
-        if (!NAME.test(role)) {
-          problems.push(`Status name "${role}" can only use letters, numbers, and dashes.`);
-          continue;
-        }
-        if (scales.some((s) => s.name === value)) statusRoles[role] = value;
-        else if (BUILT_IN_SCALES[value]) {
-          addBuiltIn(value);
-          statusRoles[role] = value;
-        } else {
-          const parsed = parseKeys(problems, role, value, interpolation);
-          if (parsed) {
-            const scaleName = `status-${role}`;
-            if (scales.some((s) => s.name === scaleName))
-              problems.push(`status.${role} conflicts with a color named "${scaleName}".`);
-            else {
-              scales.push({ name: scaleName, ...parsed, builtIn: false });
-              statusRoles[role] = scaleName;
-            }
-          }
-        }
-      }
+  if (!wantStatus) return statusRoles;
+  // Role-first themes draw feedback colors from the brand: same chroma, harmonious hues.
+  const brand = scales.find((s) => !s.builtIn && !isNeutral(s) && s.name !== backgroundScale);
+  const harmonized =
+    roleFirst && config.status === true && brand
+      ? Object.fromEntries(
+          Object.entries(harmonizeFeedback(`oklch(${brand.stops[0].lightness} ${(brand.stops[0].chroma / 100) * MAX_CHROMA} ${brand.stops[0].hue})`)).map(([name, [l, c, h]]) => [name, `oklch(${l} ${c.toFixed(4)} ${h})`]),
+        )
+      : undefined;
+  const status = harmonized ?? (config.status === undefined || config.status === true ? DEFAULT_STATUS : config.status);
+  if (typeof status !== "object" || Array.isArray(status)) {
+    problems.push("status must be true, false, or an object.");
+    return statusRoles;
   }
+  for (const [role, value] of Object.entries(status)) {
+    if (!validName(problems, "Status", role)) continue;
+    if (scales.some((s) => s.name === value)) statusRoles[role] = value;
+    else if (BUILT_IN_SCALES[value]) {
+      addBuiltIn(scales, value, interpolation);
+      statusRoles[role] = value;
+    } else {
+      const parsed = parseKeys(problems, role, value, interpolation);
+      if (!parsed) continue;
+      const scaleName = `status-${role}`;
+      if (scales.some((s) => s.name === scaleName)) problems.push(`status.${role} conflicts with a color named "${scaleName}".`);
+      else {
+        scales.push({ name: scaleName, ...parsed, builtIn: false });
+        statusRoles[role] = scaleName;
+      }
+    }
+  }
+  return statusRoles;
+}
 
-  // Steps
+function normalizeSteps(problems: Problems, config: ThemeConfig, formula: ContrastFormula) {
   const stepDefaults = formula === "apca" ? DEFAULT_APCA_STEPS : DEFAULT_WCAG_STEPS;
   const maxContrast = formula === "apca" ? MAX_APCA : 21;
   const minContrast = formula === "apca" ? 0 : 1;
@@ -333,7 +426,7 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   for (const [name, input] of rawSteps) {
     const contrast = typeof input === "object" && input !== null ? input.contrast : input;
     const opposite = typeof input === "object" && input !== null ? input.opposite : undefined;
-    if (!NAME.test(name)) problems.push(`Step name "${name}" can only use letters, numbers, and dashes.`);
+    validName(problems, "Step", name);
     if (!isNumber(contrast) || contrast < minContrast || contrast > maxContrast) {
       problems.push(`steps.${name} must be a contrast from ${minContrast} to ${maxContrast} for ${formula} (got ${JSON.stringify(contrast)}).`);
       continue;
@@ -344,12 +437,13 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
     }
     steps.push({ name, contrast, ...(opposite !== undefined && { opposite }) });
   }
+  return { steps, stepDefaults };
+}
 
-  // Surfaces
-  const surfaceInput = config.surfaces ?? DEFAULT_SURFACES;
+function normalizeSurfaces(problems: Problems, config: ThemeConfig, scales: NormalizedScale[]) {
   const surfaces: NormalizedConfig["surfaces"] = [];
-  for (const [name, input] of Object.entries(surfaceInput)) {
-    if (!NAME.test(name)) problems.push(`Surface name "${name}" can only use letters, numbers, and dashes.`);
+  for (const [name, input] of Object.entries(config.surfaces ?? DEFAULT_SURFACES)) {
+    validName(problems, "Surface", name);
     if (name === BASE_SURFACE) {
       problems.push(`"${BASE_SURFACE}" is the base surface and is always included; pick another surface name.`);
       continue;
@@ -366,8 +460,10 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
       problems.push(`surfaces.${name}.color "${input.color}" must be the name of one of your colors.`);
     surfaces.push({ name, contrast: input.contrast, reference: input.reference ?? "parent", color: input.color });
   }
+  return surfaces;
+}
 
-  // Modes
+function normalizeModes(problems: Problems, config: ThemeConfig) {
   const modeInput = config.modes ?? DEFAULT_MODES;
   const modes: NormalizedMode[] = [];
   if (typeof modeInput !== "object" || Object.keys(modeInput).length === 0) problems.push("modes needs at least one mode.");
@@ -375,13 +471,13 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   if (config.defaultMode !== undefined && !(config.defaultMode in modeInput))
     problems.push(`defaultMode "${config.defaultMode}" is not one of your modes.`);
   for (const [name, mode] of Object.entries(modeInput)) {
-    if (!NAME.test(name)) problems.push(`Mode name "${name}" can only use letters, numbers, and dashes.`);
+    validName(problems, "Mode", name);
     const m = mode ?? {};
     inRange(problems, `modes.${name}.backgroundLightness`, m.backgroundLightness, 0, 1);
     inRange(problems, `modes.${name}.contrastMultiplier`, m.contrastMultiplier, 0, MAX_CONTRAST_MULTIPLIER);
     inRange(problems, `modes.${name}.polarityCompensation`, m.polarityCompensation, 0, 1);
-    if (m.media !== undefined && m.media !== false && typeof m.media !== "string")
-      problems.push(`modes.${name}.media must be a CSS media query string or false.`);
+    if (m.media !== undefined && m.media !== false && (typeof m.media !== "string" || !MEDIA.test(m.media) || /url\(/i.test(m.media)))
+      problems.push(`modes.${name}.media must be a CSS media query like "(prefers-color-scheme: dark)", or false.`);
     const media = name === defaultMode ? undefined : m.media === false ? undefined : (m.media ?? inferMedia(name));
     modes.push({
       name,
@@ -391,16 +487,23 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
       ...(media && { media }),
     });
   }
+  return { modes, defaultMode };
+}
 
-  // Roles
-  const neutral = backgroundScale;
-  const statusScales = new Set(Object.values(statusRoles));
-  const accentScale = (
-    scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name) && s.name !== neutral) ??
-    scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name)) ??
-    scales.find((s) => !s.builtIn && !isNeutral(s))
-  )?.name;
-  const defaults: Record<string, string | RoleSpec> = {};
+interface RoleInputs {
+  formula: ContrastFormula;
+  roleFirst: boolean;
+  scales: NormalizedScale[];
+  neutral: string | undefined;
+  statusRoles: Record<string, string>;
+  steps: NormalizedStep[];
+  stepDefaults: number[];
+  surfaces: NormalizedConfig["surfaces"];
+}
+
+/** The roles every theme gets before the user's own roles are merged in. */
+function defaultRoles({ roleFirst, neutral, statusRoles, steps, stepDefaults }: RoleInputs, accentScale: string | undefined) {
+  const defaults: Record<string, RoleValue> = {};
   if (roleFirst) {
     Object.assign(defaults, { text: {}, "text-subtle": {}, border: {} });
     if (accentScale) Object.assign(defaults, { accent: { color: accentScale, states: ["hover", "active"] }, "text-on-accent": {} });
@@ -430,22 +533,34 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
       defaults[`${role}-border`] = `${scale}.${at(6)}`;
     }
   }
-  const merged: Record<string, string | RoleSpec> = { ...defaults };
+  return defaults;
+}
+
+/** Merges default and user roles, then checks every reference and spec. */
+function normalizeRoles(problems: Problems, config: ThemeConfig, inputs: RoleInputs) {
+  const { formula, scales, neutral, statusRoles, steps, surfaces } = inputs;
+  const statusScales = new Set(Object.values(statusRoles));
+  const accentScale = (
+    scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name) && s.name !== neutral) ??
+    scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name)) ??
+    scales.find((s) => !s.builtIn && !isNeutral(s))
+  )?.name;
+  const merged = defaultRoles(inputs, accentScale);
   const userRoles = config.roles ?? {};
   if (typeof userRoles !== "object" || Array.isArray(userRoles)) problems.push("roles must be an object.");
   else
     for (const [role, value] of Object.entries(userRoles)) {
-      if (!NAME.test(role)) problems.push(`Role name "${role}" can only use letters, numbers, and dashes.`);
+      validName(problems, "Role", role);
       if (value === null) delete merged[role];
       else merged[role] = value;
     }
   // A default on-color goes away with the role it sits on.
   for (const role of Object.keys(merged)) {
     const pair = pairOf(role);
-    if (typeof merged[role] !== "object" || role in userRoles || !pair) continue;
+    if (typeof merged[role] !== "object" || isRef(merged[role]) || role in userRoles || !pair) continue;
     if (!(pair in merged)) delete merged[role];
     // A fixed-step pair keeps the older default: the page background.
-    else if (typeof merged[pair] === "string") merged[role] = `surface.${BASE_SURFACE}`;
+    else if (isRef(merged[pair])) merged[role] = `surface.${BASE_SURFACE}`;
   }
   const scaleNames = new Set(scales.map((s) => s.name));
   const stepNames = new Set(steps.map((s) => s.name));
@@ -456,15 +571,20 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   const specs: Record<string, RoleSpec | undefined> = {};
   const referencedSteps = new Set<string>();
   for (const [role, value] of Object.entries(merged)) {
-    if (typeof value === "string") {
-      const [group, item, extra] = value.split(".");
+    if (isRef(value)) {
+      const ref = typeof value === "string" ? value : value.ref;
+      const kind = typeof value === "string" ? inferKind(role) : (value.kind ?? inferKind(role));
+      if (typeof value === "object" && !ROLE_KINDS.includes(kind)) problems.push(`roles.${role}.kind must be one of ${ROLE_KINDS.join(", ")}.`);
+      const [group, item, extra] = typeof ref === "string" ? ref.split(".") : [];
       const valid =
         extra === undefined &&
         (group === "surface" ? surfaceNames.has(item) : scaleNames.has(group) && stepNames.has(item));
       if (!valid)
-        problems.push(`roles.${role} "${value}" must point to a color step like "${neutral ?? "gray"}.${steps.at(-3)?.name ?? "1400"}" or a surface like "surface.${BASE_SURFACE}". ${available}`);
+        problems.push(`roles.${role} "${String(ref)}" must point to a color step like "${neutral ?? "gray"}.${steps.at(-3)?.name ?? "1400"}" or a surface like "surface.${BASE_SURFACE}". ${available}`);
       else if (group !== "surface") referencedSteps.add(item);
-      normalized[role] = { name: role, kind: inferKind(role), ref: value, floor: 0 };
+      // References you write are checked against their kind's minimum. On-colors, surfaces, and disabled text are exempt.
+      const checked = role in userRoles && group !== "surface" && kind !== "on" && !/disabled/i.test(role);
+      normalized[role] = { name: role, kind, ref, floor: checked ? (ROLE_FLOORS[formula]?.[kind] ?? 0) : 0 };
     } else {
       const result = normalizeRoleSpec(problems, role, value, formula, scaleNames, defaultScale);
       if (result) {
@@ -477,10 +597,11 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   for (const role of Object.values(roles))
     if (role.pair && (!roles[role.pair] || roles[role.pair].kind === "on" || roles[role.pair].ref))
       problems.push(`roles.${role.name} sits on "${role.pair}", which must be a generated role (not a reference or another on-color).`);
-  if (config.spacing !== undefined && config.spacing !== false && (!isNumber(config.spacing) || config.spacing < 0.01 || config.spacing > 0.2))
-    problems.push("spacing must be false or a lightness step from 0.01 to 0.2.");
+  return { roles, referencedSteps };
+}
 
-  // Names must not collide in the output.
+/** Names must not collide in the output. */
+function checkNameCollisions(problems: Problems, scales: NormalizedScale[], roles: Record<string, NormalizedRole>) {
   const used = new Map<string, string>();
   const claim = (key: string, owner: string) => {
     const previous = used.get(key);
@@ -490,6 +611,47 @@ export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
   claim("surface", "the surface group");
   scales.forEach((s) => claim(s.name, `color "${s.name}"`));
   Object.keys(roles).forEach((role) => claim(role, `role "${role}"`));
+}
+
+/** Checks a theme configuration and fills in defaults. Throws ThemeConfigError listing every problem. */
+export function normalizeConfig(config: ThemeConfig): NormalizedConfig {
+  const problems: Problems = [];
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    throw new ThemeConfigError(["The theme settings must be an object."]);
+  }
+  checkAllKeys(problems, config);
+  const formula = config.formula ?? "wcag2";
+  if (formula !== "wcag2" && formula !== "apca") problems.push(`formula must be "wcag2" or "apca".`);
+  const gamut = config.output?.gamut ?? "rec2020";
+  const format = config.output?.format ?? "oklch";
+  if (!GAMUTS.includes(gamut)) problems.push(`output.gamut must be one of ${GAMUTS.join(", ")}.`);
+  if (!FORMATS.includes(format)) problems.push(`output.format must be one of ${FORMATS.join(", ")}.`);
+  if ((format === "hex" || format === "hsl") && gamut !== "srgb")
+    problems.push(`output.format "${format}" only works with output.gamut "srgb". Use "oklch" or "rgb" for wide gamuts.`);
+  const interpolation = config.interpolation ?? "oklch";
+  if (interpolation !== "oklch" && interpolation !== "rgb") problems.push(`interpolation must be "oklch" or "rgb".`);
+  inRange(problems, "polarityCompensation", config.polarityCompensation, 0, 1);
+
+  const roleFirst = config.steps === undefined;
+  const scales = normalizeColors(problems, config, interpolation);
+  const backgroundScale = pickBackground(problems, config, scales, interpolation);
+  const statusRoles = normalizeStatus(problems, config, scales, backgroundScale, roleFirst, interpolation);
+  const { steps, stepDefaults } = normalizeSteps(problems, config, formula);
+  const surfaces = normalizeSurfaces(problems, config, scales);
+  const { modes, defaultMode } = normalizeModes(problems, config);
+  const { roles, referencedSteps } = normalizeRoles(problems, config, {
+    formula,
+    roleFirst,
+    scales,
+    neutral: backgroundScale,
+    statusRoles,
+    steps,
+    stepDefaults,
+    surfaces,
+  });
+  if (config.spacing !== undefined && config.spacing !== false && (!isNumber(config.spacing) || config.spacing < 0.01 || config.spacing > 0.2))
+    problems.push("spacing must be false or a lightness step from 0.01 to 0.2.");
+  checkNameCollisions(problems, scales, roles);
 
   if (problems.length > 0) throw new ThemeConfigError(problems);
   return {

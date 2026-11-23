@@ -5,8 +5,8 @@ import { apcaLuminanceOfLinear } from "../scales/apcaGeneration";
 
 /** Default lightness step for states (and the starting point for spacing), in OKLCH L. */
 export const DEFAULT_STEP = 0.05;
-export const MIN_STEP = 0.035;
-export const MAX_STEP = 0.07;
+const MIN_STEP = 0.035;
+const MAX_STEP = 0.07;
 
 /**
  * Converts between a contrast target and lightness distance from the background.

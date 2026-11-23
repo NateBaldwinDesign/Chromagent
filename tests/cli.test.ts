@@ -73,7 +73,7 @@ describe("generate", () => {
     const t = io();
     const code = await run(["generate", "hard.json", "--strict"], t.io);
     expect(t.err()).toMatchSnapshot();
-    expect(code).toBe(1);
+    expect(code).toBe(3);
     expect(await run(["generate", "hard.json"], io().io)).toBe(0);
   });
 
@@ -85,7 +85,7 @@ describe("generate", () => {
     [["generate", "theme.json", "--nope"], "Unknown option"],
   ])("explains bad input: %j", async (args, message) => {
     const t = io();
-    expect(await run(args, t.io)).toBe(1);
+    expect(await run(args, t.io)).toBe(2);
     expect(t.err()).toContain(message);
   });
 
@@ -93,11 +93,75 @@ describe("generate", () => {
     await writeFile(join(dir, "broken.json"), "{ colors: ");
     await writeFile(join(dir, "invalid.json"), JSON.stringify({ colors: { blue: "not-a-color" }, defaultMode: "nope" }));
     const broken = io();
-    expect(await run(["generate", "broken.json"], broken.io)).toBe(1);
+    expect(await run(["generate", "broken.json"], broken.io)).toBe(2);
     expect(broken.err()).toContain("is not valid JSON");
     const invalid = io();
-    expect(await run(["generate", "invalid.json"], invalid.io)).toBe(1);
+    expect(await run(["generate", "invalid.json"], invalid.io)).toBe(2);
     expect(invalid.err()).toMatchSnapshot();
+  });
+});
+
+describe("machine-readable output", () => {
+  const parse = (t: ReturnType<typeof io>) => JSON.parse(t.out());
+
+  it("wraps a generated theme in one JSON report", async () => {
+    const t = io({ version: "9.9.9" });
+    expect(await run(["generate", "theme.json", "--format", "json", "--json"], t.io)).toBe(0);
+    const report = parse(t);
+    expect(report).toMatchObject({ ok: true, engineVersion: "9.9.9", errors: [] });
+    expect(report.output.modes.light.roles.text.css).toMatch(/^oklch/);
+    expect(t.err()).toBe("");
+  });
+
+  it("gives warnings a code and mode, and fails --strict with exit 3", async () => {
+    await writeFile(join(dir, "hard.json"), JSON.stringify({ colors: { brand: "#FF5A00" }, steps: [4.5, 21], roles: null, status: false, modes: { mid: { backgroundLightness: 0.5 } } }));
+    const t = io();
+    expect(await run(["generate", "hard.json", "--strict", "--json"], t.io)).toBe(3);
+    const report = parse(t);
+    expect(report.ok).toBe(false);
+    expect(report.failed).toMatch(/--strict/);
+    expect(report.warnings[0]).toMatchObject({ code: "target-missed", mode: "mid" });
+    expect(report.warnings[0].colors.length).toBeGreaterThan(0);
+  });
+
+  it("lists every settings problem and exits 2", async () => {
+    await writeFile(join(dir, "invalid.json"), JSON.stringify({ colors: { blue: "nope" }, modez: {} }));
+    const t = io();
+    expect(await run(["generate", "invalid.json", "--json"], t.io)).toBe(2);
+    const messages = parse(t).errors.map((e: { message: string }) => e.message);
+    expect(messages).toContain('colors.blue: "nope" is not a valid CSS color.');
+    expect(messages.join(" ")).toMatch(/Did you mean "modes"/);
+  });
+
+  it("measures contrast as JSON", async () => {
+    const t = io();
+    await run(["contrast", "#5b6672", "#fff", "--json"], t.io);
+    expect(parse(t).output).toEqual({ formula: "wcag2", contrast: 5.85, text: "5.85:1" });
+  });
+});
+
+describe("validate, standard input, and --platform", () => {
+  it("validates settings without printing colors", async () => {
+    const t = io();
+    expect(await run(["validate", "theme.json"], t.io)).toBe(0);
+    expect(t.out()).toMatch(/^The settings are valid: 6 modes \(light, dark/);
+    expect(t.out()).not.toContain("oklch");
+  });
+
+  it("reads settings from standard input with -", async () => {
+    const t = io({ stdin: async () => JSON.stringify({ colors: { blue: "#0265dc" }, modes: { light: {} } }) });
+    expect(await run(["generate", "-"], t.io)).toBe(0);
+    expect(t.out()).toContain("--color-text:");
+    const none = io();
+    expect(await run(["validate", "-"], none.io)).toBe(2);
+    expect(none.err()).toContain("standard input");
+  });
+
+  it("notes when --platform replaces output settings from the file", async () => {
+    await writeFile(join(dir, "web.json"), JSON.stringify({ colors: { blue: "#0265dc" }, output: { gamut: "srgb", format: "hex" }, modes: { light: {} } }));
+    const t = io();
+    await run(["generate", "web.json", "--platform", "ios", "--json"], t.io);
+    expect(JSON.parse(t.out()).notes).toContainEqual(expect.objectContaining({ code: "platform-override" }));
   });
 });
 
@@ -138,7 +202,7 @@ describe("helper commands", () => {
     [["dance"], 'Unknown command "dance"'],
   ])("explains bad input: %j", async (args, message) => {
     const t = io();
-    expect(await run(args, t.io)).toBe(1);
+    expect(await run(args, t.io)).toBe(2);
     expect(t.err()).toContain(message);
   });
 

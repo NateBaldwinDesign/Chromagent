@@ -4,20 +4,21 @@ These tests check how well a real AI agent uses chromagentic. They start Copilot
 
 ```sh
 npm run build
-npm run eval                                   # Copilot, every scenario, 1 run each
+npm run eval                                   # Copilot, every scenario, 5 runs each, with the skill
+npm run eval -- --compare                      # with vs. without the skill (the headline numbers)
 npm run eval -- --agent claude --scenario dark-mode --runs 3
-npm run eval -- --agent all --no-rubric        # skip the AI grader
-npm run eval -- --compare --runs 3             # with vs. without the skill
+npm run eval -- --triggers --runs 1            # does the skill load when it should, and only then?
 ```
 
 | Option | Meaning |
 |---|---|
 | `--agent copilot\|claude\|all` | Which agent to test. Default `copilot`. |
 | `--scenario id[,id]\|all` | Which scenarios to run. Default `all`. |
-| `--runs N` | Runs per scenario. Agents vary, so more runs give steadier pass rates. Default 1. |
+| `--runs N` | Runs per scenario (or per trigger prompt). Agents vary, so the report needs at least 2 a side for a confidence interval. Default 5. |
 | `--parallel N` | Runs at the same time. Default 3. |
 | `--baseline` | Run without the skill, to see what the agent does on its own. |
 | `--compare` | Run every scenario both with and without the skill, and report the difference. |
+| `--triggers` | Run the trigger suite in `triggers.yaml` instead of the scenarios. |
 | `--no-rubric` | Skip the AI grader. |
 | `--grader copilot\|claude` | Which agent grades with the rubric. Default: the first agent tested. |
 | `--model name` | Model for the agent being tested. |
@@ -26,9 +27,11 @@ npm run eval -- --compare --runs 3             # with vs. without the skill
 
 ## How a run works
 
-1. A practice project from `fixtures/` is copied to a temporary folder, and the skill folder is copied into `.agents/skills`, `.github/skills`, and `.claude/skills` (the standard places agents look). In a baseline run, no skill is added.
+1. A practice project from `fixtures/` is copied to a temporary folder with a neutral name (so the path doesn't hint at what's being tested), and the skill folder is copied into `.agents/skills`, `.github/skills`, and `.claude/skills` (the standard places agents look). In a baseline run, no skill is added.
 2. The agent gets the scenario's prompt, exactly as a user would type it.
 3. The finished folder and the agent's transcript are graded.
+
+**Keeping the baseline clean.** Agents also load skills from your home folder (`~/.copilot/skills`, `~/.claude/skills`, `~/.agents/skills`). The runner won't start a baseline or trigger run if chromagentic is installed there. A baseline run whose agent still lists or mentions chromagentic is marked and left out of the averages; the report says how many. (The runner doesn't swap out your home folder, because the agents need it to sign in.)
 
 ## Scenarios
 
@@ -37,46 +40,60 @@ npm run eval -- --compare --runs 3             # with vs. without the skill
 - **light-to-dark**: a hand-made, light-only Tailwind project (`fixtures/light-only`), prompted with "Add a dark mode."
 - **dark-to-light**: a dark-only CSS project (`fixtures/dark-only`), prompted with "Add a light mode."
 
-Four more scenarios cover the role-first approach:
+Four cover the role-first approach:
 
 - **role-first**: a new app (`fixtures/new-app`), "Pick the colors for this app."
 - **form-validation**: a sign-up form with muted status messages (`fixtures/signup-form`), which needs error, success, warning, and info colors.
 - **personalization**: the new app, asked to let people choose their own lightness and contrast.
 - **six-schemes**: the new app, "Set up the color themes for this new app."
 
+Four are harder, and test things the skill doesn't spell out step by step:
+
+- **fix-contrast**: fix failing text and keep the look (scored by **Look kept**).
+- **aaa-text**: every text color must reach WCAG AAA (7:1 body text, 4.5:1 large text).
+- **focus-rings**: add visible focus indicators (scored by **Focus rings**).
+- **hex-only**: the user asks for plain hex, so hex is the right format here.
+
 ## Scores (with and without the skill)
 
-Every run, with or without the skill, gets these **result scores** (0–100%). They look at the finished project, not at how the agent got there:
+Every run, with or without the skill, is graded the same way, by code that's separate from the engine. Scores run from 0 to 100% and are split in two groups.
 
-- **Contrast (light / dark / high contrast)**: the share of text, icon, and border color pairs that meet their target in that mode. A required mode that's missing scores 0. For web projects, the pairs come from the page itself (the HTML plus its CSS, Tailwind classes, and media queries). For tokens, Compose, and SwiftUI, they come from role names like `text` on `background`.
-- **Platform fit**: the share of new colors that use the right format and gamut for the platform.
-- **Mood match**: for mood prompts, the share of key colors that `describeColor` describes with the requested words.
+### Core score (the headline)
+
+Outcomes any good answer should reach, whichever way it gets there:
+
+- **Contrast (per mode)**: the share of text, icon, border, and focus-ring pairs that meet their target, measured as an sRGB screen would show them (wide-gamut colors are mapped in first). A required mode that's missing scores 0. For web projects, the pairs come from the page itself (the HTML plus its CSS, Tailwind classes, media queries, and `:focus-visible` outlines). For tokens, Compose, and SwiftUI, they come from role names like `text` on `background`.
+- **Colors a screen can show**: the share of new colors inside Display P3. Hex always counts.
+- **Mood match**: for mood prompts, the share of key colors described with the requested words (by a word table in `lib/moodWords.ts`, not the engine).
 - **Builds**: the project still builds.
+- For conversions: **New mode passes**, **Role order kept** (body text strongest, borders subtle), **Perceived contrast kept** (lightness gaps no smaller than the original's, which catches colors that pass the ratio but look flat), **Brand hues kept** (within 15°), **Original unchanged**, and **Mode switch works** (a media query or class).
+- **Color-blind safe** (form-validation): status colors differ by CIEDE2000 ΔE ≥ 11 in typical vision and protan, deutan, and tritan simulations (Machado 2009), in every mode.
+- **Personal colors** (personalization), **Switch wired** (six-schemes: dark mode uses the app's `data-theme` switch), **Focus rings** (3:1 against what's around them), and **Look kept** (fixed colors keep their hue and don't move far).
 
-The two conversion scenarios add:
+### Follows the skill's style
 
-- **New mode passes**: every text, icon, and border pair in the new mode meets its target.
-- **Role order kept**: roles keep their order of strength (body text strongest, borders subtle).
-- **Perceived contrast kept**: the lightness gap of each pair is not smaller than in the original. This catches colors that pass the ratio but look flat.
-- **Brand hues kept**: brand and accent hues shift by 15° or less and stay colorful.
-- **Original unchanged**: the original mode looks the same (a tiny color difference at most).
-- **Mode switch works**: the new mode is switched on by a media query or a class.
+Choices the skill recommends but a good answer might make differently. Shown apart so they don't inflate the headline:
 
-The role-first scenarios add:
+- **Recommended color syntax**: OKLCH for web and tokens, Display P3 for iOS and Android, or whatever the user asked for.
+- **Roles, not a full scale**, **Text tiers** (2–4 text colors, the strongest at 7:1), **Feedback matches brand** (status colors about as colorful as the brand), and **Asked about personal colors**.
 
-- **No full scale** (role-first): no color family has 8 or more numbered steps (`--blue-100` … `--blue-900`).
-- **Text tiers** (role-first): 2–4 text colors, the strongest at 7:1 or more.
-- **Color-blind safe** (form-validation): error, success, warning, and info differ by CIEDE2000 ΔE ≥ 11 in typical vision and in protan, deutan, and tritan simulations (Machado 2009).
-- **Harmony with the brand** (form-validation): status colors are about as colorful as the brand (relative chroma within 0.25).
-- **Personal colors** (personalization): static light and dark fallbacks, a script that writes CSS variables, a saved choice, and a control.
-- **Switch wired** and **Asked** (six-schemes): dark mode plugs into the app's `data-theme` switch, and the final reply asks whether people should be able to personalize colors.
-- Low-contrast modes are scored like high contrast (`prefers-contrast: less`, `data-contrast="less"`).
+### Also reported
 
-**Overall result** is the average of the result scores that apply. Runs with the skill also get two **process scores**: whether the skill was used without being named, and the share of new colors that came from the engine.
+- **AI grader**: a second agent reads the final reply and checks **accurate** and **explains** against a neutral sheet of standards facts (WCAG, APCA, CVD). The skill's own guide is included only to check claims about the tool. Both conditions are graded the same way.
+- **Process** (skill runs only): whether the skill loaded without being named, and the share of new colors that came from the engine.
+- **Time and cost**: seconds per run and, for Copilot, premium requests.
 
-The report shows each score's average, how much it varied between runs (±), and the with − without difference.
+The report gives each score's average, its spread between runs (±), the with − without difference, and a **95% interval** for that difference (bootstrap, 4,000 resamples, seeded so it repeats). If the interval includes 0, the difference may be chance.
 
-**Known limit:** colors are found by their role names (text, background, border, and so on). In Android Compose projects, agents working without the skill often hard-code button colors inside the component, where the grader can't see them. Those runs are then scored only on the theme colors it can find, which works in the baseline's favor. The real difference is likely a little larger than reported.
+**Known limit:** colors are found by their role names (text, background, border, and so on). In Android Compose projects, agents working without the skill often hard-code button colors inside the component, where the grader can't see them. Those runs are then scored only on the theme colors it can find.
+
+## Trigger suite
+
+`triggers.yaml` lists prompts that should load the skill (dark mode, contrast fixes, palettes) and prompts that shouldn't (chart colors, CMYK print, photo edits, unrelated web work). `--triggers` runs each one with the skill installed and reports **precision** (when it loaded, it should have) and **recall** (when it should load, it did), plus every miss.
+
+## Replays (free re-grading)
+
+Every run saves `results/<date>/replay/<run>.json`: the files the agent changed, its transcript, and its scores. `lib/replay.ts` grades a replay again with today's code, without starting an agent. `replay/hand-written/` holds a few made-up solutions with the score ranges they must land in (a good hex fix, a poor fix that swaps the brand hue, a focus-ring fix). The unit tests re-grade them, so a grader change that moves scores shows up in CI at no cost. Copy a real replay in, with an `expect` range, to lock in a case you care about.
 
 ## Diagnostic checks
 
@@ -94,10 +111,10 @@ Graded by code:
 - **references**: the agent opened the reference file that fits the task.
 - **builds**: the project still builds. These checks are lightweight and offline: CSS braces and variables, DTCG JSON and aliases, and a Swift type-check with Xcode. There's no Android build here, so the Compose build is marked as skipped.
 
-Graded by AI (**rubric**): a second agent reads the final reply alongside the skill's reference text, using a fixed scoring guide. It checks whether the reply is accurate and explains the work in plain words.
+Graded by AI (**rubric**): pass when the AI grader marks the reply both accurate and clear.
 
 A skill run passes when every check that applies passes. Skipped checks don't count either way.
 
 ## Results
 
-Each run saves `results/<date>/report.md`, `report.json`, and the raw transcripts. It also adds one line to `results/history.jsonl`, so you can compare runs over time and spot drops in quality. Results stay on your machine and aren't committed.
+Each batch saves `results/<date>/report.md`, `report.json`, the replays, and the raw transcripts. The report starts with where the numbers came from: the commit (and whether it had uncommitted changes), a fingerprint of the skill folder, the engine version, each agent's version and model, and the grader. It also adds one line to `results/history.jsonl`, so you can compare batches over time and spot drops in quality. Results stay on your machine and aren't committed.

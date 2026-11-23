@@ -1,7 +1,7 @@
 import { statSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
-import { personalize, personalizeTheme, personalizedVariables } from "../src/runtime";
+import { createPersonalizer, personalize, personalizeTheme, personalizedVariables } from "../src/runtime";
 import { generateTheme } from "../src/theme/generateTheme";
 import { toCss } from "../src/output/css";
 import type { ThemeConfig } from "../src/theme/config";
@@ -67,5 +67,50 @@ describe("personalization runtime", () => {
     expect(statSync(file).size).toBeLessThan(100 * 1024);
     const bundled = (await import(pathToFileURL(file).href)) as typeof import("../src/runtime");
     expect(bundled.personalizedVariables(config, {})["--color-text"]).toBe(personalizedVariables(config, {})["--color-text"]);
+  });
+});
+
+describe("cached personalizer", () => {
+  it("matches the one-off functions and reuses repeated choices", () => {
+    const personalizer = createPersonalizer(config);
+    const choice = { backgroundLightness: 0.2, contrast: 1.4 };
+    expect(personalizer.variables(choice)).toEqual(personalizedVariables(config, choice));
+    expect(personalizer.theme(choice)).toBe(personalizer.theme({ ...choice }));
+    // Out-of-range choices clamp to the same cached theme.
+    expect(personalizer.theme({ backgroundLightness: 5, contrast: 9 })).toBe(personalizer.theme({ backgroundLightness: 1, contrast: 2 }));
+  });
+
+  it("checks settings and prefix once, up front", () => {
+    expect(() => createPersonalizer({ colors: {} })).toThrow(/at least one named color/);
+    expect(() => createPersonalizer(config, { prefix: "1bad" })).toThrow(/prefix must start with a letter/);
+  });
+
+  it("copies the settings, so later edits don't leak into cached themes", () => {
+    const settings = { colors: { brand: "#0066ff" } } as { colors: Record<string, string> };
+    const personalizer = createPersonalizer(settings);
+    const before = personalizer.variables({})["--color-accent"];
+    settings.colors.brand = "#ff0000";
+    expect(personalizer.variables({ contrast: 1.2 })["--color-accent"]).not.toBe(personalizedVariables(settings, { contrast: 1.2 })["--color-accent"]);
+    expect(personalizer.variables({})["--color-accent"]).toBe(before);
+  });
+
+  it("applies variables to an element and hands back a copy", () => {
+    const el = fakeElement();
+    const vars = createPersonalizer(config, { prefix: "ui" }).apply({ backgroundLightness: 0.1 }, el);
+    expect(el.props["--ui-text"]).toBe(vars["--ui-text"]);
+    vars["--ui-text"] = "red";
+    expect(el.props["--ui-text"]).not.toBe("red");
+  });
+});
+
+describe("personalization input safety", () => {
+  it("ignores values that aren't finite numbers", () => {
+    const mode = personalizeTheme(config, { backgroundLightness: Number.NaN, contrast: "2" as unknown as number }).modes.personal;
+    expect(mode.settings.backgroundLightness).toBe(1);
+    expect(mode.settings.contrastMultiplier).toBe(1);
+  });
+
+  it("rejects a prefix that could break out of the CSS variable name", () => {
+    expect(() => personalizedVariables(config, {}, { prefix: "x;} body{display:none" })).toThrow(/prefix must start with a letter/);
   });
 });

@@ -1,4 +1,4 @@
-import { linearToXyzD65, type LinearRgb } from "./colorMath";
+import { clamp01 as clamp, linearToXyzD65, type LinearRgb } from "./colorMath";
 
 /** Color vision used for checks: typical vision plus the three dichromacies (monochromacy is not checked). */
 export type Vision = "normal" | "protan" | "deutan" | "tritan";
@@ -25,7 +25,6 @@ export const MACHADO: Record<Exclude<Vision, "normal">, Matrix> = {
   ],
 };
 
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
 
 /** Simulates how a linear sRGB color looks with a color vision deficiency. Results are clamped to sRGB. */
 export function simulateCvd(color: LinearRgb, vision: Vision): LinearRgb {

@@ -1,4 +1,5 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { parse as parseYaml } from "yaml";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
@@ -17,9 +18,9 @@ import {
 } from "../evals/lib/checks";
 import { parseClaude, parseCopilot } from "../evals/lib/transcript";
 import { parseRubric, rubricPrompt } from "../evals/lib/rubric";
-import { runPassed, summarize, toMarkdown, writeReport } from "../evals/lib/report";
+import { bootstrapDiff, runPassed, summarize, toMarkdown, triggerSummary, writeReport } from "../evals/lib/report";
 import { agentCommand, changedFiles, prepareWorkspace, readTextFiles, SKILL_FOLDERS } from "../evals/lib/workspace";
-import { loadFixture, loadScenarios } from "../evals/run";
+import { contamination, folderHash, loadFixture, loadScenarios } from "../evals/run";
 import type { RunResult, Scenario, Transcript } from "../evals/lib/types";
 
 const settings: ThemeConfig = {
@@ -51,25 +52,38 @@ const byName = (results: { name: string; status: string }[]) => Object.fromEntri
 describe("transcript parsing", () => {
   it("reads Copilot JSON events", () => {
     const raw = [
-      JSON.stringify({ type: "tool.execution_start", data: { toolName: "bash", arguments: { command: "npx chromagentic generate x.json" } } }),
+      JSON.stringify({ type: "session.start", data: { copilotVersion: "1.2.3" } }),
+      JSON.stringify({ type: "session.skills_loaded", data: { skills: [{ name: "chromagentic" }, { name: "other" }] } }),
+      JSON.stringify({ type: "tool.execution_start", data: { toolName: "bash", model: "m-1", arguments: { command: "npx chromagentic generate x.json" } } }),
       JSON.stringify({ type: "tool.execution_start", data: { toolName: "view", arguments: { path: ".github/skills/chromagentic/references/engine.md" } } }),
       "not json",
       JSON.stringify({ type: "assistant.message", data: { content: "All done." } }),
+      JSON.stringify({ type: "result", usage: { premiumRequests: 3 } }),
     ].join("\n");
     const t = parseCopilot(raw);
     expect(t.commands).toEqual(["npx chromagentic generate x.json"]);
     expect(t.toolArgs[1]).toContain("references/engine.md");
     expect(t.finalMessage).toBe("All done.");
+    expect(t).toMatchObject({ agentVersion: "1.2.3", model: "m-1", skillsLoaded: ["chromagentic", "other"], usage: { premiumRequests: 3 } });
   });
 
   it("reads Claude stream-json events and errors", () => {
     const raw = [
+      JSON.stringify({ type: "system", subtype: "init", model: "c-1", claude_code_version: "2.0.0" }),
       JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", name: "Bash", input: { command: "chromagentic suggest calm" } }, { type: "text", text: "Picking colors" }] } }),
-      JSON.stringify({ type: "result", is_error: true, result: "Failed to authenticate." }),
+      JSON.stringify({ type: "result", is_error: true, result: "Failed to authenticate.", total_cost_usd: 0.25, usage: { input_tokens: 10, output_tokens: 5 } }),
     ].join("\n");
     const t = parseClaude(raw);
     expect(t.commands).toEqual(["chromagentic suggest calm"]);
     expect(t.error).toBe("Failed to authenticate.");
+    expect(t).toMatchObject({ model: "c-1", agentVersion: "2.0.0", usage: { inputTokens: 10, outputTokens: 5, costUsd: 0.25 } });
+  });
+
+  it("flags baseline runs that could see the skill", () => {
+    const clean: Transcript = { commands: ["ls"], toolArgs: [], finalMessage: "Done." };
+    expect(contamination(clean)).toBeUndefined();
+    expect(contamination({ ...clean, skillsLoaded: ["chromagentic"] })).toMatch(/loaded skills/);
+    expect(contamination({ ...clean, commands: ["cat ~/.copilot/skills/chromagentic/SKILL.md"] })).toMatch(/mentions/);
   });
 });
 
@@ -109,7 +123,8 @@ describe("finding colors in files", () => {
 
   it("matches engine colors in any platform format, and rejects hand-picked ones", () => {
     const engine = engineColors(settings);
-    const p3 = generateTheme({ ...settings, output: platformOutput("swiftui") }).modes.light.roles.text.css;
+    const { gamut, format } = platformOutput("swiftui");
+    const p3 = generateTheme({ ...settings, output: { gamut, format } }).modes.light.roles.text.css;
     expect(matchesEngine(extractColors(p3)[0].color, engine)).toBe(true);
     expect(matchesEngine(extractColors("#ff00aa")[0].color, engine)).toBe(false);
   });
@@ -205,10 +220,13 @@ describe("code-graded checks", () => {
 
 describe("rubric grader", () => {
   it("builds a prompt with the reply and reads the score", () => {
-    expect(rubricPrompt(scenario, "Here are your colors.", "REFERENCE")).toContain("Here are your colors.");
-    expect(parseRubric('Sure: {"accurate": true, "explains": true, "notes": "Good."}').status).toBe("pass");
-    expect(parseRubric('{"accurate": false, "explains": true, "notes": "Wrong ratio."}').status).toBe("fail");
-    expect(parseRubric("no score").status).toBe("skip");
+    const prompt = rubricPrompt(scenario, "Here are your colors.", "REFERENCE");
+    expect(prompt).toContain("Here are your colors.");
+    expect(prompt).toContain("## Standards facts");
+    const good = parseRubric('Sure: {"accurate": true, "explains": true, "notes": "Good."}');
+    expect(good).toMatchObject({ check: { status: "pass" }, accurate: 1, explains: 1 });
+    expect(parseRubric('{"accurate": false, "explains": true, "notes": "Wrong ratio."}')).toMatchObject({ check: { status: "fail" }, accurate: 0, explains: 1 });
+    expect(parseRubric("no score")).toMatchObject({ check: { status: "skip" }, accurate: null, explains: null });
   });
 });
 
@@ -216,23 +234,51 @@ describe("reports", () => {
   const dir = mkdtempSync(join(tmpdir(), "chromagentic-report-"));
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
+  it("gives a repeatable 95% interval for the difference, and none with too few runs", () => {
+    const ci = bootstrapDiff([0.4, 0.5, 0.6], [0.8, 0.9, 1]);
+    expect(ci).toEqual(bootstrapDiff([0.4, 0.5, 0.6], [0.8, 0.9, 1]));
+    expect(ci![0]).toBeGreaterThan(0);
+    expect(ci![1]).toBeLessThanOrEqual(0.6 + 1e-9);
+    // Overlapping runs give an interval that includes 0.
+    const wide = bootstrapDiff([0.2, 0.9], [0.3, 0.8])!;
+    expect(wide[0]).toBeLessThan(0);
+    expect(wide[1]).toBeGreaterThan(0);
+    expect(bootstrapDiff([0.5], [0.9, 1])).toBeNull();
+  });
+
+  it("measures trigger precision and recall", () => {
+    const t = triggerSummary([
+      { prompt: "dark mode", agent: "copilot", expect: true, triggered: true },
+      { prompt: "brand colors", agent: "copilot", expect: true, triggered: false },
+      { prompt: "CMYK print", agent: "copilot", expect: false, triggered: true },
+      { prompt: "chart colors", agent: "copilot", expect: false, triggered: false },
+    ]);
+    expect(t).toMatchObject({ runs: 4, precision: 0.5, recall: 0.5 });
+    expect(t.misses).toEqual(['copilot: didn\'t load for "brand colors"', 'copilot: loaded for "CMYK print"']);
+    expect(triggerSummary([])).toMatchObject({ precision: null, recall: null });
+  });
+
   it("averages scores with and without the skill, with the spread and the difference", () => {
     const base = { fixture: "css", durationMs: 1000, workspace: "", run: 1, agent: "copilot" as const, scenario: "a" };
     const results: RunResult[] = [
-      { ...base, condition: "skill", passed: true, metrics: { result: 0.9, engine: 1 }, checks: [{ name: "x", status: "pass", detail: "" }, { name: "y", status: "skip", detail: "" }] },
-      { ...base, condition: "skill", run: 2, passed: false, metrics: { result: 0.7, engine: null }, checks: [{ name: "x", status: "fail", detail: "" }] },
-      { ...base, condition: "baseline", passed: true, metrics: { result: 0.5 }, checks: [] },
+      { ...base, condition: "skill", passed: true, metrics: { core: 0.9, engine: 1 }, checks: [{ name: "x", status: "pass", detail: "" }, { name: "y", status: "skip", detail: "" }] },
+      { ...base, condition: "skill", run: 2, passed: false, metrics: { core: 0.7, engine: null }, checks: [{ name: "x", status: "fail", detail: "" }] },
+      { ...base, condition: "baseline", passed: true, metrics: { core: 0.5 }, checks: [] },
+      { ...base, condition: "baseline", run: 2, passed: true, metrics: { core: 0.1 }, checks: [], contaminated: "it read the skill" },
     ];
     expect(runPassed(results[0].checks)).toBe(true);
     const summary = summarize(results, "today");
     const skill = summary.byScenario.a.copilot.skill;
     expect(skill.runs).toBe(2);
-    expect(skill.metrics.result.mean).toBeCloseTo(0.8);
-    expect(skill.metrics.result.sd).toBeCloseTo(0.1414, 3);
-    expect(skill.metrics.engine).toEqual({ mean: 1, sd: 0, n: 1 });
+    expect(summary.excluded).toBe(1);
+    expect(summary.byScenario.a.copilot.baseline.runs).toBe(1);
+    expect(skill.metrics.core.mean).toBeCloseTo(0.8);
+    expect(skill.metrics.core.sd).toBeCloseTo(0.1414, 3);
+    expect(skill.metrics.engine).toEqual({ mean: 1, sd: 0, n: 1, values: [1] });
     expect(summary.byCheck).toEqual({ x: { passed: 1, graded: 2 } });
     const md = toMarkdown(summary, results);
-    expect(md).toContain("| a | copilot | 50% | 80% ± 14 | +30 pts |");
+    expect(md).toContain("| a | copilot | 50% | 80% ± 14 | +30 pts | needs 2+ runs |");
+    expect(md).toContain("1 left out");
     expect(md).toContain("| Colors from the engine | – | 100% | – |");
     const out = writeReport(dir, "stamp", results);
     expect(existsSync(join(out, "report.md")) && existsSync(join(dir, "history.jsonl"))).toBe(true);
@@ -267,6 +313,18 @@ describe("workspaces and scenarios", () => {
     rmSync(root, { recursive: true, force: true });
   });
 
+  it("fingerprints the skill folder so reports say which version ran", () => {
+    const root = mkdtempSync(join(tmpdir(), "chromagentic-hash-"));
+    mkdirSync(join(root, "sub"));
+    writeFileSync(join(root, "a.md"), "one");
+    writeFileSync(join(root, "sub", "b.md"), "two");
+    const first = folderHash(root);
+    expect(first).toMatch(/^[0-9a-f]{64}$/);
+    writeFileSync(join(root, "sub", "b.md"), "three");
+    expect(folderHash(root)).not.toBe(first);
+    rmSync(root, { recursive: true, force: true });
+  });
+
   it("builds non-interactive agent commands", () => {
     expect(agentCommand("copilot", "hi")[1]).toEqual(expect.arrayContaining(["-p", "hi", "--allow-all-tools", "--output-format", "json"]));
     expect(agentCommand("claude", "hi", "haiku")[1]).toEqual(expect.arrayContaining(["--output-format", "stream-json", "--model", "haiku"]));
@@ -274,7 +332,12 @@ describe("workspaces and scenarios", () => {
 
   it("has valid scenarios that point at real fixtures and reference files", () => {
     const scenarios = loadScenarios();
-    expect(scenarios.length).toBe(13);
+    expect(scenarios.length).toBe(17);
+    expect(scenarios.find((s) => s.id === "hex-only")?.expectFormat).toBe("hex");
+    expect(scenarios.find((s) => s.id === "aaa-text")?.textTarget).toBe(7);
+    const triggers = parseYaml(readFileSync(join(__dirname, "..", "evals", "triggers.yaml"), "utf8")) as { fixture: string; prompts: { expect: boolean }[] };
+    expect(existsSync(join(__dirname, "..", "evals", "fixtures", triggers.fixture))).toBe(true);
+    expect(new Set(triggers.prompts.map((p) => p.expect))).toEqual(new Set([true, false]));
     expect(scenarios.map((s) => s.id).slice(8, 11)).toEqual(["dark-to-light", "role-first", "form-validation"]);
     expect(scenarios.filter((s) => s.conversion).map((s) => s.id)).toEqual(["light-to-dark", "dark-to-light"]);
     const references = join(__dirname, "..", "skills", "chromagentic", "references");

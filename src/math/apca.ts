@@ -1,4 +1,4 @@
-import Color from "colorjs.io";
+import Color from "./color";
 
 // APCA 0.0.98G constants (https://github.com/Myndex/apca-w3).
 const NORM_BG = 0.56;

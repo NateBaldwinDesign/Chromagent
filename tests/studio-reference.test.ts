@@ -2,8 +2,8 @@
 // original code (tests/fixtures/studio-reference.json), so nothing changed by accident.
 import { describe, expect, it } from "vitest";
 import reference from "./fixtures/studio-reference.json";
-import { buildScaleData, resolveScaleColorAtLightness } from "../src/scales/scaleGeneration";
-import { generateColors } from "../src/scales/generation";
+import { buildScaleData, resolveScaleColorAtLightness } from "../src/scales/scaleData";
+import { generateColors } from "../src/scales/colorAtContrast";
 import {
   applyContrastMultiplier,
   applyPolarityCompensation,
@@ -34,7 +34,6 @@ const OUTPUTS: Record<string, ColorOutputSettings> = {
   "p3-rgb": { authoringGamut: "display-p3", outputFormat: "rgb", mapOutputsToSrgb: false },
   "rec2020-oklch": { authoringGamut: "rec2020", outputFormat: "oklch", mapOutputsToSrgb: false },
 };
-const settingsBase = { side: "auto" as const, backgroundBlend: 0, colorSourceCurveOffset: -1 };
 
 function scale(name: string, interpolation: "oklch" | "rgb"): ColorScale {
   return {
@@ -53,9 +52,8 @@ describe("matches Spectrum Studio reference values", () => {
       const data = buildScaleData(scale(entry.scale, interpolation), output);
       const bg = resolveScaleColorAtLightness(scale("gray", interpolation), entry.backgroundLightness, output);
       expect(bg.css).toBe(entry.background);
-      const settings = { ...settingsBase, colorOutput: output };
       entry.steps.forEach((step) => {
-        const generated = generateColors(data, bg.linear, step.target, settings);
+        const generated = generateColors(data, bg.linear, step.target);
         expect(generated.opaque.css, `${entry.output} ${entry.scale} ${step.target}`).toBe(step.css);
         expect(generated.opaque.measuredContrast).toBeCloseTo(step.measured, 9);
       });
@@ -118,7 +116,6 @@ describe("matches Spectrum Studio reference values", () => {
           { id: "info", name: "info", reference: "parent", contrast: 1.15, sourceScaleId: "blue" },
         ],
         settings: {
-          ...settingsBase,
           colorOutput: output,
           contrastReference: "light",
           polarityCompensation: entry.polarity,

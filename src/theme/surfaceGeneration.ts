@@ -8,12 +8,12 @@ import {
   type LinearRgb,
   type RgbGamut,
 } from "../math/colorMath";
-import { generateColors } from "../scales/generation";
+import { generateColors } from "../scales/colorAtContrast";
 import type { ColorSystemDocument, Surface } from "../engineTypes";
 import {
   buildScaleData,
   resolveScaleColorAtLightness,
-} from "../scales/scaleGeneration";
+} from "../scales/scaleData";
 import { enforceOutputContrast, parsedOutputLinear } from "../math/outputContrast";
 
 function goesLight(surface: Surface, reference: LinearRgb, gamut: RgbGamut) {
@@ -85,7 +85,6 @@ export function surfaceLinear(
     buildScaleData(scale, document.settings.colorOutput),
     reference,
     surface.contrast ?? 1,
-    document.settings,
     !goesLight(surface, reference, gamut),
   ).dynamic.linear;
 }

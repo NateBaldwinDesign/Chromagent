@@ -1,4 +1,4 @@
-import Color from "colorjs.io";
+import Color from "../math/color";
 import type { LinearRgb } from "../math/colorMath";
 import { deltaE2000, labOfLinear, simulateCvd, VISIONS, type Vision } from "../math/cvd";
 
@@ -13,6 +13,21 @@ export const FEEDBACK_HUES: Record<string, [number, number]> = {
 };
 /** Natural OKLCH lightness for each feedback key color (yellows only get vivid when light). */
 const FEEDBACK_LIGHTNESS: Record<string, number> = { error: 0.6, warning: 0.78, success: 0.65, info: 0.6 };
+/**
+ * OKLCH lightness where each feedback color still reads as itself: darker reds and oranges turn brown,
+ * and lighter reds turn peach. Greens and blues keep a wider range, since dark green still reads as green
+ * and lightness is often the only difference color-blind users can see. The CVD search stays inside these.
+ */
+const FEEDBACK_LIGHTNESS_RANGE: Record<string, [number, number]> = {
+  error: [0.4, 0.85],
+  warning: [0.3, 0.95],
+  success: [0.2, 0.98],
+  info: [0.2, 0.98],
+};
+const lightEnough = (name: string, lightness: number) => {
+  const [lo, hi] = FEEDBACK_LIGHTNESS_RANGE[name] ?? [0.02, 0.98];
+  return lightness >= lo && lightness <= hi;
+};
 /** Every feedback pair must differ by at least this CIEDE2000 value, in typical vision and each simulation. */
 export const MIN_FEEDBACK_DELTA_E = 11;
 const MIN_CHROMA = 0.08;
@@ -124,7 +139,7 @@ function searchLightness(start: Record<string, Oklch>, options: SeparateOptions,
         const value: Oklch = [l + k * step, c, h];
         return { k, value };
       })
-      .filter(({ k, value }) => k === 0 || (value[0] > 0.02 && value[0] < 0.98 && options.accepts(name, value)))
+      .filter(({ k, value }) => k === 0 || (lightEnough(name, value[0]) && value[0] > 0.02 && value[0] < 0.98 && options.accepts(name, value)))
       .map(({ k, value }) => ({ k, value, labs: visionLabs(options.realize(value)) })),
   );
   // Pairwise smallest difference for every lightness choice, computed once.
@@ -189,7 +204,7 @@ export function separateFeedback(start: Record<string, Oklch>, options: Separate
               ? [[l, c * 1.1, h], [l, c * 0.9, h]]
               : [[l + step / 2, c, h], [l - step / 2, c, h]];
         for (const value of candidates) {
-          if (value[0] <= 0.02 || value[0] >= 0.98 || value[2] < lo || value[2] > hi || value[1] < 0.03) continue;
+          if (value[0] <= 0.02 || value[0] >= 0.98 || !lightEnough(name, value[0]) || value[2] < lo || value[2] > hi || value[1] < 0.03) continue;
           if (!options.accepts(name, value)) continue;
           const trial = { ...labs, [name]: visionLabs(options.realize(value)) };
           const score = shortfall(trial);

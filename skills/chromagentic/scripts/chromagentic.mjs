@@ -1,25 +1,5603 @@
 #!/usr/bin/env node
-import{mkdir as ai,readFile as rh,writeFile as si}from"fs/promises";import{dirname as nh,join as oh,resolve as ii}from"path";import{parseArgs as Ht}from"util";function Z(e,t){let r=e.length;Array.isArray(e[0])||(e=[e]),Array.isArray(t[0])||(t=t.map(s=>[s]));let n=t[0].length,o=t[0].map((s,i)=>t.map(l=>l[i])),a=e.map(s=>o.map(i=>{let l=0;if(!Array.isArray(s)){for(let u of i)l+=s*u;return l}for(let u=0;u<s.length;u++)l+=s[u]*(i[u]||0);return l}));return r===1&&(a=a[0]),n===1?a.map(s=>s[0]):a}function $t(e){return Ee(e)==="string"}function Ee(e){return(Object.prototype.toString.call(e).match(/^\[object\s+(.*?)\]$/)[1]||"").toLowerCase()}function Qt(e,{precision:t,unit:r}){return Ae(e)?"none":Yo(e,t)+(r??"")}function Ae(e){return Number.isNaN(e)||e instanceof Number&&e?.none}function K(e){return Ae(e)?0:e}function Yo(e,t){if(e===0)return 0;let r=~~e,n=0;r&&t&&(n=~~Math.log10(Math.abs(r))+1);let o=10**(t-n);return Math.floor(e*o+.5)/o}var di={deg:1,grad:.9,rad:180/Math.PI,turn:360};function Wo(e){if(!e)return;e=e.trim();let t=/^([a-z]+)\((.+?)\)$/i,r=/^-?[\d.]+$/,n=/%|deg|g?rad|turn$/,o=/\/?\s*(none|[-\w.]+(?:%|deg|g?rad|turn)?)/g,a=e.match(t);if(a){let s=[];return a[2].replace(o,(i,l)=>{let u=l.match(n),d=l;if(u){let c=u[0],h=d.slice(0,-c.length);c==="%"?(d=new Number(h/100),d.type="<percentage>"):(d=new Number(h*di[c]),d.type="<angle>",d.unit=c)}else r.test(d)?(d=new Number(d),d.type="<number>"):d==="none"&&(d=new Number(NaN),d.none=!0);i.startsWith("/")&&(d=d instanceof Number?d:new Number(d),d.alpha=!0),typeof d=="object"&&d instanceof Number&&(d.raw=l),s.push(d)}),{name:a[1].toLowerCase(),rawName:a[1],rawArgs:a[2],args:s}}}function Vo(e){return e[e.length-1]}function xt(e,t,r){return isNaN(e)?t:isNaN(t)?e:e+(t-e)*r}function Uo(e,t,r){return(r-e)/(t-e)}function an(e,t,r){return xt(t[0],t[1],Uo(e[0],e[1],r))}function Jo(e){return e.map(t=>t.split("|").map(r=>{r=r.trim();let n=r.match(/^(<[a-z]+>)\[(-?[.\d]+),\s*(-?[.\d]+)\]?$/);if(n){let o=new String(n[1]);return o.range=[+n[2],+n[3]],o}return r}))}function Zo(e,t,r){return Math.max(Math.min(r,t),e)}function nr(e,t){return Math.sign(e)===Math.sign(t)?e:-e}function ve(e,t){return nr(Math.abs(e)**t,e)}function sn(e,t){return t===0?0:e/t}function Ko(e,t,r=0,n=e.length){for(;r<n;){let o=r+n>>1;e[o]<t?r=o+1:n=o}return r}var hi=Object.freeze({__proto__:null,bisectLeft:Ko,clamp:Zo,copySign:nr,interpolate:xt,interpolateInv:Uo,isNone:Ae,isString:$t,last:Vo,mapRange:an,multiplyMatrices:Z,parseCoordGrammar:Jo,parseFunction:Wo,serializeNumber:Qt,skipNone:K,spow:ve,toPrecision:Yo,type:Ee,zdiv:sn}),Jr=class{add(t,r,n){if(typeof arguments[0]!="string"){for(var t in arguments[0])this.add(t,arguments[0][t],arguments[1]);return}(Array.isArray(t)?t:[t]).forEach(function(o){this[o]=this[o]||[],r&&this[o][n?"unshift":"push"](r)},this)}run(t,r){this[t]=this[t]||[],this[t].forEach(function(n){n.call(r&&r.context?r.context:r,r)})}},Pe=new Jr,fe={gamut_mapping:"css",precision:5,deltaE:"76",verbose:globalThis?.process?.env?.NODE_ENV?.toLowerCase()!=="test",warn:function(t){this.verbose&&globalThis?.console?.warn?.(t)}},se={D50:[.3457/.3585,1,(1-.3457-.3585)/.3585],D65:[.3127/.329,1,(1-.3127-.329)/.329]};function Zr(e){return Array.isArray(e)?e:se[e]}function er(e,t,r,n={}){if(e=Zr(e),t=Zr(t),!e||!t)throw new TypeError(`Missing white point to convert ${e?"":"from"}${!e&&!t?"/":""}${t?"":"to"}`);if(e===t)return r;let o={W1:e,W2:t,XYZ:r,options:n};if(Pe.run("chromatic-adaptation-start",o),o.M||(o.W1===se.D65&&o.W2===se.D50?o.M=[[1.0479297925449969,.022946870601609652,-.05019226628920524],[.02962780877005599,.9904344267538799,-.017073799063418826],[-.009243040646204504,.015055191490298152,.7518742814281371]]:o.W1===se.D50&&o.W2===se.D65&&(o.M=[[.955473421488075,-.02309845494876471,.06325924320057072],[-.0283697093338637,1.0099953980813041,.021041441191917323],[.012314014864481998,-.020507649298898964,1.330365926242124]])),Pe.run("chromatic-adaptation-end",o),o.M)return Z(o.M,o.XYZ);throw new TypeError("Only Bradford CAT with white points D50 and D65 supported for now.")}var mi=new Set(["<number>","<percentage>","<angle>"]);function Vn(e,t,r,n){return Object.entries(e.coords).map(([a,s],i)=>{let l=t.coordGrammar[i],u=n[i],d=u?.type,c;if(u.none?c=l.find(p=>mi.has(p)):c=l.find(p=>p==d),!c){let p=s.name||a;throw new TypeError(`${d??u.raw} not allowed for ${p} in ${r}()`)}let h=c.range;d==="<percentage>"&&(h||=[0,1]);let m=s.range||s.refRange;return h&&m&&(n[i]=an(h,m,n[i])),c})}function Qo(e,{meta:t}={}){let r={str:String(e)?.trim()};if(Pe.run("parse-start",r),r.color)return r.color;if(r.parsed=Wo(r.str),r.parsed){let n=r.parsed.name;if(n==="color"){let o=r.parsed.args.shift(),a=o.startsWith("--")?o.substring(2):`--${o}`,s=[o,a],i=r.parsed.rawArgs.indexOf("/")>0?r.parsed.args.pop():1;for(let d of $.all){let c=d.getFormat("color");if(c&&(s.includes(c.id)||c.ids?.filter(h=>s.includes(h)).length)){let h=Object.keys(d.coords).map((p,y)=>r.parsed.args[y]||0),m;return c.coordGrammar&&(m=Vn(d,c,"color",h)),t&&Object.assign(t,{formatId:"color",types:m}),c.id.startsWith("--")&&!o.startsWith("--")&&fe.warn(`${d.name} is a non-standard space and not currently supported in the CSS spec. Use prefixed color(${c.id}) instead of color(${o}).`),o.startsWith("--")&&!c.id.startsWith("--")&&fe.warn(`${d.name} is a standard space and supported in the CSS spec. Use color(${c.id}) instead of prefixed color(${o}).`),{spaceId:d.id,coords:h,alpha:i}}}let l="",u=o in $.registry?o:a;if(u in $.registry){let d=$.registry[u].formats?.color?.id;d&&(l=`Did you mean color(${d})?`)}throw new TypeError(`Cannot parse color(${o}). `+(l||"Missing a plugin?"))}else for(let o of $.all){let a=o.getFormat(n);if(a&&a.type==="function"){let s=1;(a.lastAlpha||Vo(r.parsed.args).alpha)&&(s=r.parsed.args.pop());let i=r.parsed.args,l;return a.coordGrammar&&(l=Vn(o,a,n,i)),t&&Object.assign(t,{formatId:a.name,types:l}),{spaceId:o.id,coords:i,alpha:s}}}}else for(let n of $.all)for(let o in n.formats){let a=n.formats[o];if(a.type!=="custom"||a.test&&!a.test(r.str))continue;let s=a.parse(r.str);if(s)return s.alpha??=1,t&&(t.formatId=o),s}throw new TypeError(`Could not parse ${e} as a color. Missing a plugin?`)}function _(e){if(Array.isArray(e))return e.map(_);if(!e)throw new TypeError("Empty color reference");$t(e)&&(e=Qo(e));let t=e.space||e.spaceId;return t instanceof $||(e.space=$.get(t)),e.alpha===void 0&&(e.alpha=1),e}var pi=75e-6,$=class e{constructor(t){this.id=t.id,this.name=t.name,this.base=t.base?e.get(t.base):null,this.aliases=t.aliases,this.base&&(this.fromBase=t.fromBase,this.toBase=t.toBase);let r=t.coords??this.base.coords;for(let o in r)"name"in r[o]||(r[o].name=o);this.coords=r;let n=t.white??this.base.white??"D65";this.white=Zr(n),this.formats=t.formats??{};for(let o in this.formats){let a=this.formats[o];a.type||="function",a.name||=o}this.formats.color?.id||(this.formats.color={...this.formats.color??{},id:t.cssId||this.id}),t.gamutSpace?this.gamutSpace=t.gamutSpace==="self"?this:e.get(t.gamutSpace):this.isPolar?this.gamutSpace=this.base:this.gamutSpace=this,this.gamutSpace.isUnbounded&&(this.inGamut=(o,a)=>!0),this.referred=t.referred,Object.defineProperty(this,"path",{value:fi(this).reverse(),writable:!1,enumerable:!0,configurable:!0}),Pe.run("colorspace-init-end",this)}inGamut(t,{epsilon:r=pi}={}){if(!this.equals(this.gamutSpace))return t=this.to(this.gamutSpace,t),this.gamutSpace.inGamut(t,{epsilon:r});let n=Object.values(this.coords);return t.every((o,a)=>{let s=n[a];if(s.type!=="angle"&&s.range){if(Number.isNaN(o))return!0;let[i,l]=s.range;return(i===void 0||o>=i-r)&&(l===void 0||o<=l+r)}return!0})}get isUnbounded(){return Object.values(this.coords).every(t=>!("range"in t))}get cssId(){return this.formats?.color?.id||this.id}get isPolar(){for(let t in this.coords)if(this.coords[t].type==="angle")return!0;return!1}getFormat(t){if(typeof t=="object")return t=Un(t,this),t;let r;return t==="default"?r=Object.values(this.formats)[0]:r=this.formats[t],r?(r=Un(r,this),r):null}equals(t){return t?this===t||this.id===t||this.id===t.id:!1}to(t,r){if(arguments.length===1){let i=_(t);[t,r]=[i.space,i.coords]}if(t=e.get(t),this.equals(t))return r;r=r.map(i=>Number.isNaN(i)?0:i);let n=this.path,o=t.path,a,s;for(let i=0;i<n.length&&n[i].equals(o[i]);i++)a=n[i],s=i;if(!a)throw new Error(`Cannot convert between color spaces ${this} and ${t}: no connection space was found`);for(let i=n.length-1;i>s;i--)r=n[i].toBase(r);for(let i=s+1;i<o.length;i++)r=o[i].fromBase(r);return r}from(t,r){if(arguments.length===1){let n=_(t);[t,r]=[n.space,n.coords]}return t=e.get(t),t.to(this,r)}toString(){return`${this.name} (${this.id})`}getMinCoords(){let t=[];for(let r in this.coords){let n=this.coords[r],o=n.range||n.refRange;t.push(o?.min??0)}return t}static registry={};static get all(){return[...new Set(Object.values(e.registry))]}static register(t,r){if(arguments.length===1&&(r=arguments[0],t=r.id),r=this.get(r),this.registry[t]&&this.registry[t]!==r)throw new Error(`Duplicate color space registration: '${t}'`);if(this.registry[t]=r,arguments.length===1&&r.aliases)for(let n of r.aliases)this.register(n,r);return r}static get(t,...r){if(!t||t instanceof e)return t;if(Ee(t)==="string"){let o=e.registry[t.toLowerCase()];if(!o)throw new TypeError(`No color space found with id = "${t}"`);return o}if(r.length)return e.get(...r);throw new TypeError(`${t} is not a valid color space`)}static resolveCoord(t,r){let n=Ee(t),o,a;if(n==="string"?t.includes(".")?[o,a]=t.split("."):[o,a]=[,t]:Array.isArray(t)?[o,a]=t:(o=t.space,a=t.coordId),o=e.get(o),o||(o=r),!o)throw new TypeError(`Cannot resolve coordinate reference ${t}: No color space specified and relative references are not allowed here`);if(n=Ee(a),n==="number"||n==="string"&&a>=0){let l=Object.entries(o.coords)[a];if(l)return{space:o,id:l[0],index:a,...l[1]}}o=e.get(o);let s=a.toLowerCase(),i=0;for(let l in o.coords){let u=o.coords[l];if(l.toLowerCase()===s||u.name?.toLowerCase()===s)return{space:o,id:l,index:i,...u};i++}throw new TypeError(`No "${a}" coordinate found in ${o.name}. Its coordinates are: ${Object.keys(o.coords).join(", ")}`)}static DEFAULT_FORMAT={type:"functions",name:"color"}};function fi(e){let t=[e];for(let r=e;r=r.base;)t.push(r);return t}function Un(e,{coords:t}={}){if(e.coords&&!e.coordGrammar){e.type||="function",e.name||="color",e.coordGrammar=Jo(e.coords);let r=Object.entries(t).map(([n,o],a)=>{let s=e.coordGrammar[a][0],i=o.range||o.refRange,l=s.range,u="";return s=="<percentage>"?(l=[0,100],u="%"):s=="<angle>"&&(u="deg"),{fromRange:i,toRange:l,suffix:u}});e.serializeCoords=(n,o)=>n.map((a,s)=>{let{fromRange:i,toRange:l,suffix:u}=r[s];return i&&l&&(a=an(i,l,a)),a=Qt(a,{precision:o,unit:u}),a})}return e}var re=new $({id:"xyz-d65",name:"XYZ D65",coords:{x:{name:"X"},y:{name:"Y"},z:{name:"Z"}},white:"D65",formats:{color:{ids:["xyz-d65","xyz"]}},aliases:["xyz"]}),oe=class extends ${constructor(t){t.coords||(t.coords={r:{range:[0,1],name:"Red"},g:{range:[0,1],name:"Green"},b:{range:[0,1],name:"Blue"}}),t.base||(t.base=re),t.toXYZ_M&&t.fromXYZ_M&&(t.toBase??=r=>{let n=Z(t.toXYZ_M,r);return this.white!==this.base.white&&(n=er(this.white,this.base.white,n)),n},t.fromBase??=r=>(r=er(this.base.white,this.white,r),Z(t.fromXYZ_M,r))),t.referred??="display",super(t)}};function Lt(e,t){return e=_(e),!t||e.space.equals(t)?e.coords.slice():(t=$.get(t),t.from(e))}function me(e,t){e=_(e);let{space:r,index:n}=$.resolveCoord(t,e.space);return Lt(e,r)[n]}function ln(e,t,r){return e=_(e),t=$.get(t),e.coords=t.to(e.space,r),e}ln.returns="color";function $e(e,t,r){if(e=_(e),arguments.length===2&&Ee(arguments[1])==="object"){let n=arguments[1];for(let o in n)$e(e,o,n[o])}else{typeof r=="function"&&(r=r(me(e,t)));let{space:n,index:o}=$.resolveCoord(t,e.space),a=Lt(e,n);a[o]=r,ln(e,n,a)}return e}$e.returns="color";var cn=new $({id:"xyz-d50",name:"XYZ D50",white:"D50",base:re,fromBase:e=>er(re.white,"D50",e),toBase:e=>er("D50",re.white,e)}),gi=216/24389,Jn=24/116,qt=24389/27,Gr=se.D50,pe=new $({id:"lab",name:"Lab",coords:{l:{refRange:[0,100],name:"Lightness"},a:{refRange:[-125,125]},b:{refRange:[-125,125]}},white:Gr,base:cn,fromBase(e){let r=e.map((n,o)=>n/Gr[o]).map(n=>n>gi?Math.cbrt(n):(qt*n+16)/116);return[116*r[1]-16,500*(r[0]-r[1]),200*(r[1]-r[2])]},toBase(e){let t=[];return t[1]=(e[0]+16)/116,t[0]=e[1]/500+t[1],t[2]=t[1]-e[2]/200,[t[0]>Jn?Math.pow(t[0],3):(116*t[0]-16)/qt,e[0]>8?Math.pow((e[0]+16)/116,3):e[0]/qt,t[2]>Jn?Math.pow(t[2],3):(116*t[2]-16)/qt].map((n,o)=>n*Gr[o])},formats:{lab:{coords:["<number> | <percentage>","<number> | <percentage>[-1,1]","<number> | <percentage>[-1,1]"]}}});function Me(e){return(e%360+360)%360}function bi(e,t){if(e==="raw")return t;let[r,n]=t.map(Me),o=n-r;return e==="increasing"?o<0&&(n+=360):e==="decreasing"?o>0&&(r+=360):e==="longer"?-180<o&&o<180&&(o>0?r+=360:n+=360):e==="shorter"&&(o>180?r+=360:o<-180&&(n+=360)),[r,n]}var Rt=new $({id:"lch",name:"LCH",coords:{l:{refRange:[0,100],name:"Lightness"},c:{refRange:[0,150],name:"Chroma"},h:{refRange:[0,360],type:"angle",name:"Hue"}},base:pe,fromBase(e){let[t,r,n]=e,o,a=.02;return Math.abs(r)<a&&Math.abs(n)<a?o=NaN:o=Math.atan2(n,r)*180/Math.PI,[t,Math.sqrt(r**2+n**2),Me(o)]},toBase(e){let[t,r,n]=e;return r<0&&(r=0),isNaN(n)&&(n=0),[t,r*Math.cos(n*Math.PI/180),r*Math.sin(n*Math.PI/180)]},formats:{lch:{coords:["<number> | <percentage>","<number> | <percentage>","<number> | <angle>"]}}}),Zn=25**7,tr=Math.PI,Kn=180/tr,et=tr/180;function Qn(e){let t=e*e;return t*t*t*e}function ea(e,t,{kL:r=1,kC:n=1,kH:o=1}={}){[e,t]=_([e,t]);let[a,s,i]=pe.from(e),l=Rt.from(pe,[a,s,i])[1],[u,d,c]=pe.from(t),h=Rt.from(pe,[u,d,c])[1];l<0&&(l=0),h<0&&(h=0);let m=(l+h)/2,p=Qn(m),y=.5*(1-Math.sqrt(p/(p+Zn))),k=(1+y)*s,v=(1+y)*d,C=Math.sqrt(k**2+i**2),S=Math.sqrt(v**2+c**2),P=k===0&&i===0?0:Math.atan2(i,k),H=v===0&&c===0?0:Math.atan2(c,v);P<0&&(P+=2*tr),H<0&&(H+=2*tr),P*=Kn,H*=Kn;let B=u-a,z=S-C,A=H-P,j=P+H,G=Math.abs(A),L;C*S===0?L=0:G<=180?L=A:A>180?L=A-360:A<-180?L=A+360:fe.warn("the unthinkable has happened");let I=2*Math.sqrt(S*C)*Math.sin(L*et/2),Y=(a+u)/2,W=(C+S)/2,b=Qn(W),M;C*S===0?M=j:G<=180?M=j/2:j<360?M=(j+360)/2:M=(j-360)/2;let x=(Y-50)**2,T=1+.015*x/Math.sqrt(20+x),D=1+.045*W,F=1;F-=.17*Math.cos((M-30)*et),F+=.24*Math.cos(2*M*et),F+=.32*Math.cos((3*M+6)*et),F-=.2*Math.cos((4*M-63)*et);let q=1+.015*W*F,U=30*Math.exp(-1*((M-275)/25)**2),le=2*Math.sqrt(b/(b+Zn)),ce=-1*Math.sin(2*U*et)*le,f=(B/(r*T))**2;return f+=(z/(n*D))**2,f+=(I/(o*q))**2,f+=ce*(z/(n*D))*(I/(o*q)),Math.sqrt(f)}var yi=[[.819022437996703,.3619062600528904,-.1288737815209879],[.0329836539323885,.9292868615863434,.0361446663506424],[.0481771893596242,.2642395317527308,.6335478284694309]],ki=[[1.2268798758459243,-.5578149944602171,.2813910456659647],[-.0405757452148008,1.112286803280317,-.0717110580655164],[-.0763729366746601,-.4214933324022432,1.5869240198367816]],wi=[[.210454268309314,.7936177747023054,-.0040720430116193],[1.9779985324311684,-2.42859224204858,.450593709617411],[.0259040424655478,.7827717124575296,-.8086757549230774]],vi=[[1,.3963377773761749,.2158037573099136],[1,-.1055613458156586,-.0638541728258133],[1,-.0894841775298119,-1.2914855480194092]],ot=new $({id:"oklab",name:"Oklab",coords:{l:{refRange:[0,1],name:"Lightness"},a:{refRange:[-.4,.4]},b:{refRange:[-.4,.4]}},white:"D65",base:re,fromBase(e){let r=Z(yi,e).map(n=>Math.cbrt(n));return Z(wi,r)},toBase(e){let r=Z(vi,e).map(n=>n**3);return Z(ki,r)},formats:{oklab:{coords:["<percentage> | <number>","<number> | <percentage>[-1,1]","<number> | <percentage>[-1,1]"]}}});function Kr(e,t){[e,t]=_([e,t]);let[r,n,o]=ot.from(e),[a,s,i]=ot.from(t),l=r-a,u=n-s,d=o-i;return Math.sqrt(l**2+u**2+d**2)}var Mi=75e-6;function qe(e,t,{epsilon:r=Mi}={}){e=_(e),t||(t=e.space),t=$.get(t);let n=e.coords;return t!==e.space&&(n=t.from(e)),t.inGamut(n,{epsilon:r})}function at(e){return{space:e.space,coords:e.coords.slice(),alpha:e.alpha}}function ta(e,t,r="lab"){r=$.get(r);let n=r.from(e),o=r.from(t);return Math.sqrt(n.reduce((a,s,i)=>{let l=o[i];return isNaN(s)||isNaN(l)?a:a+(l-s)**2},0))}function Ci(e,t){return ta(e,t,"lab")}var xi=Math.PI,eo=xi/180;function Ri(e,t,{l:r=2,c:n=1}={}){[e,t]=_([e,t]);let[o,a,s]=pe.from(e),[,i,l]=Rt.from(pe,[o,a,s]),[u,d,c]=pe.from(t),h=Rt.from(pe,[u,d,c])[1];i<0&&(i=0),h<0&&(h=0);let m=o-u,p=i-h,y=a-d,k=s-c,v=y**2+k**2-p**2,C=.511;o>=16&&(C=.040975*o/(1+.01765*o));let S=.0638*i/(1+.0131*i)+.638,P;Number.isNaN(l)&&(l=0),l>=164&&l<=345?P=.56+Math.abs(.2*Math.cos((l+168)*eo)):P=.36+Math.abs(.4*Math.cos((l+35)*eo));let H=Math.pow(i,4),B=Math.sqrt(H/(H+1900)),z=S*(B*P+1-B),A=(m/(r*C))**2;return A+=(p/(n*S))**2,A+=v/z**2,Math.sqrt(A)}var to=203,un=new $({id:"xyz-abs-d65",cssId:"--xyz-abs-d65",name:"Absolute XYZ D65",coords:{x:{refRange:[0,9504.7],name:"Xa"},y:{refRange:[0,1e4],name:"Ya"},z:{refRange:[0,10888.3],name:"Za"}},base:re,fromBase(e){return e.map(t=>Math.max(t*to,0))},toBase(e){return e.map(t=>Math.max(t/to,0))}}),Xt=1.15,Yt=.66,ro=2610/2**14,Si=2**14/2610,no=3424/2**12,oo=2413/2**7,ao=2392/2**7,$i=1.7*2523/2**5,so=2**5/(1.7*2523),Wt=-.56,Dr=16295499532821565e-27,Li=[[.41478972,.579999,.014648],[-.20151,1.120649,.0531008],[-.0166008,.2648,.6684799]],Oi=[[1.9242264357876067,-1.0047923125953657,.037651404030618],[.35031676209499907,.7264811939316552,-.06538442294808501],[-.09098281098284752,-.3127282905230739,1.5227665613052603]],Ni=[[.5,.5,0],[3.524,-4.066708,.542708],[.199076,1.096799,-1.295875]],Ii=[[1,.1386050432715393,.05804731615611886],[.9999999999999999,-.1386050432715393,-.05804731615611886],[.9999999999999998,-.09601924202631895,-.8118918960560388]],ra=new $({id:"jzazbz",name:"Jzazbz",coords:{jz:{refRange:[0,1],name:"Jz"},az:{refRange:[-.5,.5]},bz:{refRange:[-.5,.5]}},base:un,fromBase(e){let[t,r,n]=e,o=Xt*t-(Xt-1)*n,a=Yt*r-(Yt-1)*t,i=Z(Li,[o,a,n]).map(function(h){let m=no+oo*(h/1e4)**ro,p=1+ao*(h/1e4)**ro;return(m/p)**$i}),[l,u,d]=Z(Ni,i);return[(1+Wt)*l/(1+Wt*l)-Dr,u,d]},toBase(e){let[t,r,n]=e,o=(t+Dr)/(1+Wt-Wt*(t+Dr)),s=Z(Ii,[o,r,n]).map(function(h){let m=no-h**so,p=ao*h**so-oo;return 1e4*(m/p)**Si}),[i,l,u]=Z(Oi,s),d=(i+(Xt-1)*u)/Xt,c=(l+(Yt-1)*d)/Yt;return[d,c,u]},formats:{color:{coords:["<number> | <percentage>","<number> | <percentage>[-1,1]","<number> | <percentage>[-1,1]"]}}}),Qr=new $({id:"jzczhz",name:"JzCzHz",coords:{jz:{refRange:[0,1],name:"Jz"},cz:{refRange:[0,1],name:"Chroma"},hz:{refRange:[0,360],type:"angle",name:"Hue"}},base:ra,fromBase(e){let[t,r,n]=e,o,a=2e-4;return Math.abs(r)<a&&Math.abs(n)<a?o=NaN:o=Math.atan2(n,r)*180/Math.PI,[t,Math.sqrt(r**2+n**2),Me(o)]},toBase(e){return[e[0],e[1]*Math.cos(e[2]*Math.PI/180),e[1]*Math.sin(e[2]*Math.PI/180)]}});function Ti(e,t){[e,t]=_([e,t]);let[r,n,o]=Qr.from(e),[a,s,i]=Qr.from(t),l=r-a,u=n-s;Number.isNaN(o)&&Number.isNaN(i)?(o=0,i=0):Number.isNaN(o)?o=i:Number.isNaN(i)&&(i=o);let d=o-i,c=2*Math.sqrt(n*s)*Math.sin(d/2*(Math.PI/180));return Math.sqrt(l**2+u**2+c**2)}var na=3424/4096,oa=2413/128,aa=2392/128,io=2610/16384,Ei=2523/32,Ai=16384/2610,lo=32/2523,Pi=[[.3592832590121217,.6976051147779502,-.035891593232029],[-.1920808463704993,1.100476797037432,.0753748658519118],[.0070797844607479,.0748396662186362,.8433265453898765]],_i=[[2048/4096,2048/4096,0],[6610/4096,-13613/4096,7003/4096],[17933/4096,-17390/4096,-543/4096]],zi=[[.9999999999999998,.0086090370379328,.111029625003026],[.9999999999999998,-.0086090370379328,-.1110296250030259],[.9999999999999998,.5600313357106791,-.3206271749873188]],ji=[[2.0701522183894223,-1.3263473389671563,.2066510476294053],[.3647385209748072,.6805660249472273,-.0453045459220347],[-.0497472075358123,-.0492609666966131,1.1880659249923042]],en=new $({id:"ictcp",name:"ICTCP",coords:{i:{refRange:[0,1],name:"I"},ct:{refRange:[-.5,.5],name:"CT"},cp:{refRange:[-.5,.5],name:"CP"}},base:un,fromBase(e){let t=Z(Pi,e);return Fi(t)},toBase(e){let t=Gi(e);return Z(ji,t)}});function Fi(e){let t=e.map(function(r){let n=na+oa*(r/1e4)**io,o=1+aa*(r/1e4)**io;return(n/o)**Ei});return Z(_i,t)}function Gi(e){return Z(zi,e).map(function(n){let o=Math.max(n**lo-na,0),a=oa-aa*n**lo;return 1e4*(o/a)**Ai})}function Di(e,t){[e,t]=_([e,t]);let[r,n,o]=en.from(e),[a,s,i]=en.from(t);return 720*Math.sqrt((r-a)**2+.25*(n-s)**2+(o-i)**2)}var Bi=se.D65,sa=.42,co=1/sa,Br=2*Math.PI,ia=[[.401288,.650173,-.051461],[-.250268,1.204414,.045854],[-.002079,.048952,.953127]],Hi=[[1.8620678550872327,-1.0112546305316843,.14918677544445175],[.38752654323613717,.6214474419314753,-.008973985167612518],[-.015841498849333856,-.03412293802851557,1.0499644368778496]],qi=[[460,451,288],[460,-891,-261],[460,-220,-6300]],Xi={dark:[.8,.525,.8],dim:[.9,.59,.9],average:[1,.69,1]},He={h:[20.14,90,164.25,237.53,380.14],e:[.8,.7,1,1.2,.8],H:[0,100,200,300,400]},Yi=180/Math.PI,uo=Math.PI/180;function la(e,t){return e.map(n=>{let o=ve(t*Math.abs(n)*.01,sa);return 400*nr(o,n)/(o+27.13)})}function Wi(e,t){let r=100/t*27.13**co;return e.map(n=>{let o=Math.abs(n);return nr(r*ve(o/(400-o),co),n)})}function Vi(e){let t=Me(e);t<=He.h[0]&&(t+=360);let r=Ko(He.h,t)-1,[n,o]=He.h.slice(r,r+2),[a,s]=He.e.slice(r,r+2),i=He.H[r],l=(t-n)/a;return i+100*l/(l+(o-t)/s)}function Ui(e){let t=(e%400+400)%400,r=Math.floor(.01*t);t=t%100;let[n,o]=He.h.slice(r,r+2),[a,s]=He.e.slice(r,r+2);return Me((t*(s*n-a*o)-100*n*s)/(t*(s-a)-100*s))}function ca(e,t,r,n,o){let a={};a.discounting=o,a.refWhite=e,a.surround=n;let s=e.map(y=>y*100);a.la=t,a.yb=r;let i=s[1],l=Z(ia,s);n=Xi[a.surround];let u=n[0];a.c=n[1],a.nc=n[2];let c=(1/(5*a.la+1))**4;a.fl=c*a.la+.1*(1-c)*(1-c)*Math.cbrt(5*a.la),a.flRoot=a.fl**.25,a.n=a.yb/i,a.z=1.48+Math.sqrt(a.n),a.nbb=.725*a.n**-.2,a.ncb=a.nbb;let h=o?1:Math.max(Math.min(u*(1-1/3.6*Math.exp((-a.la-42)/92)),1),0);a.dRgb=l.map(y=>xt(1,i/y,h)),a.dRgbInv=a.dRgb.map(y=>1/y);let m=l.map((y,k)=>y*a.dRgb[k]),p=la(m,a.fl);return a.aW=a.nbb*(2*p[0]+p[1]+.05*p[2]),a}var ho=ca(Bi,64/Math.PI*.2,20,"average",!1);function tn(e,t){if(!(e.J!==void 0^e.Q!==void 0))throw new Error("Conversion requires one and only one: 'J' or 'Q'");if(!(e.C!==void 0^e.M!==void 0^e.s!==void 0))throw new Error("Conversion requires one and only one: 'C', 'M' or 's'");if(!(e.h!==void 0^e.H!==void 0))throw new Error("Conversion requires one and only one: 'h' or 'H'");if(e.J===0||e.Q===0)return[0,0,0];let r=0;e.h!==void 0?r=Me(e.h)*uo:r=Ui(e.H)*uo;let n=Math.cos(r),o=Math.sin(r),a=0;e.J!==void 0?a=ve(e.J,1/2)*.1:e.Q!==void 0&&(a=.25*t.c*e.Q/((t.aW+4)*t.flRoot));let s=0;e.C!==void 0?s=e.C/a:e.M!==void 0?s=e.M/t.flRoot/a:e.s!==void 0&&(s=4e-4*e.s**2*(t.aW+4)/t.c);let i=ve(s*Math.pow(1.64-Math.pow(.29,t.n),-.73),10/9),l=.25*(Math.cos(r+2)+3.8),u=t.aW*ve(a,2/t.c/t.z),d=5e4/13*t.nc*t.ncb*l,c=u/t.nbb,h=23*(c+.305)*sn(i,23*d+i*(11*n+108*o)),m=h*n,p=h*o,y=Wi(Z(qi,[c,m,p]).map(k=>k*1/1403),t.fl);return Z(Hi,y.map((k,v)=>k*t.dRgbInv[v])).map(k=>k/100)}function ua(e,t){let r=e.map(S=>S*100),n=la(Z(ia,r).map((S,P)=>S*t.dRgb[P]),t.fl),o=n[0]+(-12*n[1]+n[2])/11,a=(n[0]+n[1]-2*n[2])/9,s=(Math.atan2(a,o)%Br+Br)%Br,i=.25*(Math.cos(s+2)+3.8),l=5e4/13*t.nc*t.ncb*sn(i*Math.sqrt(o**2+a**2),n[0]+n[1]+1.05*n[2]+.305),u=ve(l,.9)*Math.pow(1.64-Math.pow(.29,t.n),.73),d=t.nbb*(2*n[0]+n[1]+.05*n[2]),c=ve(d/t.aW,.5*t.c*t.z),h=100*ve(c,2),m=4/t.c*c*(t.aW+4)*t.flRoot,p=u*c,y=p*t.flRoot,k=Me(s*Yi),v=Vi(k),C=50*ve(t.c*u/(t.aW+4),1/2);return{J:h,C:p,h:k,s:C,Q:m,M:y,H:v}}var Ji=new $({id:"cam16-jmh",cssId:"--cam16-jmh",name:"CAM16-JMh",coords:{j:{refRange:[0,100],name:"J"},m:{refRange:[0,105],name:"Colorfulness"},h:{refRange:[0,360],type:"angle",name:"Hue"}},base:re,fromBase(e){let t=ua(e,ho);return[t.J,t.M,t.h]},toBase(e){return tn({J:e[0],M:e[1],h:e[2]},ho)}}),Zi=se.D65,Ki=216/24389,da=24389/27;function Qi(e){return 116*(e>Ki?Math.cbrt(e):(da*e+16)/116)-16}function rn(e){return e>8?Math.pow((e+16)/116,3):e/da}function el(e,t){let[r,n,o]=e,a=[],s=0;if(o===0)return[0,0,0];let i=rn(o);o>0?s=.00379058511492914*o**2+.608983189401032*o+.9155088574762233:s=9514440756550361e-21*o**2+.08693057439788597*o-21.928975842194614;let l=2e-12,u=15,d=0,c=1/0;for(;d<=u;){a=tn({J:s,C:n,h:r},t);let h=Math.abs(a[1]-i);if(h<c){if(h<=l)return a;c=h}s=s-(a[1]-i)*s/(2*a[1]),d+=1}return tn({J:s,C:n,h:r},t)}function tl(e,t){let r=Qi(e[1]);if(r===0)return[0,0,0];let n=ua(e,dn);return[Me(n.h),n.C,r]}var dn=ca(Zi,200/Math.PI*rn(50),rn(50)*100,"average",!1),St=new $({id:"hct",name:"HCT",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},c:{refRange:[0,145],name:"Colorfulness"},t:{refRange:[0,100],name:"Tone"}},base:re,fromBase(e){return tl(e)},toBase(e){return el(e,dn)},formats:{color:{id:"--hct",coords:["<number> | <angle>","<percentage> | <number>","<percentage> | <number>"]}}}),rl=Math.PI/180,mo=[1,.007,.0228];function po(e){e[1]<0&&(e=St.fromBase(St.toBase(e)));let t=Math.log(Math.max(1+mo[2]*e[1]*dn.flRoot,1))/mo[2],r=e[0]*rl,n=t*Math.cos(r),o=t*Math.sin(r);return[e[2],n,o]}function nl(e,t){[e,t]=_([e,t]);let[r,n,o]=po(St.from(e)),[a,s,i]=po(St.from(t));return Math.sqrt((r-a)**2+(n-s)**2+(o-i)**2)}var st={deltaE76:Ci,deltaECMC:Ri,deltaE2000:ea,deltaEJz:Ti,deltaEITP:Di,deltaEOK:Kr,deltaEHCT:nl};function ol(e){let t=e?Math.floor(Math.log10(Math.abs(e))):0;return Math.max(parseFloat(`1e${t-2}`),1e-6)}var fo={hct:{method:"hct.c",jnd:2,deltaEMethod:"hct",blackWhiteClamp:{}},"hct-tonal":{method:"hct.c",jnd:0,deltaEMethod:"hct",blackWhiteClamp:{channel:"hct.t",min:0,max:100}}};function _e(e,{method:t=fe.gamut_mapping,space:r=void 0,deltaEMethod:n="",jnd:o=2,blackWhiteClamp:a={}}={}){if(e=_(e),$t(arguments[1])?r=arguments[1]:r||(r=e.space),r=$.get(r),qe(e,r,{epsilon:0}))return e;let s;if(t==="css")s=al(e,{space:r});else{if(t!=="clip"&&!qe(e,r)){Object.prototype.hasOwnProperty.call(fo,t)&&({method:t,jnd:o,deltaEMethod:n,blackWhiteClamp:a}=fo[t]);let i=ea;if(n!==""){for(let u in st)if("deltae"+n.toLowerCase()===u.toLowerCase()){i=st[u];break}}let l=_e(J(e,r),{method:"clip",space:r});if(i(e,l)>o){if(Object.keys(a).length===3){let C=$.resolveCoord(a.channel),S=me(J(e,C.space),C.id);if(Ae(S)&&(S=0),S>=a.max)return J({space:"xyz-d65",coords:se.D65},e.space);if(S<=a.min)return J({space:"xyz-d65",coords:[0,0,0]},e.space)}let u=$.resolveCoord(t),d=u.space,c=u.id,h=J(e,d);h.coords.forEach((C,S)=>{Ae(C)&&(h.coords[S]=0)});let p=(u.range||u.refRange)[0],y=ol(o),k=p,v=me(h,c);for(;v-k>y;){let C=at(h);C=_e(C,{space:r,method:"clip"}),i(h,C)-o<y?k=me(h,c):v=me(h,c),$e(h,c,(k+v)/2)}s=J(h,r)}else s=l}else s=J(e,r);if(t==="clip"||!qe(s,r,{epsilon:0})){let i=Object.values(r.coords).map(l=>l.range||[]);s.coords=s.coords.map((l,u)=>{let[d,c]=i[u];return d!==void 0&&(l=Math.max(d,l)),c!==void 0&&(l=Math.min(l,c)),l})}}return r!==e.space&&(s=J(s,e.space)),e.coords=s.coords,e}_e.returns="color";var go={WHITE:{space:ot,coords:[1,0,0]},BLACK:{space:ot,coords:[0,0,0]}};function al(e,{space:t}={}){e=_(e),t||(t=e.space),t=$.get(t);let o=$.get("oklch");if(t.isUnbounded)return J(e,t);let a=J(e,o),s=a.coords[0];if(s>=1){let p=J(go.WHITE,t);return p.alpha=e.alpha,J(p,t)}if(s<=0){let p=J(go.BLACK,t);return p.alpha=e.alpha,J(p,t)}if(qe(a,t,{epsilon:0}))return J(a,t);function i(p){let y=J(p,t),k=Object.values(t.coords);return y.coords=y.coords.map((v,C)=>{if("range"in k[C]){let[S,P]=k[C].range;return Zo(S,v,P)}return v}),y}let l=0,u=a.coords[1],d=!0,c=at(a),h=i(c),m=Kr(h,c);if(m<.02)return h;for(;u-l>1e-4;){let p=(l+u)/2;if(c.coords[1]=p,d&&qe(c,t,{epsilon:0}))l=p;else if(h=i(c),m=Kr(h,c),m<.02){if(.02-m<1e-4)break;d=!1,l=p}else u=p}return h}function J(e,t,{inGamut:r}={}){e=_(e),t=$.get(t);let n=t.from(e),o={space:t,coords:n,alpha:e.alpha};return r&&(o=_e(o,r===!0?void 0:r)),o}J.returns="color";function Ct(e,{precision:t=fe.precision,format:r="default",inGamut:n=!0,...o}={}){let a;e=_(e);let s=r;r=e.space.getFormat(r)??e.space.getFormat("default")??$.DEFAULT_FORMAT;let i=e.coords.slice();if(n||=r.toGamut,n&&!qe(e)&&(i=_e(at(e),n===!0?void 0:n).coords),r.type==="custom")if(o.precision=t,r.serialize)a=r.serialize(i,e.alpha,o);else throw new TypeError(`format ${s} can only be used to parse colors, not for serialization`);else{let l=r.name||"color";r.serializeCoords?i=r.serializeCoords(i,t):t!==null&&(i=i.map(h=>Qt(h,{precision:t})));let u=[...i];if(l==="color"){let h=r.id||r.ids?.[0]||e.space.id;u.unshift(h)}let d=e.alpha;t!==null&&(d=Qt(d,{precision:t}));let c=e.alpha>=1||r.noAlpha?"":`${r.commas?",":" /"} ${d}`;a=`${l}(${u.join(r.commas?", ":" ")}${c})`}return a}var sl=[[.6369580483012914,.14461690358620832,.1688809751641721],[.2627002120112671,.6779980715188708,.05930171646986196],[0,.028072693049087428,1.060985057710791]],il=[[1.716651187971268,-.355670783776392,-.25336628137366],[-.666684351832489,1.616481236634939,.0157685458139111],[.017639857445311,-.042770613257809,.942103121235474]],or=new oe({id:"rec2020-linear",cssId:"--rec2020-linear",name:"Linear REC.2020",white:"D65",toXYZ_M:sl,fromXYZ_M:il}),Vt=1.09929682680944,bo=.018053968510807,ha=new oe({id:"rec2020",name:"REC.2020",base:or,toBase(e){return e.map(function(t){return t<bo*4.5?t/4.5:Math.pow((t+Vt-1)/Vt,1/.45)})},fromBase(e){return e.map(function(t){return t>=bo?Vt*Math.pow(t,.45)-(Vt-1):4.5*t})}}),ll=[[.4865709486482162,.26566769316909306,.1982172852343625],[.2289745640697488,.6917385218365064,.079286914093745],[0,.04511338185890264,1.043944368900976]],cl=[[2.493496911941425,-.9313836179191239,-.40271078445071684],[-.8294889695615747,1.7626640603183463,.023624685841943577],[.03584583024378447,-.07617238926804182,.9568845240076872]],ma=new oe({id:"p3-linear",cssId:"--display-p3-linear",name:"Linear P3",white:"D65",toXYZ_M:ll,fromXYZ_M:cl}),ul=[[.41239079926595934,.357584339383878,.1804807884018343],[.21263900587151027,.715168678767756,.07219231536073371],[.01933081871559182,.11919477979462598,.9505321522496607]],ee=[[3.2409699419045226,-1.537383177570094,-.4986107602930034],[-.9692436362808796,1.8759675015077202,.04155505740717559],[.05563007969699366,-.20397695888897652,1.0569715142428786]],pa=new oe({id:"srgb-linear",name:"Linear sRGB",white:"D65",toXYZ_M:ul,fromXYZ_M:ee}),yo={aliceblue:[240/255,248/255,1],antiquewhite:[250/255,235/255,215/255],aqua:[0,1,1],aquamarine:[127/255,1,212/255],azure:[240/255,1,1],beige:[245/255,245/255,220/255],bisque:[1,228/255,196/255],black:[0,0,0],blanchedalmond:[1,235/255,205/255],blue:[0,0,1],blueviolet:[138/255,43/255,226/255],brown:[165/255,42/255,42/255],burlywood:[222/255,184/255,135/255],cadetblue:[95/255,158/255,160/255],chartreuse:[127/255,1,0],chocolate:[210/255,105/255,30/255],coral:[1,127/255,80/255],cornflowerblue:[100/255,149/255,237/255],cornsilk:[1,248/255,220/255],crimson:[220/255,20/255,60/255],cyan:[0,1,1],darkblue:[0,0,139/255],darkcyan:[0,139/255,139/255],darkgoldenrod:[184/255,134/255,11/255],darkgray:[169/255,169/255,169/255],darkgreen:[0,100/255,0],darkgrey:[169/255,169/255,169/255],darkkhaki:[189/255,183/255,107/255],darkmagenta:[139/255,0,139/255],darkolivegreen:[85/255,107/255,47/255],darkorange:[1,140/255,0],darkorchid:[153/255,50/255,204/255],darkred:[139/255,0,0],darksalmon:[233/255,150/255,122/255],darkseagreen:[143/255,188/255,143/255],darkslateblue:[72/255,61/255,139/255],darkslategray:[47/255,79/255,79/255],darkslategrey:[47/255,79/255,79/255],darkturquoise:[0,206/255,209/255],darkviolet:[148/255,0,211/255],deeppink:[1,20/255,147/255],deepskyblue:[0,191/255,1],dimgray:[105/255,105/255,105/255],dimgrey:[105/255,105/255,105/255],dodgerblue:[30/255,144/255,1],firebrick:[178/255,34/255,34/255],floralwhite:[1,250/255,240/255],forestgreen:[34/255,139/255,34/255],fuchsia:[1,0,1],gainsboro:[220/255,220/255,220/255],ghostwhite:[248/255,248/255,1],gold:[1,215/255,0],goldenrod:[218/255,165/255,32/255],gray:[128/255,128/255,128/255],green:[0,128/255,0],greenyellow:[173/255,1,47/255],grey:[128/255,128/255,128/255],honeydew:[240/255,1,240/255],hotpink:[1,105/255,180/255],indianred:[205/255,92/255,92/255],indigo:[75/255,0,130/255],ivory:[1,1,240/255],khaki:[240/255,230/255,140/255],lavender:[230/255,230/255,250/255],lavenderblush:[1,240/255,245/255],lawngreen:[124/255,252/255,0],lemonchiffon:[1,250/255,205/255],lightblue:[173/255,216/255,230/255],lightcoral:[240/255,128/255,128/255],lightcyan:[224/255,1,1],lightgoldenrodyellow:[250/255,250/255,210/255],lightgray:[211/255,211/255,211/255],lightgreen:[144/255,238/255,144/255],lightgrey:[211/255,211/255,211/255],lightpink:[1,182/255,193/255],lightsalmon:[1,160/255,122/255],lightseagreen:[32/255,178/255,170/255],lightskyblue:[135/255,206/255,250/255],lightslategray:[119/255,136/255,153/255],lightslategrey:[119/255,136/255,153/255],lightsteelblue:[176/255,196/255,222/255],lightyellow:[1,1,224/255],lime:[0,1,0],limegreen:[50/255,205/255,50/255],linen:[250/255,240/255,230/255],magenta:[1,0,1],maroon:[128/255,0,0],mediumaquamarine:[102/255,205/255,170/255],mediumblue:[0,0,205/255],mediumorchid:[186/255,85/255,211/255],mediumpurple:[147/255,112/255,219/255],mediumseagreen:[60/255,179/255,113/255],mediumslateblue:[123/255,104/255,238/255],mediumspringgreen:[0,250/255,154/255],mediumturquoise:[72/255,209/255,204/255],mediumvioletred:[199/255,21/255,133/255],midnightblue:[25/255,25/255,112/255],mintcream:[245/255,1,250/255],mistyrose:[1,228/255,225/255],moccasin:[1,228/255,181/255],navajowhite:[1,222/255,173/255],navy:[0,0,128/255],oldlace:[253/255,245/255,230/255],olive:[128/255,128/255,0],olivedrab:[107/255,142/255,35/255],orange:[1,165/255,0],orangered:[1,69/255,0],orchid:[218/255,112/255,214/255],palegoldenrod:[238/255,232/255,170/255],palegreen:[152/255,251/255,152/255],paleturquoise:[175/255,238/255,238/255],palevioletred:[219/255,112/255,147/255],papayawhip:[1,239/255,213/255],peachpuff:[1,218/255,185/255],peru:[205/255,133/255,63/255],pink:[1,192/255,203/255],plum:[221/255,160/255,221/255],powderblue:[176/255,224/255,230/255],purple:[128/255,0,128/255],rebeccapurple:[102/255,51/255,153/255],red:[1,0,0],rosybrown:[188/255,143/255,143/255],royalblue:[65/255,105/255,225/255],saddlebrown:[139/255,69/255,19/255],salmon:[250/255,128/255,114/255],sandybrown:[244/255,164/255,96/255],seagreen:[46/255,139/255,87/255],seashell:[1,245/255,238/255],sienna:[160/255,82/255,45/255],silver:[192/255,192/255,192/255],skyblue:[135/255,206/255,235/255],slateblue:[106/255,90/255,205/255],slategray:[112/255,128/255,144/255],slategrey:[112/255,128/255,144/255],snow:[1,250/255,250/255],springgreen:[0,1,127/255],steelblue:[70/255,130/255,180/255],tan:[210/255,180/255,140/255],teal:[0,128/255,128/255],thistle:[216/255,191/255,216/255],tomato:[1,99/255,71/255],turquoise:[64/255,224/255,208/255],violet:[238/255,130/255,238/255],wheat:[245/255,222/255,179/255],white:[1,1,1],whitesmoke:[245/255,245/255,245/255],yellow:[1,1,0],yellowgreen:[154/255,205/255,50/255]},ko=Array(3).fill("<percentage> | <number>[0, 255]"),wo=Array(3).fill("<number>[0, 255]"),it=new oe({id:"srgb",name:"sRGB",base:pa,fromBase:e=>e.map(t=>{let r=t<0?-1:1,n=t*r;return n>.0031308?r*(1.055*n**(1/2.4)-.055):12.92*t}),toBase:e=>e.map(t=>{let r=t<0?-1:1,n=t*r;return n<=.04045?t/12.92:r*((n+.055)/1.055)**2.4}),formats:{rgb:{coords:ko},rgb_number:{name:"rgb",commas:!0,coords:wo,noAlpha:!0},color:{},rgba:{coords:ko,commas:!0,lastAlpha:!0},rgba_number:{name:"rgba",commas:!0,coords:wo},hex:{type:"custom",toGamut:!0,test:e=>/^#([a-f0-9]{3,4}){1,2}$/i.test(e),parse(e){e.length<=5&&(e=e.replace(/[a-f0-9]/gi,"$&$&"));let t=[];return e.replace(/[a-f0-9]{2}/gi,r=>{t.push(parseInt(r,16)/255)}),{spaceId:"srgb",coords:t.slice(0,3),alpha:t.slice(3)[0]}},serialize:(e,t,{collapse:r=!0}={})=>{t<1&&e.push(t),e=e.map(a=>Math.round(a*255));let n=r&&e.every(a=>a%17===0);return"#"+e.map(a=>n?(a/17).toString(16):a.toString(16).padStart(2,"0")).join("")}},keyword:{type:"custom",test:e=>/^[a-z]+$/i.test(e),parse(e){e=e.toLowerCase();let t={spaceId:"srgb",coords:null,alpha:1};if(e==="transparent"?(t.coords=yo.black,t.alpha=0):t.coords=yo[e],t.coords)return t}}}}),fa=new oe({id:"p3",cssId:"display-p3",name:"P3",base:ma,fromBase:it.fromBase,toBase:it.toBase});fe.display_space=it;var dl;if(typeof CSS<"u"&&CSS.supports)for(let e of[pe,ha,fa]){let t=e.getMinCoords(),n=Ct({space:e,coords:t,alpha:1});if(CSS.supports("color",n)){fe.display_space=e;break}}function hl(e,{space:t=fe.display_space,...r}={}){let n=Ct(e,r);if(typeof CSS>"u"||CSS.supports("color",n)||!fe.display_space)n=new String(n),n.color=e;else{let o=e;if((e.coords.some(Ae)||Ae(e.alpha))&&!(dl??=CSS.supports("color","hsl(none 50% 50%)"))&&(o=at(e),o.coords=o.coords.map(K),o.alpha=K(o.alpha),n=Ct(o,r),CSS.supports("color",n)))return n=new String(n),n.color=o,n;o=J(o,t),n=new String(Ct(o,r)),n.color=o}return n}function ml(e,t){return e=_(e),t=_(t),e.space===t.space&&e.alpha===t.alpha&&e.coords.every((r,n)=>r===t.coords[n])}function ze(e){return me(e,[re,"y"])}function ga(e,t){$e(e,[re,"y"],t)}function pl(e){Object.defineProperty(e.prototype,"luminance",{get(){return ze(this)},set(t){ga(this,t)}})}var fl=Object.freeze({__proto__:null,getLuminance:ze,register:pl,setLuminance:ga});function gl(e,t){e=_(e),t=_(t);let r=Math.max(ze(e),0),n=Math.max(ze(t),0);return n>r&&([r,n]=[n,r]),(r+.05)/(n+.05)}var bl=.56,yl=.57,kl=.62,wl=.65,vo=.022,vl=1.414,Ml=.1,Cl=5e-4,xl=1.14,Mo=.027,Rl=1.14;function Co(e){return e>=vo?e:e+(vo-e)**vl}function tt(e){let t=e<0?-1:1,r=Math.abs(e);return t*Math.pow(r,2.4)}function Sl(e,t){t=_(t),e=_(e);let r,n,o,a,s,i;t=J(t,"srgb"),[a,s,i]=t.coords;let l=tt(a)*.2126729+tt(s)*.7151522+tt(i)*.072175;e=J(e,"srgb"),[a,s,i]=e.coords;let u=tt(a)*.2126729+tt(s)*.7151522+tt(i)*.072175,d=Co(l),c=Co(u),h=c>d;return Math.abs(c-d)<Cl?n=0:h?(r=c**bl-d**yl,n=r*xl):(r=c**wl-d**kl,n=r*Rl),Math.abs(n)<Ml?o=0:n>0?o=n-Mo:o=n+Mo,o*100}function $l(e,t){e=_(e),t=_(t);let r=Math.max(ze(e),0),n=Math.max(ze(t),0);n>r&&([r,n]=[n,r]);let o=r+n;return o===0?0:(r-n)/o}var Ll=5e4;function Ol(e,t){e=_(e),t=_(t);let r=Math.max(ze(e),0),n=Math.max(ze(t),0);return n>r&&([r,n]=[n,r]),n===0?Ll:(r-n)/n}function Nl(e,t){e=_(e),t=_(t);let r=me(e,[pe,"l"]),n=me(t,[pe,"l"]);return Math.abs(r-n)}var Il=216/24389,xo=24/116,Ut=24389/27,Hr=se.D65,nn=new $({id:"lab-d65",name:"Lab D65",coords:{l:{refRange:[0,100],name:"Lightness"},a:{refRange:[-125,125]},b:{refRange:[-125,125]}},white:Hr,base:re,fromBase(e){let r=e.map((n,o)=>n/Hr[o]).map(n=>n>Il?Math.cbrt(n):(Ut*n+16)/116);return[116*r[1]-16,500*(r[0]-r[1]),200*(r[1]-r[2])]},toBase(e){let t=[];return t[1]=(e[0]+16)/116,t[0]=e[1]/500+t[1],t[2]=t[1]-e[2]/200,[t[0]>xo?Math.pow(t[0],3):(116*t[0]-16)/Ut,e[0]>8?Math.pow((e[0]+16)/116,3):e[0]/Ut,t[2]>xo?Math.pow(t[2],3):(116*t[2]-16)/Ut].map((n,o)=>n*Hr[o])},formats:{"lab-d65":{coords:["<number> | <percentage>","<number> | <percentage>[-1,1]","<number> | <percentage>[-1,1]"]}}}),qr=Math.pow(5,.5)*.5+.5;function Tl(e,t){e=_(e),t=_(t);let r=me(e,[nn,"l"]),n=me(t,[nn,"l"]),o=Math.abs(Math.pow(r,qr)-Math.pow(n,qr)),a=Math.pow(o,1/qr)*Math.SQRT2-40;return a<7.5?0:a}var Kt=Object.freeze({__proto__:null,contrastAPCA:Sl,contrastDeltaPhi:Tl,contrastLstar:Nl,contrastMichelson:$l,contrastWCAG21:gl,contrastWeber:Ol});function El(e,t,r={}){$t(r)&&(r={algorithm:r});let{algorithm:n,...o}=r;if(!n){let a=Object.keys(Kt).map(s=>s.replace(/^contrast/,"")).join(", ");throw new TypeError(`contrast() function needs a contrast algorithm. Please specify one of: ${a}`)}e=_(e),t=_(t);for(let a in Kt)if("contrast"+n.toLowerCase()===a.toLowerCase())return Kt[a](e,t,o);throw new TypeError(`Unknown contrast algorithm: ${n}`)}function ar(e){let[t,r,n]=Lt(e,re),o=t+15*r+3*n;return[4*t/o,9*r/o]}function ba(e){let[t,r,n]=Lt(e,re),o=t+r+n;return[t/o,r/o]}function Al(e){Object.defineProperty(e.prototype,"uv",{get(){return ar(this)}}),Object.defineProperty(e.prototype,"xy",{get(){return ba(this)}})}var Pl=Object.freeze({__proto__:null,register:Al,uv:ar,xy:ba});function Mt(e,t,r={}){$t(r)&&(r={method:r});let{method:n=fe.deltaE,...o}=r;for(let a in st)if("deltae"+n.toLowerCase()===a.toLowerCase())return st[a](e,t,o);throw new TypeError(`Unknown deltaE method: ${n}`)}function _l(e,t=.25){let n=[$.get("oklch","lch"),"l"];return $e(e,n,o=>o*(1+t))}function zl(e,t=.25){let n=[$.get("oklch","lch"),"l"];return $e(e,n,o=>o*(1-t))}var jl=Object.freeze({__proto__:null,darken:zl,lighten:_l});function ya(e,t,r=.5,n={}){return[e,t]=[_(e),_(t)],Ee(r)==="object"&&([r,n]=[.5,r]),Ot(e,t,n)(r)}function ka(e,t,r={}){let n;hn(e)&&([n,r]=[e,t],[e,t]=n.rangeArgs.colors);let{maxDeltaE:o,deltaEMethod:a,steps:s=2,maxSteps:i=1e3,...l}=r;n||([e,t]=[_(e),_(t)],n=Ot(e,t,l));let u=Mt(e,t),d=o>0?Math.max(s,Math.ceil(u/o)+1):s,c=[];if(i!==void 0&&(d=Math.min(d,i)),d===1)c=[{p:.5,color:n(.5)}];else{let h=1/(d-1);c=Array.from({length:d},(m,p)=>{let y=p*h;return{p:y,color:n(y)}})}if(o>0){let h=c.reduce((m,p,y)=>{if(y===0)return 0;let k=Mt(p.color,c[y-1].color,a);return Math.max(m,k)},0);for(;h>o;){h=0;for(let m=1;m<c.length&&c.length<i;m++){let p=c[m-1],y=c[m],k=(y.p+p.p)/2,v=n(k);h=Math.max(h,Mt(v,p.color),Mt(v,y.color)),c.splice(m,0,{p:k,color:n(k)}),m++}}}return c=c.map(h=>h.color),c}function Ot(e,t,r={}){if(hn(e)){let[l,u]=[e,t];return Ot(...l.rangeArgs.colors,{...l.rangeArgs.options,...u})}let{space:n,outputSpace:o,progression:a,premultiplied:s}=r;e=_(e),t=_(t),e=at(e),t=at(t);let i={colors:[e,t],options:r};if(n?n=$.get(n):n=$.registry[fe.interpolationSpace]||e.space,o=o?$.get(o):n,e=J(e,n),t=J(t,n),e=_e(e),t=_e(t),n.coords.h&&n.coords.h.type==="angle"){let l=r.hue=r.hue||"shorter",u=[n,"h"],[d,c]=[me(e,u),me(t,u)];isNaN(d)&&!isNaN(c)?d=c:isNaN(c)&&!isNaN(d)&&(c=d),[d,c]=bi(l,[d,c]),$e(e,u,d),$e(t,u,c)}return s&&(e.coords=e.coords.map(l=>l*e.alpha),t.coords=t.coords.map(l=>l*t.alpha)),Object.assign(l=>{l=a?a(l):l;let u=e.coords.map((h,m)=>{let p=t.coords[m];return xt(h,p,l)}),d=xt(e.alpha,t.alpha,l),c={space:n,coords:u,alpha:d};return s&&(c.coords=c.coords.map(h=>h/d)),o!==n&&(c=J(c,o)),c},{rangeArgs:i})}function hn(e){return Ee(e)==="function"&&!!e.rangeArgs}fe.interpolationSpace="lab";function Fl(e){e.defineFunction("mix",ya,{returns:"color"}),e.defineFunction("range",Ot,{returns:"function<color>"}),e.defineFunction("steps",ka,{returns:"array<color>"})}var Gl=Object.freeze({__proto__:null,isRange:hn,mix:ya,range:Ot,register:Fl,steps:ka}),wa=new $({id:"hsl",name:"HSL",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},s:{range:[0,100],name:"Saturation"},l:{range:[0,100],name:"Lightness"}},base:it,fromBase:e=>{let t=Math.max(...e),r=Math.min(...e),[n,o,a]=e,[s,i,l]=[NaN,0,(r+t)/2],u=t-r;if(u!==0){switch(i=l===0||l===1?0:(t-l)/Math.min(l,1-l),t){case n:s=(o-a)/u+(o<a?6:0);break;case o:s=(a-n)/u+2;break;case a:s=(n-o)/u+4}s=s*60}return i<0&&(s+=180,i=Math.abs(i)),s>=360&&(s-=360),[s,i*100,l*100]},toBase:e=>{let[t,r,n]=e;t=t%360,t<0&&(t+=360),r/=100,n/=100;function o(a){let s=(a+t/30)%12,i=r*Math.min(n,1-n);return n-i*Math.max(-1,Math.min(s-3,9-s,1))}return[o(0),o(8),o(4)]},formats:{hsl:{coords:["<number> | <angle>","<percentage>","<percentage>"]},hsla:{coords:["<number> | <angle>","<percentage>","<percentage>"],commas:!0,lastAlpha:!0}}}),va=new $({id:"hsv",name:"HSV",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},s:{range:[0,100],name:"Saturation"},v:{range:[0,100],name:"Value"}},base:wa,fromBase(e){let[t,r,n]=e;r/=100,n/=100;let o=n+r*Math.min(n,1-n);return[t,o===0?0:200*(1-n/o),100*o]},toBase(e){let[t,r,n]=e;r/=100,n/=100;let o=n*(1-r/2);return[t,o===0||o===1?0:(n-o)/Math.min(o,1-o)*100,o*100]},formats:{color:{id:"--hsv",coords:["<number> | <angle>","<percentage> | <number>","<percentage> | <number>"]}}}),Dl=new $({id:"hwb",name:"HWB",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},w:{range:[0,100],name:"Whiteness"},b:{range:[0,100],name:"Blackness"}},base:va,fromBase(e){let[t,r,n]=e;return[t,n*(100-r)/100,100-n]},toBase(e){let[t,r,n]=e;r/=100,n/=100;let o=r+n;if(o>=1){let i=r/o;return[t,0,i*100]}let a=1-n,s=a===0?0:1-r/a;return[t,s*100,a*100]},formats:{hwb:{coords:["<number> | <angle>","<percentage> | <number>","<percentage> | <number>"]}}}),Bl=[[.5766690429101305,.1855582379065463,.1882286462349947],[.29734497525053605,.6273635662554661,.07529145849399788],[.02703136138641234,.07068885253582723,.9913375368376388]],Hl=[[2.0415879038107465,-.5650069742788596,-.34473135077832956],[-.9692436362808795,1.8759675015077202,.04155505740717557],[.013444280632031142,-.11836239223101838,1.0151749943912054]],Ma=new oe({id:"a98rgb-linear",cssId:"--a98-rgb-linear",name:"Linear Adobe\xAE 98 RGB compatible",white:"D65",toXYZ_M:Bl,fromXYZ_M:Hl}),ql=new oe({id:"a98rgb",cssId:"a98-rgb",name:"Adobe\xAE 98 RGB compatible",base:Ma,toBase:e=>e.map(t=>Math.pow(Math.abs(t),563/256)*Math.sign(t)),fromBase:e=>e.map(t=>Math.pow(Math.abs(t),256/563)*Math.sign(t))}),Xl=[[.7977666449006423,.13518129740053308,.0313477341283922],[.2880748288194013,.711835234241873,8993693872564e-17],[0,0,.8251046025104602]],Yl=[[1.3457868816471583,-.25557208737979464,-.05110186497554526],[-.5446307051249019,1.5082477428451468,.02052744743642139],[0,0,1.2119675456389452]],Ca=new oe({id:"prophoto-linear",cssId:"--prophoto-rgb-linear",name:"Linear ProPhoto",white:"D50",base:cn,toXYZ_M:Xl,fromXYZ_M:Yl}),Wl=1/512,Vl=16/512,Ul=new oe({id:"prophoto",cssId:"prophoto-rgb",name:"ProPhoto",base:Ca,toBase(e){return e.map(t=>t<Vl?t/16:t**1.8)},fromBase(e){return e.map(t=>t>=Wl?t**(1/1.8):16*t)}}),Jl=new $({id:"oklch",name:"Oklch",coords:{l:{refRange:[0,1],name:"Lightness"},c:{refRange:[0,.4],name:"Chroma"},h:{refRange:[0,360],type:"angle",name:"Hue"}},white:"D65",base:ot,fromBase(e){let[t,r,n]=e,o,a=2e-4;return Math.abs(r)<a&&Math.abs(n)<a?o=NaN:o=Math.atan2(n,r)*180/Math.PI,[t,Math.sqrt(r**2+n**2),Me(o)]},toBase(e){let[t,r,n]=e,o,a;return isNaN(n)?(o=0,a=0):(o=r*Math.cos(n*Math.PI/180),a=r*Math.sin(n*Math.PI/180)),[t,o,a]},formats:{oklch:{coords:["<percentage> | <number>","<number> | <percentage>[0,1]","<number> | <angle>"]}}}),xa=se.D65,Zl=216/24389,Ro=24389/27,[So,$o]=ar({space:re,coords:xa}),Ra=new $({id:"luv",name:"Luv",coords:{l:{refRange:[0,100],name:"Lightness"},u:{refRange:[-215,215]},v:{refRange:[-215,215]}},white:xa,base:re,fromBase(e){let t=[K(e[0]),K(e[1]),K(e[2])],r=t[1],[n,o]=ar({space:re,coords:t});if(!Number.isFinite(n)||!Number.isFinite(o))return[0,0,0];let a=r<=Zl?Ro*r:116*Math.cbrt(r)-16;return[a,13*a*(n-So),13*a*(o-$o)]},toBase(e){let[t,r,n]=e;if(t===0||Ae(t))return[0,0,0];r=K(r),n=K(n);let o=r/(13*t)+So,a=n/(13*t)+$o,s=t<=8?t/Ro:Math.pow((t+16)/116,3);return[s*(9*o/(4*a)),s,s*((12-3*o-20*a)/(4*a))]},formats:{color:{id:"--luv",coords:["<number> | <percentage>","<number> | <percentage>[-1,1]","<number> | <percentage>[-1,1]"]}}}),mn=new $({id:"lchuv",name:"LChuv",coords:{l:{refRange:[0,100],name:"Lightness"},c:{refRange:[0,220],name:"Chroma"},h:{refRange:[0,360],type:"angle",name:"Hue"}},base:Ra,fromBase(e){let[t,r,n]=e,o,a=.02;return Math.abs(r)<a&&Math.abs(n)<a?o=NaN:o=Math.atan2(n,r)*180/Math.PI,[t,Math.sqrt(r**2+n**2),Me(o)]},toBase(e){let[t,r,n]=e;return r<0&&(r=0),isNaN(n)&&(n=0),[t,r*Math.cos(n*Math.PI/180),r*Math.sin(n*Math.PI/180)]},formats:{color:{id:"--lchuv",coords:["<number> | <percentage>","<number> | <percentage>","<number> | <angle>"]}}}),Kl=216/24389,Ql=24389/27,Lo=ee[0][0],Oo=ee[0][1],Xr=ee[0][2],No=ee[1][0],Io=ee[1][1],Yr=ee[1][2],To=ee[2][0],Eo=ee[2][1],Wr=ee[2][2];function rt(e,t,r){let n=t/(Math.sin(r)-e*Math.cos(r));return n<0?1/0:n}function rr(e){let t=Math.pow(e+16,3)/1560896,r=t>Kl?t:e/Ql,n=r*(284517*Lo-94839*Xr),o=r*(838422*Xr+769860*Oo+731718*Lo),a=r*(632260*Xr-126452*Oo),s=r*(284517*No-94839*Yr),i=r*(838422*Yr+769860*Io+731718*No),l=r*(632260*Yr-126452*Io),u=r*(284517*To-94839*Wr),d=r*(838422*Wr+769860*Eo+731718*To),c=r*(632260*Wr-126452*Eo);return{r0s:n/a,r0i:o*e/a,r1s:n/(a+126452),r1i:(o-769860)*e/(a+126452),g0s:s/l,g0i:i*e/l,g1s:s/(l+126452),g1i:(i-769860)*e/(l+126452),b0s:u/c,b0i:d*e/c,b1s:u/(c+126452),b1i:(d-769860)*e/(c+126452)}}function Ao(e,t){let r=t/360*Math.PI*2,n=rt(e.r0s,e.r0i,r),o=rt(e.r1s,e.r1i,r),a=rt(e.g0s,e.g0i,r),s=rt(e.g1s,e.g1i,r),i=rt(e.b0s,e.b0i,r),l=rt(e.b1s,e.b1i,r);return Math.min(n,o,a,s,i,l)}var ec=new $({id:"hsluv",name:"HSLuv",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},s:{range:[0,100],name:"Saturation"},l:{range:[0,100],name:"Lightness"}},base:mn,gamutSpace:it,fromBase(e){let[t,r,n]=[K(e[0]),K(e[1]),K(e[2])],o;if(t>99.9999999)o=0,t=100;else if(t<1e-8)o=0,t=0;else{let a=rr(t),s=Ao(a,n);o=r/s*100}return[n,o,t]},toBase(e){let[t,r,n]=[K(e[0]),K(e[1]),K(e[2])],o;if(n>99.9999999)n=100,o=0;else if(n<1e-8)n=0,o=0;else{let a=rr(n);o=Ao(a,t)/100*r}return[n,o,t]},formats:{color:{id:"--hsluv",coords:["<number> | <angle>","<percentage> | <number>","<percentage> | <number>"]}}});ee[0][0];ee[0][1];ee[0][2];ee[1][0];ee[1][1];ee[1][2];ee[2][0];ee[2][1];ee[2][2];function nt(e,t){return Math.abs(t)/Math.sqrt(Math.pow(e,2)+1)}function Po(e){let t=nt(e.r0s,e.r0i),r=nt(e.r1s,e.r1i),n=nt(e.g0s,e.g0i),o=nt(e.g1s,e.g1i),a=nt(e.b0s,e.b0i),s=nt(e.b1s,e.b1i);return Math.min(t,r,n,o,a,s)}var tc=new $({id:"hpluv",name:"HPLuv",coords:{h:{refRange:[0,360],type:"angle",name:"Hue"},s:{range:[0,100],name:"Saturation"},l:{range:[0,100],name:"Lightness"}},base:mn,gamutSpace:"self",fromBase(e){let[t,r,n]=[K(e[0]),K(e[1]),K(e[2])],o;if(t>99.9999999)o=0,t=100;else if(t<1e-8)o=0,t=0;else{let a=rr(t),s=Po(a);o=r/s*100}return[n,o,t]},toBase(e){let[t,r,n]=[K(e[0]),K(e[1]),K(e[2])],o;if(n>99.9999999)n=100,o=0;else if(n<1e-8)n=0,o=0;else{let a=rr(n);o=Po(a)/100*r}return[n,o,t]},formats:{color:{id:"--hpluv",coords:["<number> | <angle>","<percentage> | <number>","<percentage> | <number>"]}}}),_o=203,zo=2610/2**14,rc=2**14/2610,nc=2523/2**5,jo=2**5/2523,Fo=3424/2**12,Go=2413/2**7,Do=2392/2**7,oc=new oe({id:"rec2100pq",cssId:"rec2100-pq",name:"REC.2100-PQ",base:or,toBase(e){return e.map(function(t){return(Math.max(t**jo-Fo,0)/(Go-Do*t**jo))**rc*1e4/_o})},fromBase(e){return e.map(function(t){let r=Math.max(t*_o/1e4,0),n=Fo+Go*r**zo,o=1+Do*r**zo;return(n/o)**nc})}}),Bo=.17883277,Ho=.28466892,qo=.55991073,Vr=3.7743,ac=new oe({id:"rec2100hlg",cssId:"rec2100-hlg",name:"REC.2100-HLG",referred:"scene",base:or,toBase(e){return e.map(function(t){return t<=.5?t**2/3*Vr:(Math.exp((t-qo)/Bo)+Ho)/12*Vr})},fromBase(e){return e.map(function(t){return t/=Vr,t<=1/12?Math.sqrt(3*t):Bo*Math.log(12*t-Ho)+qo})}}),Sa={};Pe.add("chromatic-adaptation-start",e=>{e.options.method&&(e.M=$a(e.W1,e.W2,e.options.method))});Pe.add("chromatic-adaptation-end",e=>{e.M||(e.M=$a(e.W1,e.W2,e.options.method))});function sr({id:e,toCone_M:t,fromCone_M:r}){Sa[e]=arguments[0]}function $a(e,t,r="Bradford"){let n=Sa[r],[o,a,s]=Z(n.toCone_M,e),[i,l,u]=Z(n.toCone_M,t),d=[[i/o,0,0],[0,l/a,0],[0,0,u/s]],c=Z(d,n.toCone_M);return Z(n.fromCone_M,c)}sr({id:"von Kries",toCone_M:[[.40024,.7076,-.08081],[-.2263,1.16532,.0457],[0,0,.91822]],fromCone_M:[[1.8599363874558397,-1.1293816185800916,.21989740959619328],[.3611914362417676,.6388124632850422,-6370596838649899e-21],[0,0,1.0890636230968613]]});sr({id:"Bradford",toCone_M:[[.8951,.2664,-.1614],[-.7502,1.7135,.0367],[.0389,-.0685,1.0296]],fromCone_M:[[.9869929054667121,-.14705425642099013,.15996265166373122],[.4323052697233945,.5183602715367774,.049291228212855594],[-.00852866457517732,.04004282165408486,.96848669578755]]});sr({id:"CAT02",toCone_M:[[.7328,.4296,-.1624],[-.7036,1.6975,.0061],[.003,.0136,.9834]],fromCone_M:[[1.0961238208355142,-.27886900021828726,.18274517938277307],[.4543690419753592,.4735331543074117,.07209780371722911],[-.009627608738429355,-.00569803121611342,1.0153256399545427]]});sr({id:"CAT16",toCone_M:[[.401288,.650173,-.051461],[-.250268,1.204414,.045854],[-.002079,.048952,.953127]],fromCone_M:[[1.862067855087233,-1.0112546305316845,.14918677544445172],[.3875265432361372,.6214474419314753,-.008973985167612521],[-.01584149884933386,-.03412293802851557,1.0499644368778496]]});Object.assign(se,{A:[1.0985,1,.35585],C:[.98074,1,1.18232],D55:[.95682,1,.92149],D75:[.94972,1,1.22638],E:[1,1,1],F2:[.99186,1,.67393],F7:[.95041,1,1.08747],F11:[1.00962,1,.6435]});se.ACES=[.32168/.33767,1,(1-.32168-.33767)/.33767];var sc=[[.6624541811085053,.13400420645643313,.1561876870049078],[.27222871678091454,.6740817658111484,.05368951740793705],[-.005574649490394108,.004060733528982826,1.0103391003129971]],ic=[[1.6410233796943257,-.32480329418479,-.23642469523761225],[-.6636628587229829,1.6153315916573379,.016756347685530137],[.011721894328375376,-.008284441996237409,.9883948585390215]],La=new oe({id:"acescg",cssId:"--acescg",name:"ACEScg",coords:{r:{range:[0,65504],name:"Red"},g:{range:[0,65504],name:"Green"},b:{range:[0,65504],name:"Blue"}},referred:"scene",white:se.ACES,toXYZ_M:sc,fromXYZ_M:ic}),Jt=2**-16,Ur=-.35828683,Zt=(Math.log2(65504)+9.72)/17.52,lc=new oe({id:"acescc",cssId:"--acescc",name:"ACEScc",coords:{r:{range:[Ur,Zt],name:"Red"},g:{range:[Ur,Zt],name:"Green"},b:{range:[Ur,Zt],name:"Blue"}},referred:"scene",base:La,toBase(e){let t=-.3013698630136986;return e.map(function(r){return r<=t?(2**(r*17.52-9.72)-Jt)*2:r<Zt?2**(r*17.52-9.72):65504})},fromBase(e){return e.map(function(t){return t<=0?(Math.log2(Jt)+9.72)/17.52:t<Jt?(Math.log2(Jt+t*.5)+9.72)/17.52:(Math.log2(t)+9.72)/17.52})}}),Xo=Object.freeze({__proto__:null,A98RGB:ql,A98RGB_Linear:Ma,ACEScc:lc,ACEScg:La,CAM16_JMh:Ji,HCT:St,HPLuv:tc,HSL:wa,HSLuv:ec,HSV:va,HWB:Dl,ICTCP:en,JzCzHz:Qr,Jzazbz:ra,LCH:Rt,LCHuv:mn,Lab:pe,Lab_D65:nn,Luv:Ra,OKLCH:Jl,OKLab:ot,P3:fa,P3_Linear:ma,ProPhoto:Ul,ProPhoto_Linear:Ca,REC_2020:ha,REC_2020_Linear:or,REC_2100_HLG:ac,REC_2100_PQ:oc,XYZ_ABS_D65:un,XYZ_D50:cn,XYZ_D65:re,sRGB:it,sRGB_Linear:pa}),E=class e{constructor(...t){let r;t.length===1&&(r=_(t[0]));let n,o,a;r?(n=r.space||r.spaceId,o=r.coords,a=r.alpha):[n,o,a]=t,Object.defineProperty(this,"space",{value:$.get(n),writable:!1,enumerable:!0,configurable:!0}),this.coords=o?o.slice():[0,0,0],this.alpha=a>1||a===void 0?1:a<0?0:a;for(let s=0;s<this.coords.length;s++)this.coords[s]==="NaN"&&(this.coords[s]=NaN);for(let s in this.space.coords)Object.defineProperty(this,s,{get:()=>this.get(s),set:i=>this.set(s,i)})}get spaceId(){return this.space.id}clone(){return new e(this.space,this.coords,this.alpha)}toJSON(){return{spaceId:this.spaceId,coords:this.coords,alpha:this.alpha}}display(...t){let r=hl(this,...t);return r.color=new e(r.color),r}static get(t,...r){return t instanceof e?t:new e(t,...r)}static defineFunction(t,r,n=r){let{instance:o=!0,returns:a}=n,s=function(...i){let l=r(...i);if(a==="color")l=e.get(l);else if(a==="function<color>"){let u=l;l=function(...d){let c=u(...d);return e.get(c)},Object.assign(l,u)}else a==="array<color>"&&(l=l.map(u=>e.get(u)));return l};t in e||(e[t]=s),o&&(e.prototype[t]=function(...i){return s(this,...i)})}static defineFunctions(t){for(let r in t)e.defineFunction(r,t[r],t[r])}static extend(t){if(t.register)t.register(e);else for(let r in t)e.defineFunction(r,t[r])}};E.defineFunctions({get:me,getAll:Lt,set:$e,setAll:ln,to:J,equals:ml,inGamut:qe,toGamut:_e,distance:ta,toString:Ct});Object.assign(E,{util:hi,hooks:Pe,WHITES:se,Space:$,spaces:$.registry,parse:Qo,defaults:fe});for(let e of Object.keys(Xo))$.register(Xo[e]);for(let e in $.registry)on(e,$.registry[e]);Pe.add("colorspace-init-end",e=>{on(e.id,e),e.aliases?.forEach(t=>{on(t,e)})});function on(e,t){let r=e.replace(/-/g,"_");Object.defineProperty(E.prototype,r,{get(){let n=this.getAll(e);return typeof Proxy>"u"?n:new Proxy(n,{has:(o,a)=>{try{return $.resolveCoord([t,a]),!0}catch{}return Reflect.has(o,a)},get:(o,a,s)=>{if(a&&typeof a!="symbol"&&!(a in o)){let{index:i}=$.resolveCoord([t,a]);if(i>=0)return o[i]}return Reflect.get(o,a,s)},set:(o,a,s,i)=>{if(a&&typeof a!="symbol"&&!(a in o)||a>=0){let{index:l}=$.resolveCoord([t,a]);if(l>=0)return o[l]=s,this.setAll(e,o),!0}return Reflect.set(o,a,s,i)}})},set(n){this.setAll(e,n)},configurable:!0,enumerable:!0})}E.extend(st);E.extend({deltaE:Mt});Object.assign(E,{deltaEMethods:st});E.extend(jl);E.extend({contrast:El});E.extend(Pl);E.extend(fl);E.extend(Gl);E.extend(Kt);var cc=["srgb","display-p3","rec2020"],uc=["rgb","oklch","hex","hsl"];function ue(e){return e.mapOutputsToSrgb?"srgb":e.authoringGamut}function pn(e){if(!e||typeof e!="object"||Array.isArray(e))return!1;let t=e;return Object.keys(t).length===3&&cc.some(r=>r===t.authoringGamut)&&uc.some(r=>r===t.outputFormat)&&typeof t.mapOutputsToSrgb=="boolean"&&(t.mapOutputsToSrgb||t.authoringGamut==="srgb"||t.outputFormat==="rgb"||t.outputFormat==="oklch")}function ye(e){return e==="display-p3"?"p3":e}var fn="css",dc=2;function ge(e){if(!Number.isFinite(e))throw new Error("Color output contains an unavailable channel.");let t=e.toFixed(dc);return Number(t)===0?"0":t.replace(/(?:\.0+|(\.\d*?)0+)$/,"$1")}function lt(e){let[t,r,n]=e.coords;if(t===null||r===null||n===null||![t,r,n].every(o=>Number.isFinite(Number(o))))throw new Error("Color output contains an unavailable channel.");return[Number(t),Number(r),Number(n)]}function Na(e,t,r){if(r.outputFormat==="hex"){let a=i=>Math.round(Math.min(1,Math.max(0,i))*255).toString(16).padStart(2,"0"),s=a(t);return`#${e.map(a).join("")}${s==="ff"?"":s}`}let n=t===1?"":` / ${ge(t)}`,o=e.map(a=>Math.min(1,Math.max(0,a)));if(ue(r)==="srgb"){let a=o.map(s=>Math.round(s*255)).join(", ");return t===1?`rgb(${a})`:`rgba(${a}, ${ge(t)})`}return`color(${ue(r)} ${o.map(ge).join(" ")}${n})`}function Oa(e,t,r,n,o){let a=Number(ge(e*100))/100,s=Number(ge(r))%360,i=25e3,l=0,u=Math.round(t*i),d=ye(ue(o)),c=h=>new E("oklch",[a,h/i,s]).inGamut(d,{epsilon:1e-8});if(!c(u)){for(;l<u;){let h=Math.ceil((l+u)/2);c(h)?l=h:u=h-1}u=l}return`oklch(${ge(a*100)}% ${ge(u/100)}% ${u===0?"0":ge(s)}${n})`}function ct(e,t){let r=ye(ue(t));if(pn(t)&&(t.outputFormat==="hex"||t.outputFormat==="rgb")&&e.length===3&&e.every(n=>Number.isFinite(n)&&n>=0&&n<=1)){let n=E.Space.get(`${r}-linear`).to(r,[...e]);if(n.some(o=>o===null||!Number.isFinite(o)))throw new Error("Color output contains an unavailable channel.");return Na(n.map(Number),1,t)}return gn(new E(`${r}-linear`,[...e]),t)}function hc(e,t){if(!pn(t))throw new Error("Invalid color output configuration.");let r=Number(e.alpha);if(e.alpha===null||!Number.isFinite(r)||r<0||r>1)throw new Error("Color output has invalid opacity.");let n=e.clone();n.coords=lt(e),n.alpha=r;let o=ye(ue(t));return n.toGamut({space:o,method:fn}).to(o)}function gn(e,t){let r=hc(e,t),n=t.outputFormat==="hex"?Number(r.alpha):Number(ge(Number(r.alpha))),o=n===1?"":` / ${ge(n)}`;if(t.outputFormat==="hex"||t.outputFormat==="rgb")return Na(lt(r),n,t);if(t.outputFormat==="hsl"){let d=r.to("hsl");Number.isFinite(d.coords[0])||(d.coords[0]=0);let[c,h,m]=lt(d);return`hsl(${ge(c)} ${ge(h)}% ${ge(m)}%${o})`}let a=r.to("oklch"),s=lt(r);if(Math.max(...s)-Math.min(...s)<1e-12){let d=lt(r.to(`${ye(ue(t))}-linear`));return Oa(Math.cbrt(d[0]),0,0,o,t)}Number.isFinite(a.coords[2])||(a.coords[2]=0);let[i,l,u]=lt(a);return Oa(i,l,u,o,t)}var Xe=.4,lr={srgb:{linearThreshold:.0031308,encodedThreshold:.04045,slope:12.92,factor:1.055,offset:.055,exponent:1/2.4},rec2020:{linearThreshold:.018053968510807,encodedThreshold:.0812428582986315,slope:4.5,factor:1.09929682680944,offset:.09929682680944,exponent:.45}};function ne(e){return Math.min(1,Math.max(0,e))}function Le(e,t){return[t(e[0],0),t(e[1],1),t(e[2],2)]}function dt(e,t="srgb"){let r=lr[t==="rec2020"?"rec2020":"srgb"],n=t==="rec2020"?Math.abs(e):e,o=n<=r.encodedThreshold?n/r.slope:((n+r.offset)/r.factor)**(1/r.exponent);return t==="rec2020"?Math.sign(e)*o:o}function Nt(e,t="srgb"){let r=lr[t==="rec2020"?"rec2020":"srgb"],n=t==="rec2020"?Math.abs(e):e,o=n<=r.linearThreshold?n*r.slope:r.factor*n**r.exponent-r.offset;return t==="rec2020"?Math.sign(e)*o:o}function de(e,t,r){return t===r?e:mc(cr(e,t),r)}function cr([e,t,r],n="srgb"){return Ta(kc[n],[e,t,r])}function mc([e,t,r],n="srgb"){return Ta(wc[n],[e,t,r])}function ht(e,t="srgb"){return`#${de(e,t,"srgb").map(o=>Math.round(ne(Nt(o))*255).toString(16).padStart(2,"0")).join("")}`}function pc(e){return typeof e=="object"?e:{authoringGamut:e==="oklch"?"srgb":e,outputFormat:e==="srgb"?"hex":e==="oklch"?"oklch":"rgb",mapOutputsToSrgb:!1}}function ie(e,t="srgb",r=Oe(t)){let n=pc(t);return r===ue(n)?ct(e,n):gn(new E(`${ye(r)}-linear`,[...e]),n)}function Oe(e){return typeof e=="object"?ue(e):e==="oklch"?"srgb":e}function V([e,t,r],n="srgb"){return e===t&&t===r?e:n==="rec2020"?.2627002120112671*e+.6779980715188708*t+.05930171646986196*r:n==="display-p3"?.2289745640697488*e+.6917385218365064*t+.079286914093745*r:.2126*e+.7152*t+.0722*r}function Ce(e,t){return(Math.max(e,t)+.05)/(Math.min(e,t)+.05)}function Ia(e,t,r){return ne(r?(e+.05)/t-.05:t*(e+.05)-.05)}function ur([e,t,r]){let n=.4122214708*e+.5363325363*t+.0514459929*r,o=.2119034982*e+.6806995451*t+.1073969566*r,a=.0883024619*e+.2817188376*t+.6299787005*r,s=Math.cbrt(n),i=Math.cbrt(o),l=Math.cbrt(a);return[.2104542553*s+.793617785*i-.0040720468*l,1.9779984951*s-2.428592205*i+.4505937099*l,.0259040371*s+.7827717662*i-.808675766*l]}function fc([e,t,r]){let n=(e+.3963377774*t+.2158037573*r)**3,o=(e-.1055613458*t-.0638541728*r)**3,a=(e-.0894841775*t-1.291485548*r)**3;return[4.0767416621*n-3.3077115913*o+.2309699292*a,-1.2684380046*n+2.6097574011*o-.3413193965*a,-.0041960863*n-.7034186147*o+1.707614701*a]}function gc([e,t,r]){let n=Math.hypot(t,r),o=(Math.atan2(r,t)*180/Math.PI+360)%360;return[e,n,o]}function bc([e,t,r]){let n=r*Math.PI/180;return[e,t*Math.cos(n),t*Math.sin(n)]}function dr(e){return gc(ur(e))}function bn(e){return fc(bc(e))}function yc(e){return e.every(t=>t>=0&&t<=1)}function ir(e){let[t,r,n]=e.coords;if(t===null||r===null||n===null||![t,r,n].every(Number.isFinite))throw new Error("Color conversion returned unavailable channels.");return[t,r,n]}function ut(e,t){return[ir(new E(e,[1,0,0]).to(t)),ir(new E(e,[0,1,0]).to(t)),ir(new E(e,[0,0,1]).to(t))]}var kc={srgb:ut("srgb-linear","xyz-d65"),"display-p3":ut("p3-linear","xyz-d65"),rec2020:ut("rec2020-linear","xyz-d65")},wc={srgb:ut("xyz-d65","srgb-linear"),"display-p3":ut("xyz-d65","p3-linear"),rec2020:ut("xyz-d65","rec2020-linear")};function Ta([e,t,r],[n,o,a]){return[e[0]*n+t[0]*o+r[0]*a,e[1]*n+t[1]*o+r[1]*a,e[2]*n+t[2]*o+r[2]*a]}function hr(e){return typeof e=="object"&&e.mapOutputsToSrgb&&e.authoringGamut!=="srgb"}function It(e,t,r,n="srgb",o=!1){if(e<=0)return[0,0,0];if(e>=1)return[1,1,1];if(o){let u=new E("oklch",[e,t,r]);return ir(u.toGamut({space:ye(n),method:fn}).to(`${ye(n)}-linear`))}let a=u=>yc(de(u,"srgb",n)),s=bn([e,t,r]);if(a(s))return de(s,"srgb",n);let i=0,l=t;for(let u=0;u<22;u+=1){let d=(i+l)/2;a(bn([e,d,r]))?i=d:l=d}return de(bn([e,i,r]),"srgb",n)}function Ea(e,t,r){let n=(t-e+540)%360-180;return(e+n*r+360)%360}function Aa(e,t){return Math.hypot(e[0]-t[0],e[1]-t[1],e[2]-t[2])}var Tt=new Map,yn=0;function kn(e,t){let r=`${t}\0${e}`,n=Tt.get(r);if(n)return n;let o={color:new E(e)};if(r.length>512)return o;for(;Tt.size>=4096||yn+r.length>262144;){let a=Tt.keys().next().value;if(a===void 0)break;Tt.delete(a),yn-=a.length}return Tt.set(r,o),yn+=r.length,o}function xe(e,t){let r=kn(e,t);if(r.linear)return[...r.linear];let n=r.color;if(n.space.id==="oklch"&&Number(n.coords[1])===0){let s=Number(n.coords[0])**3;return r.linear=[s,s,s],[s,s,s]}let a=n.to(`${ye(t)}-linear`).coords.map(Number);if(a.length!==3||!a.every(Number.isFinite))throw new Error(`Cannot measure output color ${e}.`);return r.linear=[a[0],a[1],a[2]],[...r.linear]}function vc(e,t,r){let n=kn(e,r),o=kn(t,r),a=n.color,s=o.color;if(Number(s.alpha)!==1)throw new Error("A contrast background must be opaque.");let i=Number(a.alpha);if(!Number.isFinite(i)||i<0||i>1)throw new Error("A contrast foreground has invalid opacity.");let l=h=>{if(h.encoded)return h.encoded;let m=h.color;if(m.space.id==="oklch"&&Number(m.coords[1])===0){let p=Nt(Number(m.coords[0])**3,r);h.encoded=[p,p,p]}else h.encoded=m.to(ye(r)).coords.map(Number);return h.encoded},u=l(n),d=l(o),c=u.map((h,m)=>h*i+d[m]*(1-i));if(!c.every(Number.isFinite))throw new Error("Cannot measure the composited output color.");return[dt(c[0],r),dt(c[1],r),dt(c[2],r)]}function Et(e,t,r){return Ce(V(vc(e,t,r),r),V(xe(t,r),r))}function Mc(e){if(!Number.isFinite(e)||e<1||e>21)throw new Error("Choose a finite contrast target from 1:1 to 21:1.")}function mr(e,t,r,n,o,a){Mc(r);let s=ue(n),i=new Map,l=p=>{let y=ct(p,n),k=i.get(y);if(k)return k;let v={css:y,linear:xe(y,s),measuredContrast:Et(y,t,s)};return i.set(y,v),v},u=l(e);if(u.measuredContrast>=r)return u;let d=o?[0,0,0]:[1,1,1],c=l(d);if(c.measuredContrast<r)return c;let h=0,m=1;for(let p=0;p<46;p+=1){let y=(h+m)/2,k=l(Le(e,(v,C)=>v+y*(d[C]-v)));k.measuredContrast>=r?(m=y,c=k):h=y}return c}var Cc=.56,xc=.57,Rc=.62,Sc=.65,Pa=.022,$c=1.414,_a=1.14,za=.027,wn=.1,Lc=5e-4,je=108;function pr(e){let t=r=>Math.sign(r)*Math.abs(r)**2.4;return t(e[0])*.2126729+t(e[1])*.7151522+t(e[2])*.072175}function ja(e){return e>=Pa?e:e+(Pa-e)**$c}function Ne(e,t,r=!0){let n=ja(e),o=ja(t);if(Math.abs(o-n)<Lc)return 0;let a=o>n?(o**Cc-n**xc)*_a:(o**Sc-n**Rc)*_a,s=Math.abs(a),i=Math.sign(a);return s<wn?r?i*s*((wn-za)/wn)*100:0:i*(s-za)*100}function Fa(e){return(typeof e=="string"?new E(e):e).to("srgb").coords.map(r=>Number(r)||0)}function mt(e,t,r=!0){return Ne(pr(Fa(e)),pr(Fa(t)),r)}function fr(e){return e.interpolation??"oklch"}var Oc=2,Ga=33,Nc=[4,9,14,19,24,28],Ic=[2,5,8,11,14,17,20,23,26,29],Tc=[.05,.1,.2,.3,.4,.5,.6,.7,.8,.9,.95],pt=new Map;function Ec(e,t){return`${JSON.stringify(t)}|${e.id}|${fr(e)}|${e.stops.map(r=>`${r.lightness},${r.hue},${r.chroma}`).join(";")}`}function Da(e){return[...e].sort((t,r)=>t.lightness-r.lightness)}function Ac(e,t){let r=Da(e);if(r.length===0)throw new Error("A color scale requires at least one stop.");let n=r[0],o=r.at(-1);if(t<=n.lightness||r.length===1)return{hue:n.hue,chroma:n.chroma};if(t>=o.lightness)return{hue:o.hue,chroma:o.chroma};let a=r.findIndex(d=>d.lightness>=t),s=r[a-1],i=r[a],l=i.lightness-s.lightness,u=l===0?0:(t-s.lightness)/l;return{hue:Ea(s.hue,i.hue,u),chroma:s.chroma+(i.chroma-s.chroma)*u}}function Ba(e,t,r){return It(ne(e.lightness),e.chroma/100*Xe,e.hue,t,r)}function Pc(e,t,r,n){let o=[{lightness:0,gamma:[0,0,0]},...Da(e).map(c=>({lightness:ne(c.lightness),gamma:Ba(c,r,n).map(h=>Nt(h,r))})),{lightness:1,gamma:[1,1,1]}],a=ne(t),s=Math.max(1,o.findIndex(c=>c.lightness>=a)),i=o[s-1],l=o[s],u=l.lightness-i.lightness,d=u<=0?1:(a-i.lightness)/u;return i.gamma.map((c,h)=>dt(c+(l.gamma[h]-c)*d,r))}function Ha(e,t,r,n){if(fr(e)==="rgb"){let i=Pc(e.stops,t,r,n),[,l,u]=dr(de(i,r,"srgb"));return{linear:i,hue:Number.isFinite(u)?u:0,chroma:l/Xe*100}}let{hue:o,chroma:a}=Ac(e.stops,t);return{linear:It(ne(t),a/100*Xe,o,r,n),hue:o,chroma:a}}function gr(e,t,r="srgb"){let n=Oe(r),o=ne(t),{linear:a,hue:s,chroma:i}=Ha(e,o,n,hr(r));return{linear:a,css:ie(a,r,n),hex:ht(a,n),lightness:o,hue:s,chroma:i,gamut:n}}function _c(e,t="srgb"){let r=Oe(t),n=Math.min(...e.stops.map(a=>a.lightness),0),o=Math.max(...e.stops.map(a=>a.lightness),1);return Array.from({length:Ga},(a,s)=>{let i=n+(o-n)*s/(Ga-1),{linear:l}=Ha(e,i,r,hr(t));return{lightness:i,linear:l,luminance:V(l,r),hex:ht(l,r),css:ie(l,t,r)}}).sort((a,s)=>a.luminance-s.luminance)}function zc(e,t=[]){let r=t.length>0?Ic:Nc,n=[{luminance:0,linear:[0,0,0]},...t,...r.map(o=>({luminance:e[o].luminance,linear:e[o].linear})),{luminance:1,linear:[1,1,1]}];return n.sort((o,a)=>o.luminance-a.luminance),n.filter((o,a)=>a===0||o.luminance-n[a-1].luminance>=1e-4)}function ft(e,t){let r=ne(t);if(r<=e[0].luminance)return e[0].linear;let n=e.at(-1);if(r>=n.luminance)return n.linear;let o=e.findIndex(l=>l.luminance>=r),a=e[o-1],s=e[o],i=(r-a.luminance)/(s.luminance-a.luminance);return[a.linear[0]+(s.linear[0]-a.linear[0])*i,a.linear[1]+(s.linear[1]-a.linear[1])*i,a.linear[2]+(s.linear[2]-a.linear[2])*i]}function At(e,t="srgb"){let r=Oe(t),n=Ec(e,t),o=pt.get(n);if(o){if(o.scale===e)return o;let c={...o,scale:e};return pt.set(n,c),c}let a=_c(e,t),s=fr(e)==="rgb"?e.stops.map(c=>{let h=Ba(c,r,hr(t));return{luminance:V(h,r),linear:h}}):[],i=zc(a,s),l=e.stops.every(c=>c.chroma<Oc),u=Object.fromEntries(Tc.map(c=>[Math.round(c*1e3),ie(ft(i,c),t,r)])),d={scale:e,neutral:l,ramp:a,anchors:i,referencePalette:u,gamut:r,output:t};if(pt.set(n,d),pt.size>256){let c=pt.keys().next().value;c&&pt.delete(c)}return d}var jc="light",Fc=0,Gc=12,Dc=2,Bc=3,Hc=1,qc=21;function Fe(e){return Math.min(qc,Math.max(Hc,e))}function qa(e){return e>216/24389?116*Math.cbrt(e)-16:24389/27*e}function Xc(e){return e>8?((e+16)/116)**3:e*27/24389}function Yc(e){return qa(.05*(Fe(e)-1))}function Wc(e){return Fe(1+Xc(Math.min(100,Math.max(0,e)))/.05)}function Xa(e,t){return e+t*(1-Math.exp(-e/Bc))*(1-(e/100)**Dc)}function Vc(e,t){let r=0,n=100;for(let o=0;o<40;o+=1){let a=(r+n)/2;Xa(a,t)<e?r=a:n=a}return(r+n)/2}function Uc(e){return e.settings.contrastReference??jc}function Jc(e){return e.settings.polarityCompensation??Fc}var Zc=1,Ya=3;function Kc(e){return e.settings.contrastMultiplier??Zc}function br(e,t){return Fe((Fe(e)-1)*Math.max(0,t)+1)}function Wa(e){let t=Kc(e);return t===1?e:{...e,contrasts:e.contrasts.map(r=>({...r,value:br(r.value,t)})),surfaces:e.surfaces.map(r=>r.base||r.contrast===void 0?r:{...r,contrast:br(r.contrast,t)})}}function Qc(e,t,r){let n=Math.min(1,Math.max(0,t))*Gc;if(n===0)return Fe(e);let o=Yc(e);return Wc(r==="light"?Xa(o,n):Vc(o,n))}function eu(e,t){let r=Math.min(100,Math.max(0,qa(e)))/100;return t==="light"?1-r:r}function tu(e,t){return e.oppositeValue??Qc(e.value,t.strength,t.reference)}function yr(e,t){let r=Fe(e.value);if(t.weight<=0)return r;let n=tu(e,t);return t.weight>=1?Fe(n):Fe(Math.exp(Math.log(r)+t.weight*(Math.log(n)-Math.log(r))))}function ru(e){let t=e.scales.find(n=>n.id===e.backgroundScaleId)??e.scales[0],r=gr(t,e.backgroundLightness,e.settings.colorOutput);return V(r.linear,Oe(e.settings.colorOutput))}function vn(e){let t=Uc(e);return{weight:eu(ru(e),t),strength:Jc(e),reference:t}}function Va(e){let t=vn(e),r=e.contrasts.some(n=>n.oppositeValue!==void 0);return t.weight===0||t.strength===0&&!r?e:{...e,contrasts:e.contrasts.map(n=>({...n,value:yr(n,t)})),surfaces:e.surfaces.map(n=>n.base||n.contrast===void 0?n:{...n,contrast:yr({value:n.contrast},t)})}}var Ua=new WeakMap;function nu(e,t,r){return{linear:e,hex:ht(e,r.gamut),css:ie(e,r.output,r.gamut),measuredContrast:Ce(V(e,r.gamut),t)}}function Ye(e,t,r,n,o){let a=JSON.stringify([t,r,n.side,n.backgroundBlend,n.colorSourceCurveOffset,o]),s=Ua.get(e)??new Map,i=s.get(a);if(i)return i;let l=ie(t,e.output,e.gamut);typeof e.output=="object"&&(t=xe(l,e.gamut));let u=V(t,e.gamut),d=o??(n.side==="dark"||n.side==="auto"&&u>.1791),c=Ia(u,r,d),h=e.neutral?1:ne(n.backgroundBlend+n.colorSourceCurveOffset*(r-1)/11),p=ne(c+h*((d?0:1)-c)),y=ft(e.anchors,p),k=d?Math.min(V(y,e.gamut)-u,-1e-4):Math.max(V(y,e.gamut)-u,1e-4),v=ne((c-u)/k),C=Le(y,(j,G)=>v*j+(1-v)*t[G]),S=ft(e.anchors,c),P=j=>{if(typeof e.output!="object")return nu(j,u,e);let G=mr(j,l,r,e.output,d,e.scale.name);return{...G,hex:ht(G.linear,e.gamut)}},H,B,z=()=>B??=P(S),A={targetContrast:r,targetLuminance:c,sourceLuminance:p,alpha:v,isDark:d,sourceLinear:y,get dynamic(){return H??=P(C)},get opaque(){return z()},get chromaDeltaE(){return Aa(ur(de(A.dynamic.linear,e.gamut,"srgb")),ur(de(z().linear,e.gamut,"srgb")))}};return s.set(a,A),s.size>128&&s.delete(s.keys().next().value),Ua.set(e,s),A}function ou(e){let t=lr.srgb,r=Math.abs(e),n=r<=t.linearThreshold?r*t.slope:t.factor*r**t.exponent-t.offset;return Math.sign(e)*n}function Ie(e,t){return pr(de(e,t,"srgb").map(ou))}function Ja(e,t){let r=Ie(e,t);return Math.abs(Ne(0,r))>=Math.abs(Ne(1,r))}function kr(e,t,r,n,o,a){let s=ue(o),i=Ie(t,s),l=V(t,s),u=k=>{let v=l+k*((a?0:1)-l);return ft(e.anchors,v)},d=k=>Math.abs(Ne(Ie(k,s),i)),c=k=>{let v=ct(k,o);return{css:v,linear:xe(v,s),measuredContrast:Math.abs(mt(v,r))}},h=0,m=1;if(d(u(1))<n)return{...c(a?[0,0,0]:[1,1,1]),isDark:a};for(let k=0;k<40;k+=1){let v=(h+m)/2;d(u(v))>=n?m=v:h=v}let p=m,y=c(u(p));for(let k=0;k<60&&y.measuredContrast<n&&p<1;k+=1)p=Math.min(1,p+.002),y=c(u(p));if(y.measuredContrast<n){let k=a?[0,0,0]:[1,1,1],v=Le(y.linear,(S,P)=>S+.5*(k[P]-S)),C=c(v);C.measuredContrast>=n&&(y=C)}return{...y,isDark:a}}function Mn(e,t,r){return!e.forceDark&&(e.contrast??1)<=1.05/(V(t,r)+.05)}function au(e,t,r){let n=e.contrast??1,o=V(t,r);if(Mn(e,t,r)){let i=Math.max(...t,1e-6),l=n*(o+.05)-.05,u=ne((l-o)/Math.max(o/i-o,1e-6));return Le(t,d=>ne(d+u*(d/i-d)))}let s=((o+.05)/n-.05)/Math.max(o,1e-6);return Le(t,i=>ne(s*i))}function Za(e,t,r){let n=Oe(t.settings.colorOutput),o=Cn(t);if(e.base)return o;let a=e.reference==="base"||!r?o:r;if(!e.sourceScaleId&&(!e.source||e.source==="base")){let i=ie(a,t.settings.colorOutput,n),l=xe(i,n);return mr(au(e,l,n),i,e.contrast??1,t.settings.colorOutput,!Mn(e,l,n),e.name).linear}let s=t.scales.find(i=>e.sourceScaleId?i.id===e.sourceScaleId:i.name===e.source);if(!s)throw new Error(`Surface ${e.id} has an unresolved tint source.`);return Ye(At(s,t.settings.colorOutput),a,e.contrast??1,t.settings,!Mn(e,a,n)).dynamic.linear}function Cn(e){let t=e.scales.find(r=>r.id===e.backgroundScaleId)??e.scales[0];return gr(t,e.backgroundLightness,e.settings.colorOutput).linear}var vr=["normal","protan","deutan","tritan"],su={protan:[[.152286,1.052583,-.204868],[.114503,.786281,.099216],[-.003882,-.048116,1.051998]],deutan:[[.367322,.860646,-.227968],[.280085,.672501,.047413],[-.01182,.04294,.968881]],tritan:[[1.255528,-.076749,-.178779],[-.078411,.930809,.147602],[.004733,.691367,.3039]]},wr=e=>Math.min(1,Math.max(0,e));function Ka(e,t){let r=[wr(e[0]),wr(e[1]),wr(e[2])];return t==="normal"?r:su[t].map(o=>wr(o[0]*r[0]+o[1]*r[1]+o[2]*r[2]))}var iu=cr([1,1,1]),lu=e=>e>216/24389?Math.cbrt(e):(24389/27*e+16)/116;function Qa(e){let[t,r,n]=cr(e).map((o,a)=>lu(o/iu[a]));return[116*r-16,500*(t-r),200*(r-n)]}var We=Math.PI/180;function xn([e,t,r],[n,o,a]){let s=Math.hypot(t,r),i=Math.hypot(o,a),l=((s+i)/2)**7,u=.5*(1-Math.sqrt(l/(l+25**7))),d=t*(1+u),c=o*(1+u),h=Math.hypot(d,r),m=Math.hypot(c,a),p=(M,x)=>M===0&&x===0?0:(Math.atan2(M,x)/We+360)%360,y=p(r,d),k=p(a,c),v=n-e,C=m-h,S=0;h*m!==0&&(S=k-y,S>180?S-=360:S<-180&&(S+=360));let P=2*Math.sqrt(h*m)*Math.sin(S/2*We),H=(e+n)/2,B=(h+m)/2,z=y+k;h*m!==0&&(Math.abs(y-k)<=180?z=(y+k)/2:z=y+k<360?(y+k+360)/2:(y+k-360)/2);let A=1-.17*Math.cos((z-30)*We)+.24*Math.cos(2*z*We)+.32*Math.cos((3*z+6)*We)-.2*Math.cos((4*z-63)*We),j=30*Math.exp(-(((z-275)/25)**2)),G=B**7,L=2*Math.sqrt(G/(G+25**7)),I=1+.015*(H-50)**2/Math.sqrt(20+(H-50)**2),Y=1+.045*B,W=1+.015*B*A,b=-Math.sin(2*j*We)*L;return Math.sqrt((v/I)**2+(C/Y)**2+(P/W)**2+b*(C/Y)*(P/W))}var Rn={error:[10,45],warning:[50,100],success:[125,165],info:[225,265]},cu={error:.6,warning:.78,success:.65,info:.6},xr=11,uu=.08,du=.3,hu=e=>(e%360+360)%360;function es(e,t=Object.keys(Rn)){let[,r,n]=new E(e).to("oklch").coords.map(s=>Number(s)||0),o=Math.min(du,Math.max(uu,r)),a={};for(let s of t){let i=Rn[s];if(!i)continue;let l=(i[0]+i[1])/2,u=l,d=1/0;for(let c=0;c<12;c+=1){let h=hu(n+c*30),m=Math.abs(h-l);h>=i[0]&&h<=i[1]&&m<d&&([u,d]=[h,m])}a[s]=[cu[s],o,Number(u.toFixed(2))]}return a}function Mr(e,t){let r=Object.keys(e),n=[],o;for(let a=0;a<r.length;a+=1)for(let s=a+1;s<r.length;s+=1)for(let i of vr){let l=Number(xn(e[r[a]][i],e[r[s]][i]).toFixed(2)),u={a:r[a],b:r[s],vision:i,deltaE:l};(!o||l<o.deltaE)&&(o=u),l<t&&n.push(u)}return{pass:n.length===0,required:t,...o&&{worst:o},failing:n}}var Cr=e=>Object.fromEntries(vr.map(t=>[t,Qa(Ka(e,t))]));function ts(e,t=xr){let r={};for(let[n,o]of Object.entries(e)){let a=new E(o).to("srgb-linear").coords.map(s=>Number(s)||0);r[n]=Cr(a)}return Mr(r,t)}var mu=(e,t)=>Math.min(...vr.map(r=>xn(e[r],t[r])));function pu(e,t,r,n){let o=Object.keys(e),a=[0,1,-1,2,-2,3,-3,4,-4,5,-5,6,-6].filter((h,m,p)=>p.indexOf(h)===m),s=o.map(h=>a.map(m=>{let[p,y,k]=e[h],v=[p+m*r,y,k];return{k:m,value:v}}).filter(({k:m,value:p})=>m===0||p[0]>.02&&p[0]<.98&&t.accepts(h,p)).map(({k:m,value:p})=>({k:m,value:p,labs:Cr(t.realize(p))}))),i=new Map,l=(h,m,p,y)=>{let k=`${h}.${m}.${p}.${y}`,v=i.get(k);return v===void 0&&i.set(k,v=mu(s[h][m].labs,s[p][y].labs)),v},u,d=[],c=(h,m,p)=>{if(!(u?.pass&&p>=u.cost)){if(h===o.length){let y=m>=n;(!u||y&&(!u.pass||p<u.cost)||!y&&!u.pass&&m>u.min)&&(u={pick:[...d],pass:y,cost:p,min:m});return}for(let y=0;y<s[h].length;y+=1){let k=m;for(let v=0;v<h;v+=1)k=Math.min(k,l(v,d[v],h,y));u?.pass&&k<n||(d[h]=y,c(h+1,k,p+Math.abs(s[h][y].k)))}}};return c(0,1/0,0),Object.fromEntries(o.map((h,m)=>[h,s[m][u.pick[m]].value]))}function rs(e,t){let r=t.required??xr,n=t.lightnessStep??.05,o=pu(e,t,n,r),a={};for(let[d,c]of Object.entries(o))a[d]=Cr(t.realize(c));let s=d=>Mr(d,r).failing.reduce((c,h)=>c+(r-h.deltaE),0),i=d=>Rn[d]??[e[d][2]-15,e[d][2]+15],l=s(a);for(let d=0;d<(t.maxMoves??60)&&l>0;d+=1){let c=new Set(Mr(a,r).failing.flatMap(m=>[m.a,m.b])),h=!1;for(let m of["hue","chroma","lightness"]){let p;for(let y of c){let[k,v,C]=o[y],[S,P]=i(y),H=m==="hue"?[[k,v,C+4],[k,v,C-4]]:m==="chroma"?[[k,v*1.1,C],[k,v*.9,C]]:[[k+n/2,v,C],[k-n/2,v,C]];for(let B of H){if(B[0]<=.02||B[0]>=.98||B[2]<S||B[2]>P||B[1]<.03||!t.accepts(y,B))continue;let z={...a,[y]:Cr(t.realize(B))},A=s(z);A<l-1e-6&&(!p||A<p.score)&&(p={name:y,value:B,labs:z[y],score:A})}}if(p){o[p.name]=p.value,a[p.name]=p.labs,l=p.score,h=!0;break}}if(!h)break}let u=Object.keys(o).filter(d=>o[d].some((c,h)=>Math.abs(c-e[d][h])>1e-9));return{colors:o,report:Mr(a,r),changed:u}}var ns=["text","icon","border","accent","feedback","tint","on"],os=["subtle","strong","strongest"],as=["hover","active","selected","focus"],Sn=["error","success","warning","info"],$n={wcag2:{text:4.5,icon:3,border:3,accent:3,feedback:4.5,tint:1,on:4.5},apca:{text:60,icon:45,border:30,accent:45,feedback:60,tint:0,on:60}},fu={wcag2:{subtle:4.5,strong:7.5,strongest:12},apca:{subtle:60,strong:75,strongest:90}},gu={wcag2:1.15,apca:7.5};function Ln(e){let t=e.toLowerCase();return/(^|-)on-/.test(t)?"on":/^text(-|$)/.test(t)?"text":/^icon(-|$)/.test(t)?"icon":/(border|outline|divider|focus-ring)/.test(t)?"border":/(background|tint|-bg$)/.test(t)?"tint":Sn.includes(t)?"feedback":"accent"}function bu(e){if(e==="text"||e.endsWith("-strongest"))return"strongest";if(e.endsWith("-strong"))return"strong";if(e.endsWith("-subtle"))return"subtle"}function On(e){return/(?:^|-)on-(.+)$/.exec(e)?.[1]}function ss(e,t,r,n,o,a){if(!r||typeof r!="object"||Array.isArray(r)){e.push(`roles.${t} must be a color reference like "gray.1400", an object like { "tier": "subtle" }, or null.`);return}let s=n==="apca"?108:21,i=r.kind??Ln(t);if(!ns.includes(i)){e.push(`roles.${t}.kind must be one of ${ns.join(", ")}.`);return}r.tier!==void 0&&!os.includes(r.tier)&&e.push(`roles.${t}.tier must be one of ${os.join(", ")}.`);for(let m of["contrast","min"]){let p=r[m];p!==void 0&&(typeof p!="number"||!Number.isFinite(p)||p<0||p>s)&&e.push(`roles.${t}.${m} must be a contrast from 0 to ${s} for ${n}.`)}r.states!==void 0&&(!Array.isArray(r.states)||r.states.some(m=>!as.includes(m))?e.push(`roles.${t}.states must be a list using ${as.join(", ")}.`):(i==="on"||i==="tint")&&e.push(`roles.${t} is a ${i} role and can't have states.`));let l=r.color??a(i);i!=="on"&&(r.color!==void 0&&!o.has(r.color)?e.push(`roles.${t}.color "${r.color}" must be the name of one of your colors.`):!l&&o.size>0&&e.push(`roles.${t} needs a color, for example { "color": "brand" }.`));let u=Math.max($n[n][i],r.min??0),d=i==="text"?r.tier??bu(t)??"subtle":r.tier,c=r.contrast;c===void 0&&d&&(c=fu[n][d]),c===void 0&&i==="tint"&&(c=gu[n]),c===void 0&&i!=="accent"&&i!=="on"&&(c=u);let h=i==="on"?On(t):void 0;return i==="on"&&!h&&e.push(`roles.${t} is an on-color, so its name needs to say what it sits on, like "text-on-accent".`),{name:t,kind:i,...i!=="on"&&l&&{scale:l},...c!==void 0&&{contrast:Math.max(c,i==="tint"?0:u)},floor:u,...d&&{tier:d},...h&&{pair:h}}}function is(e,t){let r={};for(let[n,o]of Object.entries(e))r[n]=o,(t[n]?.states??[]).forEach((a,s)=>{let i=`${n}-${a}`;if(e[i])return;let l={...o,name:i,base:n,step:s+1};delete l.tier,r[i]=l});return r}var bt=class extends Error{constructor(r){super(`Invalid theme settings:
-- ${r.join(`
-- `)}`);this.problems=r;this.name="ThemeConfigError"}problems},yu=[1.06,1.15,1.32,1.6,2,2.6,3.22,3.95,4.79,6.29,7.9,10,12.3,14.8,17,19.5],ku=[3,7.5,15,27,39,51,60,67,73,82,88,93,98,102,104,105.5],wu=.1,vu={raised:{contrast:1.1,reference:"parent"},floating:{contrast:1.6,reference:"base"}},Mu={light:{backgroundLightness:1},dark:{backgroundLightness:.08},"light-high-contrast":{backgroundLightness:1,contrastMultiplier:1.5},"dark-high-contrast":{backgroundLightness:.08,contrastMultiplier:1.5},"light-low-contrast":{backgroundLightness:1,contrastMultiplier:.8},"dark-low-contrast":{backgroundLightness:.08,contrastMultiplier:.8}},Cu={success:"green",warning:"orange",error:"red",info:"blue"},ls={gray:[[.5692623996686854,0,0]],red:[[.675,30.1,53.3],[.5779,30.4,51.1],[.3001,31.5,25.5]],orange:[[.7736,65.1,43.4],[.7319,53,46.5],[.49,42.3,36.7]],green:[[.7335,154.2,44.5],[.3528,165.7,18.4],[.9011,156.6,20]],blue:[[.7893,258.6,25.6],[.5335,266.7,59.7],[.3224,265.9,38.9],[.2409,268.7,21.8]]},Re="background",gt=/^[a-z0-9][a-z0-9-]*$/i,cs=["srgb","display-p3","rec2020"],us=["oklch","rgb","hex","hsl"];function xu(e,t){let[r,n,o]=new E(e).to("oklch").coords.map(s=>Number(s)),a=Number.isFinite(n)?n:0;return{id:t,lightness:Math.min(1,Math.max(0,r)),chroma:a/Xe*100,hue:Number.isFinite(o)&&a>1e-6?o:0}}function Nn(e){return typeof e=="number"&&Number.isFinite(e)}function Ve(e,t,r,n,o){r!==void 0&&(!Nn(r)||r<n||r>o)&&e.push(`${t} must be a number from ${n} to ${o} (got ${JSON.stringify(r)}).`)}function ds(e,t,r,n){let o=typeof r=="string"?[r]:Array.isArray(r)?r:r?.keys,a=typeof o=="string"?[o]:o,s=n;if(r&&typeof r=="object"&&!Array.isArray(r)&&r.interpolation!==void 0&&(r.interpolation!=="oklch"&&r.interpolation!=="rgb"?e.push(`colors.${t}.interpolation must be "oklch" or "rgb".`):s=r.interpolation),!Array.isArray(a)||a.length===0){e.push(`colors.${t} needs at least one key color, such as "#0066ff".`);return}let i=[];return a.forEach((l,u)=>{try{if(typeof l!="string")throw new Error;i.push(xu(l,`${t}-${u}`))}catch{e.push(`colors.${t}: "${String(l)}" is not a valid CSS color.`)}}),i.length===a.length?{stops:i,interpolation:s}:void 0}function Ru(e){let t=e.toLowerCase().split(/[-_\s]+/),r=[];t.includes("dark")&&r.push("(prefers-color-scheme: dark)");let n=t.includes("contrast");return n&&t.some(o=>["high","more","increased","max"].includes(o))?r.push("(prefers-contrast: more)"):n&&t.some(o=>["low","less","reduced","min"].includes(o))&&r.push("(prefers-contrast: less)"),r.length>0?r.join(" and "):void 0}function Su(e,t,r){let n=t[r];return e.reduce((o,a)=>Math.abs(a.contrast-n)<Math.abs(o.contrast-n)?a:o).name}function hs(e){let t=[];if(!e||typeof e!="object"||Array.isArray(e))throw new bt(["The theme settings must be an object."]);let r=e.formula??"wcag2";r!=="wcag2"&&r!=="apca"&&t.push('formula must be "wcag2" or "apca".');let n=e.output?.gamut??"rec2020",o=e.output?.format??"oklch";cs.includes(n)||t.push(`output.gamut must be one of ${cs.join(", ")}.`),us.includes(o)||t.push(`output.format must be one of ${us.join(", ")}.`),(o==="hex"||o==="hsl")&&n!=="srgb"&&t.push(`output.format "${o}" only works with output.gamut "srgb". Use "oklch" or "rgb" for wide gamuts.`);let a=e.interpolation??"oklch";a!=="oklch"&&a!=="rgb"&&t.push('interpolation must be "oklch" or "rgb".'),Ve(t,"polarityCompensation",e.polarityCompensation,0,1);let s=[],i=e.colors;if(!i||typeof i!="object"||Array.isArray(i)||Object.keys(i).length===0)t.push('colors needs at least one named color, for example { "brand": "#0066ff" }.');else for(let[f,R]of Object.entries(i)){if(!gt.test(f)){t.push(`Color name "${f}" can only use letters, numbers, and dashes.`);continue}let O=ds(t,f,R,a);O&&s.push({name:f,...O,builtIn:!1})}let l=f=>{s.push({name:f,stops:ls[f].map(([R,O,X],ae)=>({id:`${f}-${ae}`,lightness:R,hue:O,chroma:X})),interpolation:f==="gray"?a:"rgb",builtIn:!0})},u=f=>f.stops.every(R=>R.chroma<2),d=e.background?.color;d!==void 0&&!s.some(f=>f.name===d)&&t.push(`background.color "${d}" must be the name of one of your colors.`),d===void 0&&(d=s.find(u)?.name,!d&&s.length>0&&(d="gray",s.some(f=>f.name==="gray")||l("gray"))),Ve(t,"background.lightness",e.background?.lightness,0,1);let c={},h=e.steps===void 0;if(e.status===void 0?!h:e.status!==!1){let f=s.find(X=>!X.builtIn&&!u(X)&&X.name!==d),O=(h&&e.status===!0&&f?Object.fromEntries(Object.entries(es(`oklch(${f.stops[0].lightness} ${f.stops[0].chroma/100*Xe} ${f.stops[0].hue})`)).map(([X,[ae,Be,Qe]])=>[X,`oklch(${ae} ${Be.toFixed(4)} ${Qe})`])):void 0)??(e.status===void 0||e.status===!0?Cu:e.status);if(typeof O!="object"||Array.isArray(O))t.push("status must be true, false, or an object.");else for(let[X,ae]of Object.entries(O)){if(!gt.test(X)){t.push(`Status name "${X}" can only use letters, numbers, and dashes.`);continue}if(s.some(Be=>Be.name===ae))c[X]=ae;else if(ls[ae])l(ae),c[X]=ae;else{let Be=ds(t,X,ae,a);if(Be){let Qe=`status-${X}`;s.some(ui=>ui.name===Qe)?t.push(`status.${X} conflicts with a color named "${Qe}".`):(s.push({name:Qe,...Be,builtIn:!1}),c[X]=Qe)}}}}let p=r==="apca"?ku:yu,y=r==="apca"?je:21,k=r==="apca"?0:1,v=Array.isArray(e.steps)?e.steps.map((f,R)=>[String((R+1)*100),f]):e.steps&&typeof e.steps=="object"?Object.entries(e.steps):p.map((f,R)=>[String((R+1)*100),f]);e.steps!==void 0&&e.steps!==!0&&(typeof e.steps!="object"||e.steps===null)?t.push("steps must be true (the default full scale), a list of contrasts, or named steps."):e.steps!==void 0&&v.length===0&&t.push("steps needs at least one contrast value.");let C=[];for(let[f,R]of v){let O=typeof R=="object"&&R!==null?R.contrast:R,X=typeof R=="object"&&R!==null?R.opposite:void 0;if(gt.test(f)||t.push(`Step name "${f}" can only use letters, numbers, and dashes.`),!Nn(O)||O<k||O>y){t.push(`steps.${f} must be a contrast from ${k} to ${y} for ${r} (got ${JSON.stringify(O)}).`);continue}X!==void 0&&(r==="apca"&&t.push(`steps.${f}.opposite only applies to the wcag2 formula.`),Ve(t,`steps.${f}.opposite`,X,1,21)),C.push({name:f,contrast:O,...X!==void 0&&{opposite:X}})}let S=e.surfaces??vu,P=[];for(let[f,R]of Object.entries(S)){if(gt.test(f)||t.push(`Surface name "${f}" can only use letters, numbers, and dashes.`),f===Re){t.push(`"${Re}" is the base surface and is always included; pick another surface name.`);continue}if(!R||typeof R!="object"){t.push(`surfaces.${f} must be an object like { "contrast": 1.1 }.`);continue}Ve(t,`surfaces.${f}.contrast`,R.contrast,1,21),R.contrast===void 0&&t.push(`surfaces.${f}.contrast is required.`),R.reference!==void 0&&R.reference!=="base"&&R.reference!=="parent"&&t.push(`surfaces.${f}.reference must be "base" or "parent".`),R.color!==void 0&&!s.some(O=>O.name===R.color)&&t.push(`surfaces.${f}.color "${R.color}" must be the name of one of your colors.`),P.push({name:f,contrast:R.contrast,reference:R.reference??"parent",color:R.color})}let H=e.modes??Mu,B=[];(typeof H!="object"||Object.keys(H).length===0)&&t.push("modes needs at least one mode.");let z=e.defaultMode??Object.keys(H)[0];e.defaultMode!==void 0&&!(e.defaultMode in H)&&t.push(`defaultMode "${e.defaultMode}" is not one of your modes.`);for(let[f,R]of Object.entries(H)){gt.test(f)||t.push(`Mode name "${f}" can only use letters, numbers, and dashes.`);let O=R??{};Ve(t,`modes.${f}.backgroundLightness`,O.backgroundLightness,0,1),Ve(t,`modes.${f}.contrastMultiplier`,O.contrastMultiplier,0,Ya),Ve(t,`modes.${f}.polarityCompensation`,O.polarityCompensation,0,1),O.media!==void 0&&O.media!==!1&&typeof O.media!="string"&&t.push(`modes.${f}.media must be a CSS media query string or false.`);let X=f===z||O.media===!1?void 0:O.media??Ru(f);B.push({name:f,backgroundLightness:O.backgroundLightness??e.background?.lightness??1,contrastMultiplier:O.contrastMultiplier??1,polarityCompensation:O.polarityCompensation??e.polarityCompensation??wu,...X&&{media:X}})}let A=d,j=new Set(Object.values(c)),G=(s.find(f=>!f.builtIn&&!u(f)&&!j.has(f.name)&&f.name!==A)??s.find(f=>!f.builtIn&&!u(f)&&!j.has(f.name))??s.find(f=>!f.builtIn&&!u(f)))?.name,L={};if(h){Object.assign(L,{text:{},"text-subtle":{},border:{}}),G&&Object.assign(L,{accent:{color:G,states:["hover","active"]},"text-on-accent":{}});for(let[f,R]of Object.entries(c))L[f]={kind:"feedback",color:R},L[`${f}-background`]={kind:"tint",color:R}}else if(C.length>0&&A){let f=R=>Su(C,p,R);Object.assign(L,{text:`${A}.${f(13)}`,"text-subtle":`${A}.${f(9)}`,"text-disabled":`${A}.${f(5)}`,border:`${A}.${f(3)}`,"border-strong":`${A}.${f(6)}`}),G&&Object.assign(L,{accent:`${G}.${f(8)}`,"accent-hover":`${G}.${f(9)}`,"accent-active":`${G}.${f(10)}`,"text-on-accent":`surface.${Re}`});for(let[R,O]of Object.entries(c))L[R]=`${O}.${f(8)}`,L[`${R}-background`]=`${O}.${f(0)}`,L[`${R}-border`]=`${O}.${f(6)}`}let I={...L},Y=e.roles??{};if(typeof Y!="object"||Array.isArray(Y))t.push("roles must be an object.");else for(let[f,R]of Object.entries(Y))gt.test(f)||t.push(`Role name "${f}" can only use letters, numbers, and dashes.`),R===null?delete I[f]:I[f]=R;for(let f of Object.keys(I)){let R=On(f);typeof I[f]!="object"||f in Y||!R||(R in I?typeof I[R]=="string"&&(I[f]=`surface.${Re}`):delete I[f])}let W=new Set(s.map(f=>f.name)),b=new Set(C.map(f=>f.name)),M=new Set([Re,...P.map(f=>f.name)]),x=`Your scales are: ${s.map(f=>f.name).join(", ")||"none"}.`,T=f=>f==="accent"?G??A:f==="feedback"?void 0:A,D={},F={},q=new Set;for(let[f,R]of Object.entries(I))if(typeof R=="string"){let[O,X,ae]=R.split(".");ae===void 0&&(O==="surface"?M.has(X):W.has(O)&&b.has(X))?O!=="surface"&&q.add(X):t.push(`roles.${f} "${R}" must point to a color step like "${A??"gray"}.${C.at(-3)?.name??"1400"}" or a surface like "surface.${Re}". ${x}`),D[f]={name:f,kind:Ln(f),ref:R,floor:0}}else{let O=ss(t,f,R,r,W,T);O&&(D[f]=O,F[f]=R)}let U=is(D,F);for(let f of Object.values(U))f.pair&&(!U[f.pair]||U[f.pair].kind==="on"||U[f.pair].ref)&&t.push(`roles.${f.name} sits on "${f.pair}", which must be a generated role (not a reference or another on-color).`);e.spacing!==void 0&&e.spacing!==!1&&(!Nn(e.spacing)||e.spacing<.01||e.spacing>.2)&&t.push("spacing must be false or a lightness step from 0.01 to 0.2.");let le=new Map,ce=(f,R)=>{let O=le.get(f);O?t.push(`The name "${f}" is used by both ${O} and ${R}; rename one of them.`):le.set(f,R)};if(ce("surface","the surface group"),s.forEach(f=>ce(f.name,`color "${f.name}"`)),Object.keys(U).forEach(f=>ce(f,`role "${f}"`)),t.length>0)throw new bt(t);return{formula:r,gamut:n,format:o,scales:s,backgroundScale:d,steps:C,surfaces:P,roles:U,modes:B,defaultMode:z,roleFirst:h,outputSteps:h?C.map(f=>f.name).filter(f=>q.has(f)):C.map(f=>f.name),spacing:e.spacing}}var Ue=1.0002,be=(e,t)=>Number(e.toFixed(t)),$u=e=>Math.floor(e*1e4+1e-7)/1e4;function Lu(e){return`#${new E(e).toGamut({space:"srgb",method:"css"}).to("srgb").coords.map(r=>Math.round(Math.min(1,Math.max(0,Number(r)||0))*255).toString(16).padStart(2,"0")).join("")}`}function In(e){let[t,r,n]=new E(e).to("oklch").coords.map(Number),o=Number.isFinite(r)?r:0;return[be(t,4),be(o,4),o<1e-4||!Number.isFinite(n)?0:be(n,2)]}function Ge(e,t,r){let n=t+1e-6<r;return{css:e,hex:Lu(e),oklch:In(e),contrast:$u(t),target:be(r,4),...n&&{capped:!0}}}function Pt(e,t){return e==="apca"?`Lc ${be(t,1)}`:`${be(t,2)}:1`}var ps=.05,Ou=.035,Nu=.07;function fs(e,t,r,n){let o=V(e,t),a=Math.cbrt(Math.max(0,o)),s=r==="apca"?Ie(e,t):0,i=n?a:1-a,l=d=>{let h=Math.min(1,Math.max(0,a+(n?-1:1)*Math.min(d,i)))**3;return r==="apca"?Math.abs(Ne(Ie([h,h,h],"srgb"),s)):Ce(h,o)};return{backgroundL:a,dark:n,maxDistance:i,contrastAt:l,distanceFor:d=>{if(l(i)<=d)return i;let c=0,h=i;for(let m=0;m<40;m++){let p=(c+h)/2;l(p)<d?c=p:h=p}return h}}}function ms(e,t,r){let n=[...e].sort((i,l)=>i.distance-l.distance),o={},a=0,s;for(let i of n){let l=Math.max(1,Math.round(i.distance/t),Math.ceil(i.floor/t-1e-9));s&&(l=Math.max(l,i.distance>s.distance+1e-6?s.k+1:s.k));let u=Math.min(l*t,r);o[i.id]=u,a+=Math.abs(u-i.distance),s={k:l,distance:i.distance}}return{cost:a,distances:o}}function gs(e,t,r){let n=[];if(r!==void 0)n.push(r);else for(let a=Ou;a<=Nu+1e-9;a+=.0025)n.push(Number(a.toFixed(4)));let o={step:n[0],...ms(e,n[0],t)};for(let a of n.slice(1)){let s=ms(e,a,t);s.cost<=o.cost+1e-9&&(o={step:a,...s})}return{step:o.step,distances:o.distances}}function bs(e,t){let{formula:r,gamut:n}=t,o=r==="apca"?je:21,a=r==="apca"?t.apcaDark:V(t.background,n)>.1791,s=fs(t.background,n,r,a),i=b=>Math.min(o,Math.max(b.floor,t.adjust(b.floor))),l=b=>e.filter(M=>M.base===b).sort((M,x)=>(M.step??0)-(x.step??0)),u=b=>{let x=e.find(T=>T.kind==="on"&&T.pair===b)?.floor??$n[r].on;return Math.min(o,Math.max(x,t.adjust(x)))},d=new Map,c=(b,M)=>{let x=Math.min(o,M*Ue),T=`${b}|${x}`,D=d.get(T);if(!D){let F=t.scaleData(b);if(r==="apca"){let q=kr(F,t.background,t.backgroundCss,x,t.output,t.apcaDark);D={css:q.css,linear:q.linear,contrast:q.measuredContrast}}else{let q=Ye(F,t.background,x,t.settings).opaque;D={css:q.css,linear:q.linear,contrast:q.measuredContrast}}d.set(T,D)}return D},h=[{css:t.backgroundCss,linear:t.background},{css:ie([1,1,1],t.output),linear:[1,1,1]},t.darkest],m=(b,M)=>r==="apca"?Math.abs(Ne(Ie(b,n),Ie(M,n))):Ce(V(b,n),V(M,n)),p=(b,M)=>r==="apca"?Math.abs(mt(b,M)):Et(b,M,n),y=(b,M)=>{let x=h.map(F=>({option:F,min:Math.min(...b.map(q=>m(F.linear,q.linear)))})),T=F=>F>=M*Ue;if(T(x[0].min))return{...x[0],passes:!0};let D=x.slice(1).sort((F,q)=>q.min-F.min)[0];return{...D,passes:T(D.min)}},k=e.filter(b=>!b.ref),v={};for(let b of k)b.base||b.kind==="on"||b.contrast===void 0||(v[b.name]=b.kind==="tint"?Math.min(o,t.adjust(b.contrast)):Math.min(o,Math.max(i(b),t.adjust(b.contrast))));let C={};for(let[b,M]of Object.entries(v))C[b]=s.distanceFor(M);let S={...C},P=k.filter(b=>b.kind==="accent"&&!b.base&&b.contrast===void 0),H=(b,M,x)=>{let T=t.keyLightness(b.scale),D=l(b.name),F=u(b.name),q=i(b),U,le;for(let ce of M){let f=c(b.scale,Math.max(q,s.contrastAt(ce))),R=[f,...D.map(ae=>c(ae.scale,Math.max(q,s.contrastAt(ce+(ae.step??0)*x))))],O=y(R,F),X=Math.abs(In(f.css)[0]-T);O.passes&&(!U||X<U.cost)&&(U={distance:ce,cost:X}),(!le||O.min>le.min)&&(le={distance:ce,min:O.min})}return(U??le)?.distance??s.distanceFor(q)},B=(b,M)=>{let x=[];for(let T=b;T<=s.maxDistance+1e-9;T+=M)x.push(T);return x.length>0?x:[s.maxDistance]},z=typeof t.spacing=="number"?t.spacing:ps;for(let b of P)C[b.name]=H(b,B(s.distanceFor(i(b)),.005),z),S[b.name]=C[b.name],v[b.name]=Math.max(i(b),s.contrastAt(C[b.name]));let A=k.filter(b=>!b.base&&b.kind!=="on"&&b.kind!=="tint"&&b.name in C);if(t.spacing!==!1&&A.length>0){let b=gs(A.map(M=>({id:M.name,distance:C[M.name],floor:s.distanceFor(i(M))})),s.maxDistance,typeof t.spacing=="number"?t.spacing:void 0);z=b.step,Object.assign(C,b.distances);for(let M of P){let x=Math.ceil(s.distanceFor(i(M))/z-1e-9)*z;C[M.name]=H(M,B(x,z),z)}}let j={},G={},L=[],I=[];for(let b of k){if(b.kind==="on")continue;let M=i(b),x;b.base?x=Math.max(M,s.contrastAt(C[b.base]+(b.step??0)*z)):Math.abs(C[b.name]-S[b.name])<1e-9&&b.kind!=="accent"?x=v[b.name]:x=b.kind==="tint"?v[b.name]:Math.max(M,s.contrastAt(C[b.name]));let T=c(b.scale,x);G[b.name]=T,j[b.name]={...Ge(T.css,T.contrast,x),scale:b.scale,...b.kind!=="tint"&&{minimum:be(M,4)}},b.kind!=="tint"&&T.contrast+1e-6<M&&I.push({role:b.name,target:M,contrast:T.contrast}),!b.base&&Math.abs(x-v[b.name])>.005*v[b.name]&&L.push({role:b.name,requested:be(v[b.name],2),used:be(x,2)})}let Y=k.filter(b=>b.kind==="feedback"&&!b.base&&G[b.name]),W;if(Y.length>1){let b=([x,T,D])=>It(x,T,D,n),M=rs(Object.fromEntries(Y.map(x=>[x.name,[...dr(de(G[x.name].linear,n,"srgb"))]])),{realize:x=>de(b(x),n,"srgb"),accepts:(x,T)=>{let D=Y.find(U=>U.name===x),F=b(T);return m(F,t.background)<i(D)*Ue?!1:!k.some(U=>U.kind==="on"&&U.pair===x)||y([{css:"",linear:F,contrast:0}],u(x)).passes},lightnessStep:z});for(let x of M.changed){let T=Y.find(le=>le.name===x),D=b(M.colors[x]),F=ie(D,t.output),q=p(F,t.backgroundCss);G[x]={css:F,linear:D,contrast:q};let U=q>=j[x].target?j[x].target:i(T);j[x]={...j[x],...Ge(F,q,U)},q>=U&&delete j[x].capped,q+1e-6<i(T)&&I.push({role:x,target:i(T),contrast:q})}W={...M.report,changed:M.changed}}for(let b of k){if(b.kind!=="on")continue;let M=[b.pair,...l(b.pair).map(F=>F.name)].filter(F=>G[F]),x=i(b),T=y(M.map(F=>G[F]),x),D=Math.min(...M.map(F=>p(T.option.css,G[F].css)));j[b.name]={...Ge(T.option.css,D,x),minimum:be(x,4),against:b.pair},D+1e-6<x&&I.push({role:b.name,target:x,contrast:D})}return{values:j,step:z,adjustments:L,missed:I,...W&&{feedback:W}}}function Iu(e,t,r,n){let o=[{id:Re,name:Re,base:!0},...e.surfaces.map(l=>({id:l.name,name:l.name,reference:l.reference,contrast:l.contrast,...l.color?{sourceScaleId:l.color}:{source:"base"}}))],a={backgroundScaleId:e.backgroundScale,backgroundLightness:t.backgroundLightness,scales:n,contrasts:e.formula==="wcag2"?e.steps.map(l=>({id:l.name,value:l.contrast,...l.opposite!==void 0&&{oppositeValue:l.opposite}})):[],surfaces:o,settings:{side:"auto",backgroundBlend:0,colorSourceCurveOffset:-1,colorOutput:r,contrastReference:"light",polarityCompensation:t.polarityCompensation,contrastMultiplier:t.contrastMultiplier}},s=vn(a),i=e.formula==="apca"?l=>Math.min(je,l*t.contrastMultiplier):l=>br(yr({value:l},s),t.contrastMultiplier);return{document:Wa(Va(a)),adjust:i}}function Rr(e){let t=hs(e),r={authoringGamut:t.gamut,outputFormat:t.format,mapOutputsToSrgb:!1},n=t.gamut,o=t.scales.map(m=>({id:m.name,name:m.name,stops:m.stops,interpolation:m.interpolation})),a=[],s=[],i={},l=new Set(t.outputSteps),u=Object.values(t.roles).filter(m=>!m.ref),d=m=>t.scales.find(p=>p.name===m)?.stops[0]?.lightness??.5,c=m=>At(o.find(p=>p.id===m),r),h;for(let m of t.modes){let{document:p,adjust:y}=Iu(t,m,r,o),k=ie(Cn(p),r),v=xe(k,n),C=t.formula==="apca"?Ja(v,n):!1,S=[],P=0,H={};for(let L of o){let I=At(L,r),Y={};t.steps.forEach((W,b)=>{if(!l.has(W.name))return;let M;if(t.formula==="apca"){let T=Math.min(je,W.contrast*m.contrastMultiplier),D=kr(I,v,k,Math.min(je,T*Ue),r,C);M=Ge(D.css,D.measuredContrast,T)}else{let T=p.contrasts[b].value,D=Math.min(21,T*Ue),F=Ye(I,v,D,p.settings).opaque;M=Ge(F.css,F.measuredContrast,T)}let x=M.oklch[1]===0&&(M.oklch[0]>=.9999||M.oklch[0]<=1e-4);M.capped&&x&&m.contrastMultiplier>1?P+=1:M.capped&&S.push(`${L.name}.${W.name} (wanted ${Pt(t.formula,M.target)}, got ${Pt(t.formula,M.contrast)})`),Y[W.name]=M}),Object.keys(Y).length>0&&(H[L.name]=Y)}let B={},z,A=k;for(let L of p.surfaces){let I=Za(L,p,z),Y=ie(I,r),W=L.base?Y:L.reference==="base"?k:A,b=L.contrast??1,M=Ge(Y,Et(Y,W,n),b);M.capped&&S.push(`surface.${L.name} (wanted ${be(b,2)}:1, got ${M.contrast}:1)`),B[L.name]=M,z=I,A=Y}let j;if(u.length>0){if(!h){let I=Ye(c(t.backgroundScale),[1,1,1],21,p.settings).opaque;h={css:I.css,linear:I.linear}}j=bs(u,{formula:t.formula,output:r,gamut:n,settings:p.settings,background:v,backgroundCss:k,apcaDark:C,scaleData:c,keyLightness:d,adjust:y,darkest:h,spacing:t.spacing});for(let I of j.missed)S.push(`${I.role} (needs at least ${Pt(t.formula,I.target)}, got ${Pt(t.formula,I.contrast)})`);for(let I of j.adjustments)s.push({mode:m.name,...I});let L=j.feedback;L&&!L.pass&&L.worst&&a.push(`In "${m.name}" mode, the feedback colors ${L.worst.a} and ${L.worst.b} are too similar${L.worst.vision==="normal"?"":` for people with ${L.worst.vision} color vision`} (difference ${L.worst.deltaE}, needs ${L.required}). Try a different brand color, or set the feedback colors yourself in "status".`)}let G={};for(let[L,I]of Object.entries(t.roles)){if(!I.ref){G[L]=j.values[L];continue}let[Y,W]=I.ref.split("."),b=Y==="surface"?B[W]:H[Y][W];G[L]={...b,ref:I.ref}}if(S.length>0){let L=S.slice(0,4).join("; "),I=S.length>4?`; and ${S.length-4} more`:"";a.push(`In "${m.name}" mode, ${S.length} color${S.length===1?"":"s"} could not reach the contrast target, so the closest possible color was used: ${L}${I}. To fix this, lower those targets or the contrast multiplier, or move the background lightness closer to white or black.`)}P>0&&a.push(`In "${m.name}" mode, the contrast multiplier asked for more contrast than is possible on ${P} step${P===1?"":"s"}, so ${P===1?"it uses":"they use"} the strongest color available (pure black or white). This is expected for high-contrast modes.`),i[m.name]={name:m.name,settings:{backgroundLightness:m.backgroundLightness,contrastMultiplier:m.contrastMultiplier,polarityCompensation:m.polarityCompensation},...m.media&&{media:m.media},background:B[Re],scales:H,surfaces:B,roles:G,...j&&{spacing:j.step},...j?.feedback&&{feedback:j.feedback}}}return{formula:t.formula,gamut:n,format:t.format,defaultMode:t.defaultMode,steps:t.outputSteps,modes:i,adjustments:s,warnings:a}}function Tu(e,t){let[r,n]=e.split(".");return r==="surface"?`--${t}-surface-${n}`:`--${t}-${r}-${n}`}function Eu(e,t="color"){let r={};for(let[n,o]of Object.entries(e.scales))for(let[a,s]of Object.entries(o))r[`--${t}-${n}-${a}`]=s.css;for(let[n,o]of Object.entries(e.surfaces))r[`--${t}-surface-${n}`]=o.css;for(let[n,o]of Object.entries(e.roles))r[`--${t}-${n}`]=o.ref?`var(${Tu(o.ref,t)})`:o.css;return r}function De(e,t,r,n=!0){let o=n?[`${r}color-scheme: ${e.settings.backgroundLightness<.5?"dark":"light"};`]:[];for(let[a,s]of Object.entries(Eu(e,t)))o.push(`${r}${a}: ${s};`);return o.join(`
-`)}var ke=(e,t,r="")=>`${r}${e} {
-${t}
-${r}}`,yt=e=>e.settings.backgroundLightness<.5?"dark":"light";function Sr(e){if(e.media?.includes("prefers-contrast: more"))return"more";if(e.media?.includes("prefers-contrast: less"))return"less";let t=e.name.toLowerCase().split(/[-_\s]+/);if(t.includes("contrast")){if(t.some(r=>["high","more","increased","max"].includes(r)))return"more";if(t.some(r=>["low","less","reduced","min"].includes(r)))return"less"}}function ys(e,t={}){let r=t.prefix??"color",n=[`/* Generated by chromagentic. Contrast formula: ${e.formula}. Gamut: ${e.gamut}. */`],o=e.modes[e.defaultMode];t.tailwind?(n.push(ke("@theme",De(o,r,"  ",!1))),n.push(ke(":root",`  color-scheme: ${yt(o)};`)),n.push(ke(`[data-theme="${e.defaultMode}"]`,De(o,r,"  ")))):n.push(ke(`:root, [data-theme="${e.defaultMode}"]`,De(o,r,"  ")));let a=Object.values(e.modes),s=a.filter(c=>c.name!==e.defaultMode),i=c=>{let h=a.filter(m=>m!==c&&!Sr(m)&&yt(m)===yt(c));return h.find(m=>c.name.startsWith(`${m.name}-`))??h[0]},l=s.filter(c=>Sr(c)&&i(c)),u=c=>l.includes(c)?":root:not([data-theme]):not([data-contrast])":":root:not([data-theme])",d=s.filter(c=>c.media).sort((c,h)=>c.media.split(" and ").length-h.media.split(" and ").length);for(let c of d)n.push(ke(`@media ${c.media}`,ke(u(c),De(c,r,"    "),"  ")));for(let c of s){let h=l.includes(c)?`, [data-theme="${i(c).name}"][data-contrast="${Sr(c)}"]`:"";n.push(ke(`[data-theme="${c.name}"]${h}`,De(c,r,"  ")))}for(let c of[...l].sort((h,m)=>+(yt(h)==="dark")-+(yt(m)==="dark"))){let h=Sr(c),m=i(c),p=`:root:not([data-theme])[data-contrast="${h}"]`;n.push(yt(c)==="dark"?ke("@media (prefers-color-scheme: dark)",ke(p,De(c,r,"    "),"  ")):ke(p,De(c,r,"  "))),n.push(ke(`@media (prefers-contrast: ${h})`,ke(`[data-theme="${m.name}"]:not([data-contrast])`,De(c,r,"    "),"  ")))}return`${n.join(`
+/*! Chromagentic 0.3.0 | Apache-2.0 | https://github.com/NateBaldwinDesign/Chromagentic
+ * Includes colorjs.io (MIT, Lea Verou and Chris Lilley) and code adapted from Adobe Spectrum Studio (Apache-2.0). See NOTICE. */
 
-`)}
-`}var ks={oklch:{colorjs:"oklch",dtcg:"oklch"},srgb:{colorjs:"srgb",dtcg:"srgb"},"display-p3":{colorjs:"p3",dtcg:"display-p3"},rec2020:{colorjs:"rec2020",dtcg:"rec2020"}};function Tn(e,t){let r=t.format==="oklch"?ks.oklch:ks[t.gamut],n=new E(e.css).to(r.colorjs).coords.map((o,a)=>{let s=Number(o);return Number.isFinite(s)?Number(s.toFixed(a===2&&r.dtcg==="oklch"?2:5)):0});return{$type:"color",$value:{colorSpace:r.dtcg,components:n,hex:e.hex},$extensions:{chromagentic:{contrast:e.contrast,target:e.target,formula:t.formula,...e.capped&&{capped:!0}}}}}function Au(e,t=e.defaultMode){let r=e.modes[t];if(!r)throw new Error(`Mode "${t}" does not exist. Modes: ${Object.keys(e.modes).join(", ")}.`);let n={};for(let[a,s]of Object.entries(r.scales)){let i={};for(let[l,u]of Object.entries(s))i[l]=Tn(u,e);n[a]=i}let o={};for(let[a,s]of Object.entries(r.surfaces))o[a]=Tn(s,e);n.surface=o;for(let[a,s]of Object.entries(r.roles))n[a]=s.ref?{$type:"color",$value:`{color.${s.ref}}`}:Tn(s,e);return{$description:`chromagentic "${r.name}" mode`,color:n}}function ws(e){return Object.fromEntries(Object.keys(e.modes).map(t=>[t,Au(e,t)]))}var $r="Modern browsers and design tokens support wide-gamut OKLCH, so colors keep their full range and older screens map them down automatically.",Je="This platform is built around Display P3, so colors are limited to P3 and written as P3 red, green, and blue values.",Lr="This technology only reliably supports sRGB, so colors are mapped into sRGB and written as hex.",vs={web:{gamut:"rec2020",format:"oklch",reason:$r},css:{gamut:"rec2020",format:"oklch",reason:$r},tailwind:{gamut:"rec2020",format:"oklch",reason:$r},dtcg:{gamut:"rec2020",format:"oklch",reason:$r},ios:{gamut:"display-p3",format:"rgb",reason:Je},swiftui:{gamut:"display-p3",format:"rgb",reason:Je},uikit:{gamut:"display-p3",format:"rgb",reason:Je},macos:{gamut:"display-p3",format:"rgb",reason:Je},visionos:{gamut:"display-p3",format:"rgb",reason:Je},android:{gamut:"display-p3",format:"rgb",reason:Je},compose:{gamut:"display-p3",format:"rgb",reason:Je},flutter:{gamut:"srgb",format:"hex",reason:Lr},"react-native":{gamut:"srgb",format:"hex",reason:Lr},email:{gamut:"srgb",format:"hex",reason:Lr},legacy:{gamut:"srgb",format:"hex",reason:Lr}},_t=Object.keys(vs);function Ms(e){let t=vs[e];if(!t)throw new Error(`Unknown platform "${e}". Choose one of: ${_t.join(", ")}.`);return{...t}}var Pu=Object.defineProperty,Ns=e=>{throw TypeError(e)},_u=(e,t,r)=>t in e?Pu(e,t,{enumerable:!0,configurable:!0,writable:!0,value:r}):e[t]=r,Cs=(e,t,r)=>_u(e,typeof t!="symbol"?t+"":t,r),zu=(e,t,r)=>t.has(e)||Ns("Cannot "+r),ju=(e,t,r)=>t.has(e)?Ns("Cannot add the same private member more than once"):t instanceof WeakSet?t.add(e):t.set(e,r),Ze=(e,t,r)=>(zu(e,t,"access private method"),r),{round:Fu,min:En,max:Er,log:Or,floor:Gu,random:Du}=Math,Bu=e=>{let t=e/100,r,n,o;return t<66?(r=1,n=t<6?0:(-155.25485562709179-.44596950469579133*(n=t-2)+104.49216199393888*Or(n))/255,o=t<20?0:(-254.76935184120902+.8274096064007395*(o=t-10)+115.67994401066147*Or(o))/255):(r=(351.97690566805693+.114206453784165*(r=t-55)-40.25366309332127*Or(r))/255,n=(325.4494125711974+.07943456536662342*(n=t-50)-28.0852963507957*Or(n))/255,o=1),{r:Er(0,En(1,r)),g:Er(0,En(1,n)),b:Er(0,En(1,o)),a:1}},Hu=e=>{let{r:t,g:r,b:n}=e;if(t<1e-10)return n>t?4e4:1e3;let o=1e3,a=4e4,s=.4,i;for(;a-o>s;){i=(a+o)*.5;let l=Bu(i);l.b/l.r>=n/t?a=i:o=i}return Fu(i)},qu=(e,t,r)=>e>=t&&e<=r,Is=e=>{let t=[...e];for(let r=t.length-1;r>0;r--){let n=Gu(Du()*(r+1));[t[r],t[n]]=[t[n],t[r]]}return t},Xu=e=>{let{r:t,g:r,b:n}=e,o=1-Er(t,r,n),a=1-o;return{mode:"cmyk",c:a&&(a-t)/a,m:a&&(a-r)/a,y:a&&(a-n)/a,k:o}},Yu=(e,t)=>{if(typeof e=="number"){if(t===3)return{mode:"rgb",r:(e>>8&15|e>>4&240)/255,g:(e>>4&15|e&240)/255,b:(e&15|e<<4&240)/255};if(t===4)return{mode:"rgb",r:(e>>12&15|e>>8&240)/255,g:(e>>8&15|e>>4&240)/255,b:(e>>4&15|e&240)/255,alpha:(e&15|e<<4&240)/255};if(t===6)return{mode:"rgb",r:(e>>16&255)/255,g:(e>>8&255)/255,b:(e&255)/255};if(t===8)return{mode:"rgb",r:(e>>24&255)/255,g:(e>>16&255)/255,b:(e>>8&255)/255,alpha:(e&255)/255}}},Ts=Yu,Wu={aliceblue:15792383,antiquewhite:16444375,aqua:65535,aquamarine:8388564,azure:15794175,beige:16119260,bisque:16770244,black:0,blanchedalmond:16772045,blue:255,blueviolet:9055202,brown:10824234,burlywood:14596231,cadetblue:6266528,chartreuse:8388352,chocolate:13789470,coral:16744272,cornflowerblue:6591981,cornsilk:16775388,crimson:14423100,cyan:65535,darkblue:139,darkcyan:35723,darkgoldenrod:12092939,darkgray:11119017,darkgreen:25600,darkgrey:11119017,darkkhaki:12433259,darkmagenta:9109643,darkolivegreen:5597999,darkorange:16747520,darkorchid:10040012,darkred:9109504,darksalmon:15308410,darkseagreen:9419919,darkslateblue:4734347,darkslategray:3100495,darkslategrey:3100495,darkturquoise:52945,darkviolet:9699539,deeppink:16716947,deepskyblue:49151,dimgray:6908265,dimgrey:6908265,dodgerblue:2003199,firebrick:11674146,floralwhite:16775920,forestgreen:2263842,fuchsia:16711935,gainsboro:14474460,ghostwhite:16316671,gold:16766720,goldenrod:14329120,gray:8421504,green:32768,greenyellow:11403055,grey:8421504,honeydew:15794160,hotpink:16738740,indianred:13458524,indigo:4915330,ivory:16777200,khaki:15787660,lavender:15132410,lavenderblush:16773365,lawngreen:8190976,lemonchiffon:16775885,lightblue:11393254,lightcoral:15761536,lightcyan:14745599,lightgoldenrodyellow:16448210,lightgray:13882323,lightgreen:9498256,lightgrey:13882323,lightpink:16758465,lightsalmon:16752762,lightseagreen:2142890,lightskyblue:8900346,lightslategray:7833753,lightslategrey:7833753,lightsteelblue:11584734,lightyellow:16777184,lime:65280,limegreen:3329330,linen:16445670,magenta:16711935,maroon:8388608,mediumaquamarine:6737322,mediumblue:205,mediumorchid:12211667,mediumpurple:9662683,mediumseagreen:3978097,mediumslateblue:8087790,mediumspringgreen:64154,mediumturquoise:4772300,mediumvioletred:13047173,midnightblue:1644912,mintcream:16121850,mistyrose:16770273,moccasin:16770229,navajowhite:16768685,navy:128,oldlace:16643558,olive:8421376,olivedrab:7048739,orange:16753920,orangered:16729344,orchid:14315734,palegoldenrod:15657130,palegreen:10025880,paleturquoise:11529966,palevioletred:14381203,papayawhip:16773077,peachpuff:16767673,peru:13468991,pink:16761035,plum:14524637,powderblue:11591910,purple:8388736,rebeccapurple:6697881,red:16711680,rosybrown:12357519,royalblue:4286945,saddlebrown:9127187,salmon:16416882,sandybrown:16032864,seagreen:3050327,seashell:16774638,sienna:10506797,silver:12632256,skyblue:8900331,slateblue:6970061,slategray:7372944,slategrey:7372944,snow:16775930,springgreen:65407,steelblue:4620980,tan:13808780,teal:32896,thistle:14204888,tomato:16737095,turquoise:4251856,violet:15631086,wheat:16113331,white:16777215,whitesmoke:16119285,yellow:16776960,yellowgreen:10145074},Vu=Wu,Uu=e=>Ts(Vu[e.toLowerCase()],6),Ju=Uu,Zu=/^#?([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{4}|[0-9a-f]{3})$/i,Ku=e=>{let t;return(t=e.match(Zu))?Ts(parseInt(t[1],16),t[1].length):void 0},Qu=Ku,he="([+-]?\\d*\\.?\\d+(?:[eE][+-]?\\d+)?)",Xm=`(?:${he}|none)`,jt=`${he}%`,Ym=`(?:${he}%|none)`,Gn=`(?:${he}%|${he})`,e0=`(?:${he}%|${he}|none)`,t0=`(?:${he}(deg|grad|rad|turn)|${he})`,Wm=`(?:${he}(deg|grad|rad|turn)|${he}|none)`,vt="\\s*,\\s*",Vm=new RegExp("^"+e0+"$"),r0=new RegExp(`^rgba?\\(\\s*${he}${vt}${he}${vt}${he}\\s*(?:,\\s*${Gn}\\s*)?\\)$`),n0=new RegExp(`^rgba?\\(\\s*${jt}${vt}${jt}${vt}${jt}\\s*(?:,\\s*${Gn}\\s*)?\\)$`),o0=e=>{let t={mode:"rgb"},r;if(r=e.match(r0))r[1]!==void 0&&(t.r=r[1]/255),r[2]!==void 0&&(t.g=r[2]/255),r[3]!==void 0&&(t.b=r[3]/255);else if(r=e.match(n0))r[1]!==void 0&&(t.r=r[1]/100),r[2]!==void 0&&(t.g=r[2]/100),r[3]!==void 0&&(t.b=r[3]/100);else return;return r[4]!==void 0?t.alpha=Math.max(0,Math.min(1,r[4]/100)):r[5]!==void 0&&(t.alpha=Math.max(0,Math.min(1,+r[5]))),t},a0=o0,s0=(e,t)=>e===void 0?void 0:typeof e!="object"?_s(e):e.mode!==void 0?e:t?{...e,mode:t}:void 0,i0=s0,l0=(e="rgb")=>t=>(t=i0(t,e))!==void 0?t.mode===e?t:Se[t.mode][e]?Se[t.mode][e](t):e==="rgb"?Se[t.mode].rgb(t):Se.rgb[e](Se[t.mode].rgb(t)):void 0,kt=l0,Se={},Es={},Ar=[],As={},c0=e=>e,u0=e=>(Se[e.mode]={...Se[e.mode],...e.toMode},Object.keys(e.fromMode||{}).forEach(t=>{Se[t]||(Se[t]={}),Se[t][e.mode]=e.fromMode[t]}),e.ranges||(e.ranges={}),e.difference||(e.difference={}),e.channels.forEach(t=>{if(e.ranges[t]===void 0&&(e.ranges[t]=[0,1]),!e.interpolate[t])throw new Error(`Missing interpolator for: ${t}`);typeof e.interpolate[t]=="function"&&(e.interpolate[t]={use:e.interpolate[t]}),e.interpolate[t].fixup||(e.interpolate[t].fixup=c0)}),Es[e.mode]=e,(e.parse||[]).forEach(t=>{h0(t,e.mode)}),kt(e.mode)),d0=e=>Es[e],h0=(e,t)=>{if(typeof e=="string"){if(!t)throw new Error("'mode' required when 'parser' is a string");As[e]=t}else typeof e=="function"&&Ar.indexOf(e)<0&&Ar.push(e)},jn=/[^\x00-\x7F]|[a-zA-Z_]/,m0=/[^\x00-\x7F]|[-\w]/,w={Function:"function",Ident:"ident",Number:"number",Percentage:"percentage",ParenClose:")",None:"none",Hue:"hue",Alpha:"alpha"},N=0;function Nr(e){let t=e[N],r=e[N+1];return t==="-"||t==="+"?/\d/.test(r)||r==="."&&/\d/.test(e[N+2]):t==="."?/\d/.test(r):/\d/.test(t)}function Fn(e){if(N>=e.length)return!1;let t=e[N];if(jn.test(t))return!0;if(t==="-"){if(e.length-N<2)return!1;let r=e[N+1];return!!(r==="-"||jn.test(r))}return!1}var p0={deg:1,rad:180/Math.PI,grad:9/10,turn:360};function zt(e){let t="";if((e[N]==="-"||e[N]==="+")&&(t+=e[N++]),t+=Ir(e),e[N]==="."&&/\d/.test(e[N+1])&&(t+=e[N++]+Ir(e)),(e[N]==="e"||e[N]==="E")&&((e[N+1]==="-"||e[N+1]==="+")&&/\d/.test(e[N+2])?t+=e[N++]+e[N++]+Ir(e):/\d/.test(e[N+1])&&(t+=e[N++]+Ir(e))),Fn(e)){let r=Pr(e);return r==="deg"||r==="rad"||r==="turn"||r==="grad"?{type:w.Hue,value:t*p0[r]}:void 0}return e[N]==="%"?(N++,{type:w.Percentage,value:+t}):{type:w.Number,value:+t}}function Ir(e){let t="";for(;/\d/.test(e[N]);)t+=e[N++];return t}function Pr(e){let t="";for(;N<e.length&&m0.test(e[N]);)t+=e[N++];return t}function f0(e){let t=Pr(e);return e[N]==="("?(N++,{type:w.Function,value:t}):t==="none"?{type:w.None,value:void 0}:{type:w.Ident,value:t}}function g0(e=""){let t=e.trim(),r=[],n;for(N=0;N<t.length;){if(n=t[N++],n===`
-`||n==="	"||n===" "){for(;N<t.length&&(t[N]===`
-`||t[N]==="	"||t[N]===" ");)N++;continue}if(n===",")return;if(n===")"){r.push({type:w.ParenClose});continue}if(n==="+"){if(N--,Nr(t)){r.push(zt(t));continue}return}if(n==="-"){if(N--,Nr(t)){r.push(zt(t));continue}if(Fn(t)){r.push({type:w.Ident,value:Pr(t)});continue}return}if(n==="."){if(N--,Nr(t)){r.push(zt(t));continue}return}if(n==="/"){for(;N<t.length&&(t[N]===`
-`||t[N]==="	"||t[N]===" ");)N++;let o;if(Nr(t)&&(o=zt(t),o.type!==w.Hue)){r.push({type:w.Alpha,value:o});continue}if(Fn(t)&&Pr(t)==="none"){r.push({type:w.Alpha,value:{type:w.None,value:void 0}});continue}return}if(/\d/.test(n)){N--,r.push(zt(t));continue}if(jn.test(n)){N--,r.push(f0(t));continue}return}return r}function b0(e){e._i=0;let t=e[e._i++];if(!t||t.type!==w.Function||t.value!=="color"||(t=e[e._i++],t.type!==w.Ident))return;let r=As[t.value];if(!r)return;let n={mode:r},o=Ps(e,!1);if(!o)return;let a=d0(r).channels;for(let s=0,i,l;s<a.length;s++)i=o[s],l=a[s],i.type!==w.None&&(n[l]=i.type===w.Number?i.value:i.value/100,l==="alpha"&&(n[l]=Math.max(0,Math.min(1,n[l]))));return n}function Ps(e,t){let r=[],n;for(;e._i<e.length;){if(n=e[e._i++],n.type===w.None||n.type===w.Number||n.type===w.Alpha||n.type===w.Percentage||t&&n.type===w.Hue){r.push(n);continue}if(n.type===w.ParenClose){if(e._i<e.length)return;continue}return}if(!(r.length<3||r.length>4)){if(r.length===4){if(r[3].type!==w.Alpha)return;r[3]=r[3].value}return r.length===3&&r.push({type:w.None,value:void 0}),r.every(o=>o.type!==w.Alpha)?r:void 0}}function y0(e,t){e._i=0;let r=e[e._i++];if(!r||r.type!==w.Function)return;let n=Ps(e,t);if(n)return n.unshift(r.value),n}var k0=e=>{if(typeof e!="string")return;let t=g0(e),r=t?y0(t,!0):void 0,n,o=0,a=Ar.length;for(;o<a;)if((n=Ar[o++](e,r))!==void 0)return n;return t?b0(t):void 0},_s=k0;function w0(e,t){if(!t||t[0]!=="rgb"&&t[0]!=="rgba")return;let r={mode:"rgb"},[,n,o,a,s]=t;if(!(n.type===w.Hue||o.type===w.Hue||a.type===w.Hue))return n.type!==w.None&&(r.r=n.type===w.Number?n.value/255:n.value/100),o.type!==w.None&&(r.g=o.type===w.Number?o.value/255:o.value/100),a.type!==w.None&&(r.b=a.type===w.Number?a.value/255:a.value/100),s.type!==w.None&&(r.alpha=Math.min(1,Math.max(0,s.type===w.Number?s.value:s.value/100))),r}var v0=w0,M0=e=>e==="transparent"?{mode:"rgb",r:0,g:0,b:0,alpha:0}:void 0,C0=M0,x0=(e,t,r)=>e+r*(t-e),R0=e=>{let t=[];for(let r=0;r<e.length-1;r++){let n=e[r],o=e[r+1];n===void 0&&o===void 0?t.push(void 0):n!==void 0&&o!==void 0?t.push([n,o]):t.push(n!==void 0?[n,n]:[o,o])}return t},S0=e=>t=>{let r=R0(t);return n=>{let o=n*r.length,a=n>=1?r.length-1:Math.max(Math.floor(o),0),s=r[a];return s===void 0?void 0:e(s[0],s[1],o-a)}},Q=S0(x0),Ft=e=>{let t=!1,r=e.map(n=>n!==void 0?(t=!0,n):1);return t?r:e},$0={mode:"rgb",channels:["r","g","b","alpha"],parse:[v0,Qu,a0,Ju,C0,"srgb"],serialize:"srgb",interpolate:{r:Q,g:Q,b:Q,alpha:{use:Q,fixup:Ft}},gamut:!0,white:{r:1,g:1,b:1},black:{r:0,g:0,b:0}},Dn=$0,An=(e=0)=>{let t=Math.abs(e);return t<=.04045?e/12.92:(Math.sign(e)||1)*Math.pow((t+.055)/1.055,2.4)},L0=({r:e,g:t,b:r,alpha:n})=>{let o={mode:"lrgb",r:An(e),g:An(t),b:An(r)};return n!==void 0&&(o.alpha=n),o},Gt=L0,O0=e=>{let{r:t,g:r,b:n,alpha:o}=Gt(e),a={mode:"xyz65",x:.4123907992659593*t+.357584339383878*r+.1804807884018343*n,y:.2126390058715102*t+.715168678767756*r+.0721923153607337*n,z:.0193308187155918*t+.119194779794626*r+.9505321522496607*n};return o!==void 0&&(a.alpha=o),a},N0=O0,Pn=(e=0)=>{let t=Math.abs(e);return t>.0031308?(Math.sign(e)||1)*(1.055*Math.pow(t,.4166666666666667)-.055):e*12.92},I0=({r:e,g:t,b:r,alpha:n},o="rgb")=>{let a={mode:o,r:Pn(e),g:Pn(t),b:Pn(r)};return n!==void 0&&(a.alpha=n),a},Dt=I0,T0=({x:e,y:t,z:r,alpha:n})=>{e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=Dt({r:e*3.2409699419045226-t*1.537383177570094-.4986107602930034*r,g:e*-.9692436362808796+t*1.8759675015077204+.0415550574071756*r,b:e*.0556300796969936-t*.2039769588889765+1.0569715142428784*r});return n!==void 0&&(o.alpha=n),o},E0=T0,A0=e=>(e=e%360)<0?e+360:e,we=A0,P0=(e,t)=>e.map((r,n,o)=>{if(r===void 0)return r;let a=we(r);return n===0||e[n-1]===void 0?a:t(a-we(o[n-1]))}).reduce((r,n)=>!r.length||n===void 0||r[r.length-1]===void 0?(r.push(n),r):(r.push(n+r[r.length-1]),r),[]),Bn=e=>P0(e,t=>Math.abs(t)<=180?t:t-360*Math.sign(t)),_0=(e,t)=>{if(e.h===void 0||t.h===void 0||!e.s||!t.s)return 0;let r=we(e.h),n=we(t.h),o=Math.sin((n-r+360)/2*Math.PI/180);return 2*Math.sqrt(e.s*t.s)*o},z0=(e,t)=>{if(e.h===void 0||t.h===void 0)return 0;let r=we(e.h),n=we(t.h);return Math.abs(n-r)>180?r-(n-360*Math.sign(n-r)):n-r},j0=(e,t)=>{if(e.h===void 0||t.h===void 0||!e.c||!t.c)return 0;let r=we(e.h),n=we(t.h),o=Math.sin((n-r+360)/2*Math.PI/180);return 2*Math.sqrt(e.c*t.c)*o},Hn=e=>{let t=e.reduce((n,o)=>{if(o!==void 0){let a=o*Math.PI/180;n.sin+=Math.sin(a),n.cos+=Math.cos(a)}return n},{sin:0,cos:0}),r=Math.atan2(t.sin,t.cos)*180/Math.PI;return r<0?360+r:r},F0=({l:e,a:t,b:r,alpha:n},o="lch")=>{t===void 0&&(t=0),r===void 0&&(r=0);let a=Math.sqrt(t*t+r*r),s={mode:o,l:e,c:a};return a&&(s.h=we(Math.atan2(r,t)*180/Math.PI)),n!==void 0&&(s.alpha=n),s},_r=F0,G0=({l:e,c:t,h:r,alpha:n},o="lab")=>{r===void 0&&(r=0);let a={mode:o,l:e,a:t?t*Math.cos(r/180*Math.PI):0,b:t?t*Math.sin(r/180*Math.PI):0};return n!==void 0&&(a.alpha=n),a},zr=G0,wt={X:.9642956764295677,Y:1,Z:.8251046025104602},Um={X:.3127/.329,Y:1,Z:(1-.3127-.329)/.329},Jm=Math.pow(29,3)/Math.pow(3,3),Zm=Math.pow(6,3)/Math.pow(29,3);function D0({h:e,s:t,l:r,alpha:n}){e=we(e!==void 0?e:0),t===void 0&&(t=0),r===void 0&&(r=0);let o=r+t*(r<.5?r:1-r),a=o-(o-r)*2*Math.abs(e/60%2-1),s;switch(Math.floor(e/60)){case 0:s={r:o,g:a,b:2*r-o};break;case 1:s={r:a,g:o,b:2*r-o};break;case 2:s={r:2*r-o,g:o,b:a};break;case 3:s={r:2*r-o,g:a,b:o};break;case 4:s={r:a,g:2*r-o,b:o};break;case 5:s={r:o,g:2*r-o,b:a};break;default:s={r:2*r-o,g:2*r-o,b:2*r-o}}return s.mode="rgb",n!==void 0&&(s.alpha=n),s}function B0({r:e,g:t,b:r,alpha:n}){e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=Math.max(e,t,r),a=Math.min(e,t,r),s={mode:"hsl",s:o===a?0:(o-a)/(1-Math.abs(o+a-1)),l:.5*(o+a)};return o-a!==0&&(s.h=(o===e?(t-r)/(o-a)+(t<r)*6:o===t?(r-e)/(o-a)+2:(e-t)/(o-a)+4)*60),n!==void 0&&(s.alpha=n),s}var H0=(e,t)=>{switch(t){case"deg":return+e;case"rad":return e/Math.PI*180;case"grad":return e/10*9;case"turn":return e*360}},q0=H0,X0=new RegExp(`^hsla?\\(\\s*${t0}${vt}${jt}${vt}${jt}\\s*(?:,\\s*${Gn}\\s*)?\\)$`),Y0=e=>{let t=e.match(X0);if(!t)return;let r={mode:"hsl"};return t[3]!==void 0?r.h=+t[3]:t[1]!==void 0&&t[2]!==void 0&&(r.h=q0(t[1],t[2])),t[4]!==void 0&&(r.s=Math.min(Math.max(0,t[4]/100),1)),t[5]!==void 0&&(r.l=Math.min(Math.max(0,t[5]/100),1)),t[6]!==void 0?r.alpha=Math.max(0,Math.min(1,t[6]/100)):t[7]!==void 0&&(r.alpha=Math.max(0,Math.min(1,+t[7]))),r},W0=Y0;function V0(e,t){if(!t||t[0]!=="hsl"&&t[0]!=="hsla")return;let r={mode:"hsl"},[,n,o,a,s]=t;if(n.type!==w.None){if(n.type===w.Percentage)return;r.h=n.value}if(o.type!==w.None){if(o.type===w.Hue)return;r.s=o.value/100}if(a.type!==w.None){if(a.type===w.Hue)return;r.l=a.value/100}return s.type!==w.None&&(r.alpha=Math.min(1,Math.max(0,s.type===w.Number?s.value:s.value/100))),r}var U0=V0,J0={mode:"hsl",toMode:{rgb:D0},fromMode:{rgb:B0},channels:["h","s","l","alpha"],ranges:{h:[0,360]},gamut:"rgb",parse:[U0,W0],serialize:e=>`hsl(${e.h!==void 0?e.h:"none"} ${e.s!==void 0?e.s*100+"%":"none"} ${e.l!==void 0?e.l*100+"%":"none"}${e.alpha<1?` / ${e.alpha}`:""})`,interpolate:{h:{use:Q,fixup:Bn},s:Q,l:Q,alpha:{use:Q,fixup:Ft}},difference:{h:_0},average:{h:Hn}},zs=J0;function Z0({h:e,s:t,v:r,alpha:n}){e=we(e!==void 0?e:0),t===void 0&&(t=0),r===void 0&&(r=0);let o=Math.abs(e/60%2-1),a;switch(Math.floor(e/60)){case 0:a={r,g:r*(1-t*o),b:r*(1-t)};break;case 1:a={r:r*(1-t*o),g:r,b:r*(1-t)};break;case 2:a={r:r*(1-t),g:r,b:r*(1-t*o)};break;case 3:a={r:r*(1-t),g:r*(1-t*o),b:r};break;case 4:a={r:r*(1-t*o),g:r*(1-t),b:r};break;case 5:a={r,g:r*(1-t),b:r*(1-t*o)};break;default:a={r:r*(1-t),g:r*(1-t),b:r*(1-t)}}return a.mode="rgb",n!==void 0&&(a.alpha=n),a}function K0({r:e,g:t,b:r,alpha:n}){e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=Math.max(e,t,r),a=Math.min(e,t,r),s={mode:"hsv",s:o===0?0:1-a/o,v:o};return o-a!==0&&(s.h=(o===e?(t-r)/(o-a)+(t<r)*6:o===t?(r-e)/(o-a)+2:(e-t)/(o-a)+4)*60),n!==void 0&&(s.alpha=n),s}function Q0({h:e,w:t,b:r,alpha:n}){if(t===void 0&&(t=0),r===void 0&&(r=0),t+r>1){let o=t+r;t/=o,r/=o}return Z0({h:e,s:r===1?1:1-t/(1-r),v:1-r,alpha:n})}function ed(e){let t=K0(e);if(t===void 0)return;let r=t.s!==void 0?t.s:0,n=t.v!==void 0?t.v:0,o={mode:"hwb",w:(1-r)*n,b:1-n};return t.h!==void 0&&(o.h=t.h),t.alpha!==void 0&&(o.alpha=t.alpha),o}function td(e,t){if(!t||t[0]!=="hwb")return;let r={mode:"hwb"},[,n,o,a,s]=t;if(n.type!==w.None){if(n.type===w.Percentage)return;r.h=n.value}if(o.type!==w.None){if(o.type===w.Hue)return;r.w=o.value/100}if(a.type!==w.None){if(a.type===w.Hue)return;r.b=a.value/100}return s.type!==w.None&&(r.alpha=Math.min(1,Math.max(0,s.type===w.Number?s.value:s.value/100))),r}var rd=td,nd={mode:"hwb",toMode:{rgb:Q0},fromMode:{rgb:ed},channels:["h","w","b","alpha"],ranges:{h:[0,360]},gamut:"rgb",parse:[rd],serialize:e=>`hwb(${e.h!==void 0?e.h:"none"} ${e.w!==void 0?e.w*100+"%":"none"} ${e.b!==void 0?e.b*100+"%":"none"}${e.alpha<1?` / ${e.alpha}`:""})`,interpolate:{h:{use:Q,fixup:Bn},w:Q,b:Q,alpha:{use:Q,fixup:Ft}},difference:{h:z0},average:{h:Hn}},od=nd,js=Math.pow(29,3)/Math.pow(3,3),Fs=Math.pow(6,3)/Math.pow(29,3),_n=e=>Math.pow(e,3)>Fs?Math.pow(e,3):(116*e-16)/js,ad=({l:e,a:t,b:r,alpha:n})=>{e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=(e+16)/116,a=t/500+o,s=o-r/200,i={mode:"xyz50",x:_n(a)*wt.X,y:_n(o)*wt.Y,z:_n(s)*wt.Z};return n!==void 0&&(i.alpha=n),i},Gs=ad,sd=({x:e,y:t,z:r,alpha:n})=>{e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=Dt({r:e*3.1341359569958707-t*1.6173863321612538-.4906619460083532*r,g:e*-.978795502912089+t*1.916254567259524+.03344273116131949*r,b:e*.07195537988411677-t*.2289768264158322+1.405386058324125*r});return n!==void 0&&(o.alpha=n),o},id=sd,ld=e=>id(Gs(e)),Ds=ld,cd=e=>{let{r:t,g:r,b:n,alpha:o}=Gt(e),a={mode:"xyz50",x:.436065742824811*t+.3851514688337912*r+.14307845442264197*n,y:.22249319175623702*t+.7168870538238823*r+.06061979053616537*n,z:.013923904500943465*t+.09708128566574634*r+.7140993584005155*n};return o!==void 0&&(a.alpha=o),a},ud=cd,zn=e=>e>Fs?Math.cbrt(e):(js*e+16)/116,dd=({x:e,y:t,z:r,alpha:n})=>{e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=zn(e/wt.X),a=zn(t/wt.Y),s=zn(r/wt.Z),i={mode:"lab",l:116*a-16,a:500*(o-a),b:200*(a-s)};return n!==void 0&&(i.alpha=n),i},Bs=dd,hd=e=>{let t=Bs(ud(e));return e.r===e.b&&e.b===e.g&&(t.a=t.b=0),t},Hs=hd;function md(e,t){if(!t||t[0]!=="lab")return;let r={mode:"lab"},[,n,o,a,s]=t;if(!(n.type===w.Hue||o.type===w.Hue||a.type===w.Hue))return n.type!==w.None&&(r.l=Math.min(Math.max(0,n.value),100)),o.type!==w.None&&(r.a=o.type===w.Number?o.value:o.value*125/100),a.type!==w.None&&(r.b=a.type===w.Number?a.value:a.value*125/100),s.type!==w.None&&(r.alpha=Math.min(1,Math.max(0,s.type===w.Number?s.value:s.value/100))),r}var pd=md,fd={mode:"lab",toMode:{xyz50:Gs,rgb:Ds},fromMode:{xyz50:Bs,rgb:Hs},channels:["l","a","b","alpha"],ranges:{l:[0,100],a:[-125,125],b:[-125,125]},parse:[pd],serialize:e=>`lab(${e.l!==void 0?e.l:"none"} ${e.a!==void 0?e.a:"none"} ${e.b!==void 0?e.b:"none"}${e.alpha<1?` / ${e.alpha}`:""})`,interpolate:{l:Q,a:Q,b:Q,alpha:{use:Q,fixup:Ft}}},qs=fd;function gd(e,t){if(!t||t[0]!=="lch")return;let r={mode:"lch"},[,n,o,a,s]=t;if(n.type!==w.None){if(n.type===w.Hue)return;r.l=Math.min(Math.max(0,n.value),100)}if(o.type!==w.None&&(r.c=Math.max(0,o.type===w.Number?o.value:o.value*150/100)),a.type!==w.None){if(a.type===w.Percentage)return;r.h=a.value}return s.type!==w.None&&(r.alpha=Math.min(1,Math.max(0,s.type===w.Number?s.value:s.value/100))),r}var bd=gd,yd={mode:"lch",toMode:{lab:zr,rgb:e=>Ds(zr(e))},fromMode:{rgb:e=>_r(Hs(e)),lab:_r},channels:["l","c","h","alpha"],ranges:{l:[0,100],c:[0,150],h:[0,360]},parse:[bd],serialize:e=>`lch(${e.l!==void 0?e.l:"none"} ${e.c!==void 0?e.c:"none"} ${e.h!==void 0?e.h:"none"}${e.alpha<1?` / ${e.alpha}`:""})`,interpolate:{h:{use:Q,fixup:Bn},c:Q,l:Q,alpha:{use:Q,fixup:Ft}},difference:{h:j0},average:{h:Hn}},Xs=yd,kd={...Dn,mode:"lrgb",toMode:{rgb:Dt},fromMode:{rgb:Gt},parse:["srgb-linear"],serialize:"srgb-linear"},wd=kd,vd=({r:e,g:t,b:r,alpha:n})=>{e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=Math.cbrt(.412221469470763*e+.5363325372617348*t+.0514459932675022*r),a=Math.cbrt(.2119034958178252*e+.6806995506452344*t+.1073969535369406*r),s=Math.cbrt(.0883024591900564*e+.2817188391361215*t+.6299787016738222*r),i={mode:"oklab",l:.210454268309314*o+.7936177747023054*a-.0040720430116193*s,a:1.9779985324311684*o-2.42859224204858*a+.450593709617411*s,b:.0259040424655478*o+.7827717124575296*a-.8086757549230774*s};return n!==void 0&&(i.alpha=n),i},Ys=vd,Md=e=>{let t=Ys(Gt(e));return e.r===e.b&&e.b===e.g&&(t.a=t.b=0),t},qn=Md,Cd=({l:e,a:t,b:r,alpha:n})=>{e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=Math.pow(e+.3963377773761749*t+.2158037573099136*r,3),a=Math.pow(e-.1055613458156586*t-.0638541728258133*r,3),s=Math.pow(e-.0894841775298119*t-1.2914855480194092*r,3),i={mode:"lrgb",r:4.076741636075957*o-3.3077115392580616*a+.2309699031821044*s,g:-1.2684379732850317*o+2.6097573492876887*a-.3413193760026573*s,b:-.0041960761386756*o-.7034186179359362*a+1.7076146940746117*s};return n!==void 0&&(i.alpha=n),i},Xn=Cd,xd=e=>Dt(Xn(e)),Yn=xd;function Rd(e){let t=1.170873786407767;return .5*(t*e-.206+Math.sqrt((t*e-.206)*(t*e-.206)+4*.03*t*e))}function Sd(e){return(e*e+.206*e)/(1.170873786407767*(e+.03))}function $d(e,t){let r,n,o,a,s,i,l,u;-1.88170328*e-.80936493*t>1?(r=1.19086277,n=1.76576728,o=.59662641,a=.75515197,s=.56771245,i=4.0767416621,l=-3.3077115913,u=.2309699292):1.81444104*e-1.19445276*t>1?(r=.73956515,n=-.45954404,o=.08285427,a=.1254107,s=.14503204,i=-1.2684380046,l=2.6097574011,u=-.3413193965):(r=1.35733652,n=-.00915799,o=-1.1513021,a=-.50559606,s=.00692167,i=-.0041960863,l=-.7034186147,u=1.707614701);let d=r+n*e+o*t+a*e*e+s*e*t,c=.3963377774*e+.2158037573*t,h=-.1055613458*e-.0638541728*t,m=-.0894841775*e-1.291485548*t;{let p=1+d*c,y=1+d*h,k=1+d*m,v=p*p*p,C=y*y*y,S=k*k*k,P=3*c*p*p,H=3*h*y*y,B=3*m*k*k,z=6*c*c*p,A=6*h*h*y,j=6*m*m*k,G=i*v+l*C+u*S,L=i*P+l*H+u*B,I=i*z+l*A+u*j;d=d-G*L/(L*L-.5*G*I)}return d}function Wn(e,t){let r=$d(e,t),n=Xn({l:1,a:r*e,b:r*t}),o=Math.cbrt(1/Math.max(n.r,n.g,n.b)),a=o*r;return[o,a]}function Ld(e,t,r,n,o,a=null){a||(a=Wn(e,t));let s;if((r-o)*a[1]-(a[0]-o)*n<=0)s=a[1]*o/(n*a[0]+a[1]*(o-r));else{s=a[1]*(o-1)/(n*(a[0]-1)+a[1]*(o-r));{let i=r-o,l=n,u=.3963377774*e+.2158037573*t,d=-.1055613458*e-.0638541728*t,c=-.0894841775*e-1.291485548*t,h=i+l*u,m=i+l*d,p=i+l*c;{let y=o*(1-s)+s*r,k=s*n,v=y+k*u,C=y+k*d,S=y+k*c,P=v*v*v,H=C*C*C,B=S*S*S,z=3*h*v*v,A=3*m*C*C,j=3*p*S*S,G=6*h*h*v,L=6*m*m*C,I=6*p*p*S,Y=4.0767416621*P-3.3077115913*H+.2309699292*B-1,W=4.0767416621*z-3.3077115913*A+.2309699292*j,b=4.0767416621*G-3.3077115913*L+.2309699292*I,M=W/(W*W-.5*Y*b),x=-Y*M,T=-1.2684380046*P+2.6097574011*H-.3413193965*B-1,D=-1.2684380046*z+2.6097574011*A-.3413193965*j,F=-1.2684380046*G+2.6097574011*L-.3413193965*I,q=D/(D*D-.5*T*F),U=-T*q,le=-.0041960863*P-.7034186147*H+1.707614701*B-1,ce=-.0041960863*z-.7034186147*A+1.707614701*j,f=-.0041960863*G-.7034186147*L+1.707614701*I,R=ce/(ce*ce-.5*le*f),O=-le*R;x=M>=0?x:1e6,U=q>=0?U:1e6,O=R>=0?O:1e6,s+=Math.min(x,Math.min(U,O))}}}return s}function Od(e,t,r=null){r||(r=Wn(e,t));let n=r[0],o=r[1];return[o/n,o/(1-n)]}function Ws(e,t,r){let n=Wn(t,r),o=Ld(t,r,e,1,e,n),a=Od(t,r,n),s=.11516993+1/(7.4477897+4.1590124*r+t*(-2.19557347+1.75198401*r+t*(-2.13704948-10.02301043*r+t*(-4.24894561+5.38770819*r+4.69891013*t)))),i=.11239642+1/(1.6132032-.68124379*r+t*(.40370612+.90148123*r+t*(-.27087943+.6122399*r+t*(.00299215-.45399568*r-.14661872*t)))),l=o/Math.min(e*a[0],(1-e)*a[1]),u=e*s,d=(1-e)*i,c=.9*l*Math.sqrt(Math.sqrt(1/(1/(u*u*u*u)+1/(d*d*d*d))));return u=e*.4,d=(1-e)*.8,[Math.sqrt(1/(1/(u*u)+1/(d*d))),c,o]}function xs(e){let t=e.l!==void 0?e.l:0,r=e.a!==void 0?e.a:0,n=e.b!==void 0?e.b:0,o={mode:"okhsl",l:Rd(t)};e.alpha!==void 0&&(o.alpha=e.alpha);let a=Math.sqrt(r*r+n*n);if(!a)return o.s=0,o;let[s,i,l]=Ws(t,r/a,n/a),u;if(a<i){let d=0,c=.8*s,h=1-c/i;u=(a-d)/(c+h*(a-d))*.8}else{let d=i,c=.2*i*i*1.25*1.25/s,h=1-c/(l-i);u=.8+.2*((a-d)/(c+h*(a-d)))}return u&&(o.s=u,o.h=we(Math.atan2(n,r)*180/Math.PI)),o}function Rs(e){let t=e.h!==void 0?e.h:0,r=e.s!==void 0?e.s:0,n=e.l!==void 0?e.l:0,o={mode:"oklab",l:Sd(n)};if(e.alpha!==void 0&&(o.alpha=e.alpha),!r||n===1)return o.a=o.b=0,o;let a=Math.cos(t/180*Math.PI),s=Math.sin(t/180*Math.PI),[i,l,u]=Ws(o.l,a,s),d,c,h,m;r<.8?(d=1.25*r,c=0,h=.8*i,m=1-h/l):(d=5*(r-.8),c=l,h=.2*l*l*1.25*1.25/i,m=1-h/(u-l));let p=c+d*h/(1-m*d);return o.a=p*a,o.b=p*s,o}var Nd={...zs,mode:"okhsl",channels:["h","s","l","alpha"],parse:["--okhsl"],serialize:"--okhsl",fromMode:{oklab:xs,rgb:e=>xs(qn(e))},toMode:{oklab:Rs,rgb:e=>Yn(Rs(e))}},Id=Nd;function Td(e,t){if(!t||t[0]!=="oklab")return;let r={mode:"oklab"},[,n,o,a,s]=t;if(!(n.type===w.Hue||o.type===w.Hue||a.type===w.Hue))return n.type!==w.None&&(r.l=Math.min(Math.max(0,n.type===w.Number?n.value:n.value/100),1)),o.type!==w.None&&(r.a=o.type===w.Number?o.value:o.value*.4/100),a.type!==w.None&&(r.b=a.type===w.Number?a.value:a.value*.4/100),s.type!==w.None&&(r.alpha=Math.min(1,Math.max(0,s.type===w.Number?s.value:s.value/100))),r}var Ed=Td,Ad={...qs,mode:"oklab",toMode:{lrgb:Xn,rgb:Yn},fromMode:{lrgb:Ys,rgb:qn},ranges:{l:[0,1],a:[-.4,.4],b:[-.4,.4]},parse:[Ed],serialize:e=>`oklab(${e.l!==void 0?e.l:"none"} ${e.a!==void 0?e.a:"none"} ${e.b!==void 0?e.b:"none"}${e.alpha<1?` / ${e.alpha}`:""})`},Pd=Ad;function _d(e,t){if(!t||t[0]!=="oklch")return;let r={mode:"oklch"},[,n,o,a,s]=t;if(n.type!==w.None){if(n.type===w.Hue)return;r.l=Math.min(Math.max(0,n.type===w.Number?n.value:n.value/100),1)}if(o.type!==w.None&&(r.c=Math.max(0,o.type===w.Number?o.value:o.value*.4/100)),a.type!==w.None){if(a.type===w.Percentage)return;r.h=a.value}return s.type!==w.None&&(r.alpha=Math.min(1,Math.max(0,s.type===w.Number?s.value:s.value/100))),r}var zd=_d,jd={...Xs,mode:"oklch",toMode:{oklab:e=>zr(e,"oklab"),rgb:e=>Yn(zr(e,"oklab"))},fromMode:{rgb:e=>_r(qn(e),"oklch"),oklab:e=>_r(e,"oklch")},parse:[zd],serialize:e=>`oklch(${e.l!==void 0?e.l:"none"} ${e.c!==void 0?e.c:"none"} ${e.h!==void 0?e.h:"none"}${e.alpha<1?` / ${e.alpha}`:""})`,ranges:{l:[0,1],c:[0,.4],h:[0,360]}},Fd=jd,Gd=e=>{let{r:t,g:r,b:n,alpha:o}=Gt(e),a={mode:"xyz65",x:.486570948648216*t+.265667693169093*r+.1982172852343625*n,y:.2289745640697487*t+.6917385218365062*r+.079286914093745*n,z:0*t+.0451133818589026*r+1.043944368900976*n};return o!==void 0&&(a.alpha=o),a},Ss=Gd,Dd=({x:e,y:t,z:r,alpha:n})=>{e===void 0&&(e=0),t===void 0&&(t=0),r===void 0&&(r=0);let o=Dt({r:e*2.4934969119414263-t*.9313836179191242-.402710784450717*r,g:e*-.8294889695615749+t*1.7626640603183465+.0236246858419436*r,b:e*.0358458302437845-t*.0761723892680418+.9568845240076871*r},"p3");return n!==void 0&&(o.alpha=n),o},$s=Dd,Bd={...Dn,mode:"p3",parse:["display-p3"],serialize:"display-p3",fromMode:{rgb:e=>$s(N0(e)),xyz65:$s},toMode:{rgb:e=>E0(Ss(e)),xyz65:Ss}},Hd=Bd;function Ls(e){let t=kt("lrgb")(e);return .2126*t.r+.7152*t.g+.0722*t.b}function Os(e,t){let r=Ls(e),n=Ls(t);return(Math.max(r,n)+.05)/(Math.min(r,n)+.05)}var g={black:{description:["Black is the absence of light: the deepest, most grounded color there is. It reads as formal, powerful and definitive, and it makes every other color beside it look brighter. Very dark tints of a hue are still black to the eye, with only a faint cast that shows up next to a pure black. In design, black carries weight and authority, from typography and luxury packaging to stage and cinema. Picture black as the velvet backdrop that lets everything else shine."],meanings:["power","elegance","formality","mystery","authority"],effects:["intimidate","signal authority","add contrast","focus attention"],usage:["luxury","typography","fashion","technology","backgrounds"]},grey:{description:["Grey is a quiet, neutral color that often reads as balanced, practical, and composed. It can feel like overcast skies, polished stone, soft shadows, or pencil graphite\u2014present without demanding attention. In design, grey is a reliable foundation: it supports bright accents, creates contrast without harshness, and fits both minimal and classic palettes. Depending on context, it can suggest calm and sophistication, or distance and restraint. Imagine grey as a gentle haze that smooths edges and lets other colors speak."],meanings:["neutrality","balance","calm","restraint","practicality","stability","professionalism","sophistication"],effects:["neutralize","calm","recede","balance"],usage:["backgrounds","typography","minimal design","interfaces","product design","architecture"]},white:{description:["White is commonly associated with clarity, simplicity, and cleanliness. It can evoke fresh snow, bright daylight, a blank page, or crisp fabric\u2014space that feels open and breathable. In design, white creates room for content, improves legibility, and helps other colors feel more vivid by contrast. It can communicate honesty and calm, but in excess it may also feel sterile or impersonal. Picture white as a clean, bright backdrop that makes everything around it feel sharper and lighter."],meanings:["purity","cleanliness","simplicity","innocence","freshness","light","goodness","virtue","safety","peace","tranquility","wholeness","perfection","honesty","truth","sincerity"],effects:["clarify","open up space","clean","lighten"],usage:["health","hospital","sanitary","weddings","bridal","minimalism","dairy","clean beauty","winter themes"]},pink:{description:["Pink often feels warm and kind, associated with care, tenderness, and playful joy. It can evoke blossoms, candy, soft fabric, or sunset clouds\u2014gentle and inviting. In design, pink ranges from subtle and comforting to bright and energetic, depending on saturation. It can communicate affection and approachability, or boldness when pushed toward hot pink. Picture pink as a soft glow that adds friendliness and charm to a scene."],meanings:["support","kindness","change","harmony","kink","charm","politeness","sensitivity","tenderness","sweetness","femininity","romance","seductiveness","sexiness"],effects:["soothe","comfort","soften","signal affection"],usage:["children's products","erotica","cosmetics","pop culture","fashion","confectionery","romance","floral"]},red:{description:["Red is energetic and attention-grabbing, often linked with passion, heat, and urgency. It can feel like firelight, ripe fruit, warning signs, or a racing heartbeat\u2014immediate and hard to ignore. In design, red is frequently used for calls to action, alerts, and emphasis, because it reads as high-intensity and high-priority. It can communicate love and celebration, but also anger or danger depending on context. Picture red as a bright spark that pulls the eye and raises the emotional volume."],meanings:["excitement","energy","passion","courage","attention","lust","power","love","speed","anger","danger","ferocity","violence","fury","vigor","urgency"],effects:["stimulate","create urgency","draw attention","encourage","excite","heighten arousal"],usage:["caution","food industry","sports","sales","entertainment","romance","emergency services"]},orange:{description:["Orange feels warm, friendly, and optimistic\u2014like sunset light, citrus peel, or autumn leaves. It carries energy without the sharp intensity of red, making it a popular choice for playful brands and welcoming interfaces. In design, orange often signals movement, creativity, and approachability, and it can work well for highlights and calls to action. Depending on saturation, it can read as cheerful and casual or bold and adventurous. Imagine orange as a cozy glow that invites you in."],meanings:["optimism","independence","adventure","creativity","fun"],effects:["stimulate","draw attention","express freedom","fascinate"],usage:["food and beverages","sports","construction safety","youth marketing","autumn themes","Halloween"]},yellow:{description:["Yellow is bright and uplifting, often linked with sunshine, optimism, and alertness. It can feel like morning light, gold, flowers, or caution tape\u2014cheerful but highly noticeable. In design, yellow works well for highlights and friendly emphasis, but large blocks can become visually tiring if too intense. Softer yellows can feel warm and gentle; vivid yellows feel energetic and attention-focused. Imagine yellow as a beam of light that instantly warms a scene."],meanings:["enthusiasm","opportunity","spontaneity","happiness","positivity"],effects:["stimulate","relax","awake awareness","energize","affect mood","convey competence"],usage:["sale","cheap","budget","construction"]},olive:{description:["Olive is a dark, earthy yellow-green that feels natural and understated. It evokes Mediterranean landscapes, military camouflage, and ripe olive groves\u2014rugged, organic, and grounded. In design, olive works well for outdoor, military, or natural aesthetics, adding warmth without brightness. It can signal durability and practicality, or a connection to the earth. Picture olive as the muted green of sun-dried leaves and weathered canvas."],meanings:["nature","earthiness","peace","resilience","tradition","humility"],effects:["ground","calm","reassure"],usage:["military","outdoor brands","organic products","nature themes","fashion"]},brown:{description:["Brown is earthy and grounded, often associated with wood, soil, leather, and natural materials. It tends to feel steady and dependable, bringing warmth without shouting for attention. In design, brown can signal craft, tradition, and comfort\u2014useful for organic, artisanal, or heritage aesthetics. Lighter browns can feel cozy and approachable, while deeper browns can feel rich and classic. Picture brown as a warm, solid surface you can lean on."],meanings:["strength","reliability","resilience","loneliness","sadness","isolation","warmth","comfort","security"],effects:["ground","reassure","warm","steady"],usage:["agriculture","legal","food","tobacco","alcohol","coffee","chocolate","craft and artisan","organic products","vintage and retro"]},beige:{description:["Beige is a light and versatile neutral color that subtly blends soft tones of brown and white. This hue is positioned toward the lighter end of the brown spectrum on the color wheel. It resembles a pale cream rather than spanning to darker hues like taupe, and offers a warm, understated elegance."],meanings:["warmth","elegance","neutrality","calm"],effects:["calm","soften","recede"],usage:["backgrounds","interiors","fashion","neutral accents","cosmetics","luxury packaging","spa and wellness","stationery"]},lime:{description:["Lime is a sharp, zesty green-yellow that feels fresh and high-energy. It can evoke citrus, neon signs, sportswear, or new leaves\u2014bright, youthful, and a little electric. In design, lime is often used to signal novelty, motion, and visibility, especially as an accent or highlight. It can read as playful and modern, but it can also feel loud if overused. Picture lime as a vivid splash that wakes up a palette instantly."],meanings:["growth","harmony","fertility","kindness","dependability"],effects:["restore energy","promote growth","awake awareness","rejuvenate"],usage:["nature","energy drinks","sports","gaming"]},green:{description:['Green is strongly associated with nature, growth, and renewal\u2014grass, forests, and fresh herbs. It often feels restorative and balanced, making it a common choice for wellness, sustainability, and "safe/ok" signals. In design, green can communicate stability and harmony, or wealth and success depending on context. Dark greens can feel serious and grounded; bright greens can feel energetic and modern. Imagine green as a breath of air that resets the mood and steadies the scene.'],meanings:["safety","harmony","stability","reliability","balance"],effects:["relax","balance","revitalize","encourage"],usage:["sustainability","organic and natural","finance","pharmacy","gardening","eco"]},teal:{description:["Teal is a blue-green that feels balanced and sophisticated, often evoking ocean water, tropical lagoons, and polished gemstones. It sits at the intersection of green's natural calm and blue's cool authority. In design, teal is popular for brands seeking a modern, trustworthy look that feels less corporate than pure blue. Depending on lightness, it can read as refreshing and lively or deep and mysterious. Picture teal as the color where water meets sky at the horizon."],meanings:["sophistication","clarity","calm","balance","refreshing","trust"],effects:["soothe"],usage:["healthcare","wellness","technology","communication","hospitality"]},blue:{description:["Blue often feels calm, steady, and trustworthy\u2014like open sky, deep water, or cool shade. It's widely used in design to communicate reliability and competence, especially in finance, security, and healthcare. Lighter blues can feel airy and friendly; darker blues feel formal and authoritative. Blue can also read as distant or reserved when overused. Imagine blue as a stable horizon line that quiets the noise and brings order."],meanings:["trust","responsibility","honesty","loyalty","security","reliability","calmness","control"],effects:["calm","reassure"],usage:["security","finance","technology","healthcare","accounting","social media","government","law enforcement","nautical"]},purple:{description:["Purple is often linked with creativity, luxury, and a sense of the uncommon. It blends the calm of blue with the energy of red, which can make it feel both soothing and expressive. In design, purple can signal premium experiences, artistry, and individuality, and it pairs well with neutrals for a refined look. Lighter purples feel soft and whimsical; deeper purples feel dramatic and regal. Picture purple as a rich fabric draped over a scene\u2014adding depth, mood, and personality."],meanings:["spirituality","structure","compassion","sensitivity","mystery","tolerance","integrity","order","wisdom","inspiration"],effects:["inspire","intrigue","elevate"],usage:["luxury","religion","psychic","royalty","creativity","gaming","confectionery","wine","counterculture"]},navy:{description:["Navy is a dark, authoritative blue that feels professional and dependable. It evokes naval uniforms, deep ocean water, and twilight sky\u2014serious but approachable. In design, navy is a versatile near-neutral that works as a softer alternative to black, lending depth and formality without harshness. It pairs well with almost any accent color and reads as classic and timeless. Picture navy as the deep blue of a clear night sky just after sunset."],meanings:["authority","trust","stability","professionalism","tradition","confidence","reliability"],effects:["reassure","signal authority","steady"],usage:["corporate","finance","uniforms","formal design","nautical themes"]},maroon:{description:["Maroon is a dark, rich red that feels grounded and dignified. It evokes aged wine, dark leather, and autumn foliage\u2014warm but restrained. In design, maroon carries the intensity of red with added depth and formality, making it a popular choice for institutions, luxury branding, and elegant print. It can communicate tradition, confidence, and seriousness without the aggressiveness of brighter reds. Picture maroon as a deep ember that glows with quiet authority."],meanings:["strength","courage","warmth","intensity","ambition","confidence","tradition"],effects:["ground","warm","signal seriousness"],usage:["luxury","academic","formal design","autumn themes","wine branding"]},gold:{description:["Gold and mustard are dark, rich yellows. Gold is the warm, lustrous yellow of the metal and of autumn light; mustard is its earthier, more muted cousin. Both feel warm, confident and a little retro. In design they add richness where plain yellow would feel loud. Picture gold as a brass fixture catching the light, and mustard as a wool scarf in October."],meanings:["wealth","warmth","success","tradition"],effects:["warm","enrich","signal value"],usage:["luxury","autumn","retro","packaging"]},peach:{description:["Peach is a soft, light orange with a touch of pink, like the skin of the fruit. It feels gentle, warm and friendly, and is a favourite for skin tones, sunsets and summery pastels. In design it works as a warm neutral or a tender accent that never shouts. Picture peach as late afternoon light on a plastered wall."],meanings:["warmth","gentleness","youth","friendliness"],effects:["soften","warm","comfort"],usage:["cosmetics","wedding","summer","food"]},sand:{description:["A light, warm brown: sand, leather, camel hair, a summer beach. It is one of the great quiet neutrals, warmer than grey and softer than a full brown, and it pairs with almost anything. In design it reads as natural, relaxed and a little classic. Picture a worn leather satchel in the sun."],meanings:["nature","reliability","comfort","simplicity"],effects:["ground","reassure","warm","steady"],usage:["fashion","interiors","leather goods","outdoor"]},salmon:{description:["Salmon is a pinkish orange, between coral and peach, named after the flesh of the fish. It feels warm, healthy and appetising, softer than coral and livelier than peach. In design it works well for food, wellness and friendly consumer brands. Picture salmon as a sunset reflected on wet sand."],meanings:["warmth","health","appetite","friendliness"],effects:["warm","stimulate appetite","cheer"],usage:["food","wellness","summer","fashion"]},mauve:{description:["Mauve is a greyish pinkish purple, dusty and restrained. It carries a Victorian, slightly faded elegance, and it is one of the few purples that works as a near-neutral. In design it reads as soft, mature and a little nostalgic. Picture mauve as dried rose petals."],meanings:["nostalgia","elegance","softness","maturity"],effects:["soften","calm","evoke nostalgia"],usage:["fashion","interiors","cosmetics","stationery"]},mint:{description:["Mint is a pale, fresh green with a hint of blue, like the leaf or the sweet. It feels clean, cool and refreshing, and it is a natural pastel for spring and health themes. In design mint lifts a palette without adding weight. Picture mint as a scoop of ice cream on a hot day."],meanings:["freshness","cleanliness","calm","youth"],effects:["refresh","cool","lighten"],usage:["health","spring","food","pastel palettes"]},turquoise:{description:["Turquoise and aqua are bright greenish blues named after the gemstone and after water. They feel tropical, clean and energetic, the colour of shallow seas over sand. In design they suggest holidays, swimming pools and freshness, and they carry more warmth than plain cyan. Picture turquoise as a lagoon seen from above."],meanings:["freshness","tropics","clarity","energy"],effects:["refresh","energize","cool"],usage:["travel","swimwear","summer","water"]},cyan:{description:["Cyan is crisp and cool, often evoking clear water, bright skies, and clean air. It tends to feel refreshing and modern\u2014light enough to be friendly, but cool enough to be precise. In design, cyan can suggest clarity, communication, and technology, and it works well for bright accents on dark backgrounds. Depending on context, it can feel playful and youthful or sleek and professional. Picture cyan as a splash of cold water: sharp, energizing, and clean."],meanings:["freedom","trust","wisdom","joy","refreshing","consciousness","stimulating"],effects:["self-expression","refresh"],usage:["communication","children's products","technology","aerospace","entertainment","productivity"]},skyBlue:{description:["Sky blue is a light, clear blue, the colour of a cloudless day. It feels open, calm and optimistic, and it is the most universally liked of the blues. In design it reads as friendly and trustworthy without the weight of a dark blue. Picture sky blue as the view from a window in summer."],meanings:["openness","calm","optimism","freedom"],effects:["open up","calm","lighten"],usage:["air travel","childhood","wellness","backgrounds"]},periwinkle:{description:["Periwinkle is a soft blue with a touch of lavender, named after the flower. It feels calm, airy and slightly dreamy, sitting exactly where blue turns into purple. In design it is a gentle alternative to sky blue with a little more character. Picture periwinkle as a hazy morning sky."],meanings:["calm","dreaminess","gentleness","serenity"],effects:["calm","soothe","soften"],usage:["stationery","wellness","pastel palettes","bedding"]},indigo:{description:["Indigo is deep and contemplative, sitting between blue's steadiness and purple's imagination. It can evoke twilight, ink, denim, and night skies\u2014quiet, thoughtful, and a little mysterious. In design, indigo often feels sophisticated and layered, adding depth without the starkness of pure black. It can suggest introspection, tradition, or spirituality depending on context. Picture indigo as dusk settling in: calm, rich, and full of hidden detail."],meanings:["intuition","wisdom","depth","spirituality","integrity"],effects:["deepen","focus","calm"],usage:["denim","luxury","spiritual","night themes","print"]},lavender:{description:["Lavender is a soft, light purple that feels gentle and refined. It evokes lavender fields, spring blossoms, and soft fabric\u2014calm, romantic, and slightly whimsical. In design, lavender adds a feminine, soothing touch without the intensity of deeper purples. It works well for wellness brands, cosmetics, and any context that wants to feel approachable and delicate. Picture lavender as a light haze of purple that softens everything it touches."],meanings:["grace","elegance","calm","femininity","youth","serenity","refinement"],effects:["relax","soothe","soften"],usage:["cosmetics","wellness","spring themes","weddings","children's products"]},violet:{description:["Violet is the bluer side of purple, the colour of the flower and the last band of the rainbow. It feels mystical, refined and a little cooler than purple proper. In design it reads as creative and spiritual, and it sits well next to blues. Picture violet as the sky a few minutes after sunset."],meanings:["mystery","creativity","spirituality","refinement"],effects:["intrigue","inspire","calm"],usage:["beauty","spiritual","creative","fashion"]},magenta:{description:["Magenta is bold and expressive, often associated with creativity, intensity, and modern flair. It can feel like neon signage, stage lights, or vivid flowers\u2014lively and unapologetic. In design, magenta is often used as a punchy accent to add energy and personality, especially in contemporary or playful palettes. It can read as romantic and warm, but also edgy and unconventional. Imagine magenta as a bright pulse that makes a layout feel instantly more alive."],meanings:["creativity","boldness","imagination","transformation","nonconformity"],effects:["energize","draw attention","provoke"],usage:["pop culture","printing","nightlife","fashion","tech branding"]},plum:{description:["Plum is a dark, rich purple with a hint of red, like the skin of the fruit. It feels deep, luxurious and grown-up, warmer than navy and softer than black. In design plum works as a dramatic dark or a moody accent. Picture plum as velvet in low light."],meanings:["luxury","depth","maturity","drama"],effects:["enrich","ground","add depth"],usage:["fashion","wine","interiors","cosmetics"]}},qd={descriptions:[{criteria:{oklch:{h:null,c:[0,.012],l:[.97,1.001]}},descriptive:["bright","pure","clean","colorless"]},{criteria:{oklch:{h:null,c:[0,.012],l:[.65,.97]}},descriptive:["light","pale","neutral"]},{criteria:{oklch:{h:null,c:[0,.012],l:[.35,.65]}},descriptive:["neutral","medium","colorless"]},{criteria:{oklch:{h:null,c:[0,.012],l:[.22,.35]}},descriptive:["dark","neutral","shady"]},{criteria:{oklch:{h:null,c:[0,.045],l:[0,.32]}},nouns:["black"],...g.black},{criteria:{oklch:{h:null,c:[.045,.1],l:[0,.25]}},nouns:["black"],...g.black},{criteria:{oklch:{h:[80,115],c:[.06,.16],l:[.85,1.001]}},descriptive:["light","pastel","delicate"]},{criteria:{oklch:{h:[70,115],c:[.085,.5],l:[.55,.85]},okhsl:{s:[.4,.75]}},descriptive:["muted","mellow","dull"]},{criteria:{oklch:{h:[70,115],c:[.085,.5],l:[.55,.85]},okhsl:{s:[.75,1.01]}},descriptive:["rich","golden","warm"]},{criteria:{oklch:{h:null,c:null,l:[0,.1]}},descriptive:["pure","pitch","deep"]},{criteria:{oklch:{h:null,c:[0,.025],l:[.1,.28]}},descriptive:["deep","inky","sooty"]},{criteria:{oklch:{h:null,c:[.05,.5],l:[.25,.42]},okhsl:{s:[.6,1.01]}},descriptive:["deep","rich","dark"]},{criteria:{oklch:{h:null,c:[.05,.5],l:[.15,.25]},okhsl:{s:[.8,1.01]}},descriptive:["deep","rich","inky"]},{criteria:{oklch:{h:null,c:null,l:[0,.25]}},descriptive:["very dark","inky","gloomy"]},{criteria:{oklch:{h:null,c:null,l:[.25,.4]}},descriptive:["dark","dim","somber"]},{criteria:{oklch:{h:[330,360],c:[.012,.05],l:[.4,.78]}},descriptive:["warm","muted","greyish","dusty"]},{criteria:{oklch:{h:[0,125],c:[.012,.05],l:[.4,.78]}},descriptive:["warm","muted","greyish","dusty"]},{criteria:{oklch:{h:[125,330],c:[.012,.05],l:[.4,.78]}},descriptive:["cool","muted","greyish","dusty"]},{criteria:{oklch:{h:null,c:[.012,.06],l:[.78,1.001]}},descriptive:["pale","delicate","faded"]},{criteria:{oklch:{h:null,c:[.1,.5],l:[.9,1.001]},okhsl:{s:[.75,1.01]}},descriptive:["bright","light","luminous"]},{criteria:{oklch:{h:null,c:[.06,.5],l:[.9,1.001]},okhsl:{s:[0,.75]}},descriptive:["light","pastel","delicate"]},{criteria:{oklch:{h:null,c:[.06,.1],l:[.9,1.001]},okhsl:{s:[.75,1.01]}},descriptive:["light","delicate"]},{criteria:{oklch:{h:null,c:[.11,.5],l:[.75,.9]},okhsl:{s:[.8,1.01]}},descriptive:["bright","vivid","brilliant","glowing"]},{criteria:{oklch:{h:null,c:[.05,.5],l:[.75,.9]},okhsl:{s:[.62,1.01]}},descriptive:["light","soft","fresh"]},{criteria:{oklch:{h:[30,100],c:[.05,.5],l:[.75,.9]},okhsl:{s:[0,.62]}},descriptive:["soft","light","warm"]},{criteria:{oklch:{h:null,c:[.05,.5],l:[.75,.9]},okhsl:{s:[0,.62]}},descriptive:["pastel","soft","light"]},{criteria:{oklch:{h:[0,70],c:[.05,.5],l:[.65,.75]},okhsl:{s:[.7,1.01]}},descriptive:["bright","vivid","brilliant","glowing"]},{criteria:{oklch:{h:[115,360],c:[.05,.5],l:[.65,.75]},okhsl:{s:[.7,1.01]}},descriptive:["bright","vivid","brilliant","glowing"]},{criteria:{oklch:{h:[20,90],c:[.05,.5],l:[.4,.6]},okhsl:{s:[.8,1.01]}},descriptive:["rich","strong","warm"]},{criteria:{oklch:{h:[88,135],c:[.05,.5],l:[.4,.65]},okhsl:{s:[.8,1.01]}},descriptive:["rich","strong","full"]},{criteria:{oklch:{h:[0,20],c:[.05,.5],l:[.4,.65]},okhsl:{s:[.8,1.01]}},descriptive:["vivid","vibrant","strong","bold","saturated"]},{criteria:{oklch:{h:[20,88],c:[.05,.5],l:[.6,.65]},okhsl:{s:[.8,1.01]}},descriptive:["vivid","vibrant","strong","bold","saturated"]},{criteria:{oklch:{h:[135,360],c:[.05,.5],l:[.4,.65]},okhsl:{s:[.8,1.01]}},descriptive:["vivid","vibrant","strong","bold","saturated"]},{criteria:{oklch:{h:[0,70],c:[.05,.5],l:[.4,.75]},okhsl:{s:[.62,.8]}},descriptive:["rich","full","medium"]},{criteria:{oklch:{h:[115,360],c:[.05,.5],l:[.4,.75]},okhsl:{s:[.62,.8]}},descriptive:["rich","full","medium"]},{criteria:{oklch:{h:null,c:[.05,.5],l:[.62,.75]},okhsl:{s:[.45,.62]}},descriptive:["soft","light","fresh"]},{criteria:{oklch:{h:null,c:[.05,.5],l:[.4,.62]},okhsl:{s:[.45,.62]}},descriptive:["medium","moderate"]},{criteria:{oklch:{h:null,c:[.05,.5],l:[.4,.75]},okhsl:{s:[0,.45]}},descriptive:["muted","dull","matte","soft"]},{criteria:{oklch:{h:null,c:[.2,.5],l:[.75,.95]}},descriptive:["neon","fluorescent"]},{criteria:{oklch:{h:null,c:[.02,.5],l:[.92,1]}},descriptive:["luminous"]},{criteria:{oklch:{h:null,c:[.012,.1],l:[0,.5]},okhsl:{s:[0,.6]}},descriptive:["dim","gloomy","dull"]},{criteria:{oklch:{h:null,c:[.012,.12],l:[.25,.65]},okhsl:{s:[0,.55]}},descriptive:["matte","dusty","ashy"]},{criteria:{oklch:{h:null,c:[.15,.5],l:[.55,.85]}},descriptive:["fresh","sparkling"]},{criteria:{oklch:{h:null,c:[.01,.035],l:[.22,.99]}},descriptive:["almost grey"]},{criteria:{oklch:{h:null,c:[.012,.5],l:[.22,.99]},okhsl:{s:[0,.3]}},descriptive:["very unsaturated"]},{criteria:{oklch:{h:null,c:[.012,.5],l:[.22,.99]},okhsl:{s:[.3,.45]}},descriptive:["unsaturated"]},{criteria:{oklch:{h:null,c:[.012,.5],l:[.22,.99]},okhsl:{s:[.45,.6]}},descriptive:["rather unsaturated"]},{criteria:{oklch:{h:null,c:[.012,.5],l:[.22,.99]},okhsl:{s:[.6,.75]}},descriptive:["fairly saturated"]},{criteria:{oklch:{h:null,c:[.1,.5],l:[.22,.99]},okhsl:{s:[.75,.9]}},descriptive:["saturated"]},{criteria:{oklch:{h:null,c:[.14,.5],l:[.22,.99]},okhsl:{s:[.9,1.01]}},descriptive:["highly saturated"]},{criteria:{oklch:{h:null,c:[0,.012],l:[.15,.98]}},nouns:["grey"],...g.grey},{criteria:{oklch:{h:[80,345],c:[.012,.045],l:[.32,.92]}},nouns:["grey"],...g.grey},{criteria:{oklch:{h:[345,360],c:[.012,.025],l:[.32,.92]}},nouns:["grey"],...g.grey},{criteria:{oklch:{h:[0,80],c:[.012,.025],l:[.32,.92]}},nouns:["grey"],...g.grey},{criteria:{oklch:{h:[345,360],c:[.025,.045],l:[.45,.92]}},nouns:["grey"],...g.grey},{criteria:{oklch:{h:[0,80],c:[.025,.045],l:[.45,.92]}},nouns:["grey"],...g.grey},{criteria:{oklch:{h:[0,120],c:[.05,.5],l:[.15,1]}},descriptive:["warm","mellow"]},{criteria:{oklch:{h:[345,360],c:[.05,.5],l:[.15,1]}},descriptive:["warm","mellow"]},{criteria:{oklch:{h:[163,327],c:[.05,.5],l:[.15,1]}},descriptive:["cold","cool"]},{criteria:{oklch:{h:null,c:null,l:[.97,1.001]}},nouns:["white"],...g.white},{criteria:{oklch:{h:null,c:[0,.025],l:[.9,.97]}},nouns:["white"],...g.white},{criteria:{oklch:{h:null,c:null,l:[0,.15]}},nouns:["black"],...g.black},{criteria:{oklch:{h:[250,300],c:[.045,.07],l:[.45,.85]}},nouns:["grey"],...g.grey},{criteria:{oklch:{h:[345,360],c:[.075,.5],l:[.55,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[0,12],c:[.075,.5],l:[.55,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[12,25],c:[.075,.5],l:[.62,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[12,25],c:[.095,.115],l:[.52,.62]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[318,345],c:[.075,.5],l:[.65,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[345,360],c:[.045,.075],l:[.65,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[0,12],c:[.045,.075],l:[.65,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[318,325],c:[.02,.075],l:[.85,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[325,345],c:[.02,.075],l:[.72,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[12,25],c:[.02,.075],l:[.72,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[345,360],c:[.02,.045],l:[.78,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[0,12],c:[.02,.045],l:[.78,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[0,12],c:[.1,.5],l:[.48,.55]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[345,360],c:[.1,.5],l:[.48,.55]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[25,35],c:[.05,.5],l:[.68,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[25,38],c:[.02,.06],l:[.85,.99]}},nouns:["pink"],...g.pink},{criteria:{oklch:{h:[0,20],c:[.115,.5],l:[.42,.68]}},descriptive:["reddish"],nouns:["red"],...g.red},{criteria:{oklch:{h:[20,40],c:[.115,.5],l:[.38,.68]}},descriptive:["reddish"],nouns:["red"],...g.red},{criteria:{oklch:{h:[5,25],c:[.15,.5],l:[.65,.75]}},descriptive:["reddish"],nouns:["red"],...g.red},{criteria:{oklch:{h:[35,50],c:[.135,.5],l:[.55,.86]}},nouns:["orange"],...g.orange},{criteria:{oklch:{h:[50,78],c:[.1,.5],l:[.58,.85]}},nouns:["orange"],...g.orange},{criteria:{oklch:{h:[35,50],c:[.11,.135],l:[.68,.86]}},nouns:["orange"],...g.orange},{criteria:{oklch:{h:[78,85],c:[.1,.5],l:[.74,.85]}},nouns:["orange"],...g.orange},{criteria:{oklch:{h:[76,83],c:[.12,.5],l:[.76,.99]}},nouns:["yellow"],...g.yellow},{criteria:{oklch:{h:[88,125],c:[.045,.16],l:[.28,.72]}},nouns:["olive"],...g.olive},{criteria:{oklch:{h:[125,135],c:[.045,.15],l:[.4,.7]}},nouns:["olive"],...g.olive},{criteria:{oklch:{h:[105,125],c:[.08,.16],l:[.72,.85]}},nouns:["olive"],...g.olive},{criteria:{oklch:{h:[15,25],c:[.02,.1],l:[.15,.45]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[25,88],c:[.045,.1],l:[.15,.68]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[25,45],c:[.02,.045],l:[.15,.45]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[45,75],c:[.02,.045],l:[.15,.52]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[88,105],c:[.045,.1],l:[.15,.68]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[75,105],c:[.02,.045],l:[.15,.45]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[15,25],c:[.045,.075],l:[.45,.55]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[15,25],c:[.045,.095],l:[.55,.66]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[45,90],c:[.08,.135],l:[.65,.74]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[30,105],c:[.1,.16],l:[.15,.55]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[30,45],c:[.1,.135],l:[.55,.62]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[45,105],c:[.1,.16],l:[.55,.65]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[30,50],c:[.1,.135],l:[.62,.68]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[345,360],c:[.02,.045],l:[.25,.45]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[25,35],c:[.02,.05],l:[.68,.85]}},nouns:["beige"],...g.beige},{criteria:{oklch:{h:[0,15],c:[.02,.045],l:[.15,.45]}},nouns:["brown"],...g.brown},{criteria:{oklch:{h:[35,100],c:[.045,.1],l:[.68,.99]}},nouns:["beige"],...g.beige},{criteria:{oklch:{h:[100,115],c:[.045,.095],l:[.68,.99]}},nouns:["beige"],...g.beige},{criteria:{oklch:{h:[35,115],c:[.02,.045],l:[.78,.99]}},nouns:["beige"],...g.beige},{criteria:{oklch:{h:[83,120],c:[.07,.5],l:[.88,.99]}},nouns:["yellow"],...g.yellow},{criteria:{oklch:{h:[83,120],c:[.1,.5],l:[.74,.88]}},nouns:["yellow"],...g.yellow},{criteria:{oklch:{h:[95,120],c:[.08,.1],l:[.74,.88]}},nouns:["yellow"],...g.yellow},{criteria:{oklch:{h:[108,135],c:[.12,.5],l:[.76,.99]}},nouns:["lime"],...g.lime},{criteria:{oklch:{h:[113,185],c:[.02,.09],l:[.15,.78]}},descriptive:["greenish"],nouns:["green"],...g.green},{criteria:{oklch:{h:[113,178],c:[.02,.09],l:[.78,.99]}},descriptive:["greenish"],nouns:["green"],...g.green},{criteria:{oklch:{h:[105,113],c:[.02,.045],l:[.66,.92]}},descriptive:["greenish"],nouns:["green"],...g.green},{criteria:{oklch:{h:[105,113],c:[.08,.5],l:[.66,.9]}},descriptive:["greenish"],nouns:["green"],...g.green},{criteria:{oklch:{h:[113,178],c:[.09,.5],l:[.15,.99]}},descriptive:["greenish"],nouns:["green"],...g.green},{criteria:{oklch:{h:[105,113],c:[.02,.15],l:[.15,.66]}},descriptive:["greenish"],nouns:["green"],...g.green},{criteria:{oklch:{h:[165,180],c:[.07,.18],l:[.6,.78]}},nouns:["teal"],...g.teal},{criteria:{oklch:{h:[180,200],c:[.02,.15],l:[.15,.78]}},nouns:["teal"],...g.teal},{criteria:{oklch:{h:[200,215],c:[.02,.15],l:[.15,.72]}},nouns:["teal"],...g.teal},{criteria:{oklch:{h:[172,180],c:[.05,.15],l:[.35,.65]}},nouns:["teal"],...g.teal},{criteria:{oklch:{h:[215,228],c:[.02,.11],l:[.15,.66]}},nouns:["teal"],...g.teal},{criteria:{oklch:{h:[185,205],c:[.02,.5],l:[.75,.99]}},descriptive:["blueish"],nouns:["blue"],...g.blue},{criteria:{oklch:{h:[215,225],c:[.02,.5],l:[.48,.99]}},descriptive:["blueish"],nouns:["blue"],...g.blue},{criteria:{oklch:{h:[178,185],c:[.02,.12],l:[.85,.99]}},descriptive:["blueish"],nouns:["blue"],...g.blue},{criteria:{oklch:{h:[205,215],c:[.02,.5],l:[.68,.99]}},descriptive:["blueish"],nouns:["blue"],...g.blue},{criteria:{oklch:{h:[225,288],c:[.02,.5],l:[.15,.99]}},descriptive:["blueish"],nouns:["blue"],...g.blue},{criteria:{oklch:{h:[295,318],c:[.02,.5],l:[.15,.92]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[285,295],c:[.02,.5],l:[.15,.62]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[318,325],c:[.02,.14],l:[.15,.75]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[325,345],c:[.02,.14],l:[.15,.72]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[318,345],c:[.14,.5],l:[.15,.65]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[345,360],c:[.02,.05],l:[.22,.45]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[0,15],c:[.02,.05],l:[.22,.45]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[225,288],c:[.02,.145],l:[.18,.45]}},nouns:["navy"],...g.navy},{criteria:{oklch:{h:[225,288],c:[.145,.22],l:[.18,.34]}},nouns:["navy"],...g.navy},{criteria:{oklch:{h:[235,288],c:[.045,.1],l:[.45,.52]}},nouns:["navy"],...g.navy},{criteria:{oklch:{h:[345,360],c:[.07,.18],l:[.22,.48]}},descriptive:["burgundy"],nouns:["maroon"],...g.maroon},{criteria:{oklch:{h:[0,32],c:[.07,.18],l:[.22,.48]}},descriptive:["burgundy"],nouns:["maroon"],...g.maroon},{criteria:{oklch:{h:[0,30],c:[.07,.145],l:[.48,.52]}},descriptive:["burgundy"],nouns:["maroon"],...g.maroon},{criteria:{oklch:{h:[78,110],c:[.08,.18],l:[.55,.74]}},descriptive:["mustard"],nouns:["gold"],...g.gold},{criteria:{oklch:{h:[85,110],c:[.12,.18],l:[.74,.82]}},descriptive:["mustard"],nouns:["gold"],...g.gold},{criteria:{oklch:{h:[25,70],c:[.04,.14],l:[.75,.93]}},nouns:["peach"],...g.peach},{criteria:{oklch:{h:[25,70],c:[.1,.14],l:[.68,.75]}},nouns:["peach"],...g.peach},{criteria:{oklch:{h:[70,85],c:[.04,.12],l:[.85,.93]}},nouns:["peach"],...g.peach},{criteria:{oklch:{h:[40,88],c:[.04,.11],l:[.66,.78]}},descriptive:["sandy"],nouns:["brown"],...g.sand},{criteria:{oklch:{h:[15,40],c:[.09,.2],l:[.65,.78]}},nouns:["salmon"],...g.salmon},{criteria:{oklch:{h:[318,360],c:[.02,.1],l:[.45,.72]}},nouns:["mauve"],...g.mauve},{criteria:{oklch:{h:[318,360],c:[.02,.06],l:[.72,.85]}},nouns:["mauve"],...g.mauve},{criteria:{oklch:{h:[0,35],c:[.02,.1],l:[.45,.72]}},nouns:["mauve"],...g.mauve},{criteria:{oklch:{h:[0,25],c:[.02,.06],l:[.72,.85]}},nouns:["mauve"],...g.mauve},{criteria:{oklch:{h:[140,182],c:[.025,.18],l:[.78,.97]}},nouns:["mint"],...g.mint},{criteria:{oklch:{h:[172,215],c:[.05,.18],l:[.7,.86]}},descriptive:["aqua"],nouns:["turquoise"],...g.turquoise},{criteria:{oklch:{h:[178,225],c:[.13,.5],l:[.68,.99]}},nouns:["cyan"],...g.cyan},{criteria:{oklch:{h:[178,225],c:[.06,.13],l:[.86,.99]}},nouns:["cyan"],...g.cyan},{criteria:{oklch:{h:[215,265],c:[.08,.16],l:[.7,.85]}},nouns:["sky blue"],...g.skyBlue},{criteria:{oklch:{h:[215,265],c:[.05,.16],l:[.85,.96]}},nouns:["sky blue"],...g.skyBlue},{criteria:{oklch:{h:[265,295],c:[.06,.5],l:[.55,.85]}},nouns:["periwinkle"],...g.periwinkle},{criteria:{oklch:{h:[278,295],c:[.12,.5],l:[.28,.55]}},nouns:["indigo"],...g.indigo},{criteria:{oklch:{h:[285,325],c:[.02,.13],l:[.62,.95]}},descriptive:["lilac"],nouns:["lavender"],...g.lavender},{criteria:{oklch:{h:[295,318],c:[.13,.5],l:[.3,.75]}},nouns:["violet"],...g.violet},{criteria:{oklch:{h:[285,295],c:[.18,.5],l:[.55,.8]}},nouns:["violet"],...g.violet},{criteria:{oklch:{h:[318,360],c:[.14,.5],l:[.42,.72]}},descriptive:["fuchsia"],nouns:["magenta"],...g.magenta},{criteria:{oklch:{h:[325,345],c:[.05,.18],l:[.25,.5]}},nouns:["plum"],...g.plum},{criteria:{oklch:{h:[345,360],c:[.05,.16],l:[.24,.45]}},nouns:["plum"],...g.plum},{criteria:{oklch:{h:[345,360],c:[.05,.12],l:[.45,.52]}},nouns:["plum"],...g.plum},{criteria:{oklch:{h:[0,15],c:[.05,.16],l:[.24,.48]}},nouns:["plum"],...g.plum},{criteria:{oklch:{h:[345,360],c:[.05,.16],l:[.28,.5]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[345,360],c:[.05,.1],l:[.5,.53]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[0,10],c:[.05,.16],l:[.28,.5]}},descriptive:["purplish"],nouns:["purple"],...g.purple},{criteria:{oklch:{h:[0,10],c:[.05,.1],l:[.5,.53]}},descriptive:["purplish"],nouns:["purple"],...g.purple}],temperatures:[{value:1800,descriptive:["ultra warm"]},{value:2400,descriptive:["very warm"]},{value:2700,descriptive:["warm"]},{value:3e3,descriptive:["warm white"]},{value:4e3,descriptive:["neutral white"]},{value:5e3,descriptive:["cool white"]},{value:6500,descriptive:["cool daylight"]},{value:1e4,descriptive:["very cool"]}],percentWords:[{maxPercentile:.06,word:"a dash of"},{maxPercentile:.16,word:"a little bit of"},{maxPercentile:.31,word:"some"},{maxPercentile:.56,word:"a good bit of"},{maxPercentile:.71,word:"a lot of"},{maxPercentile:.86,word:"a whole lot of"},{maxPercentile:.99,word:"nearly entirely"},{maxPercentile:1,word:"entirely"}]};[Dn,wd,zs,od,qs,Xs,Pd,Fd,Id,Hd].forEach(u0);var Tr={rgb:kt("rgb"),hsl:kt("hsl"),oklch:kt("oklch"),okhsl:kt("okhsl")},Xd={rgb:["r","g","b"],cmyk:["c","m","y","k"],hsl:["h","s","l"]},Te,Vs,Ke,Yd=class{constructor(e,t=qd){ju(this,Te),Cs(this,"formats",{}),Cs(this,"currentColor",null),this.color=e,this.descriptions=t.descriptions,this.temperatures=t.temperatures,this.percentWords=t.percentWords?[...t.percentWords].sort((r,n)=>r.maxPercentile-n.maxPercentile):[]}set color(e){this.currentColor=Ze(this,Te,Vs).call(this,e);let t=Tr.rgb(this.currentColor);this.formats.rgb=t,this.formats.hsl=Tr.hsl(this.currentColor),this.formats.oklch=Tr.oklch(this.currentColor),this.formats.okhsl=Tr.okhsl(this.currentColor),this.formats.okhsl&&this.formats.okhsl.s>1&&(this.formats.okhsl.s=1),this.formats.cmyk=Xu(t)}get color(){return this.currentColor}get temperatureWords(){let e=Hu(this.formats.rgb);return this.temperatures.reduce((t,r)=>Math.abs(r.value-e)<Math.abs(t.value-e)?r:t,{value:0})}percentages(e="rgb"){if(!["rgb","cmyk"].includes(e))throw new TypeError('Invalid color model. Use "rgb" or "cmyk" for percentages.');if(!this.formats[e])throw new TypeError(`Color format "${e}" is not available. Ensure color is set.`);let t=this.formats[e],r=Xd[e].map(o=>t[o]),n=r.reduce((o,a)=>o+a,0);return r.map(o=>n?o/n:0)}percentageWords(e="rgb"){return this.percentages(e).map(t=>{let r=this.percentWords.find(n=>n.maxPercentile>=t);return r?r.word:"entirely"})}get descriptiveWords(){return Ze(this,Te,Ke).call(this,"descriptive")}get nouns(){return Ze(this,Te,Ke).call(this,"nouns")}get meanings(){return Ze(this,Te,Ke).call(this,"meanings")}get effects(){return Ze(this,Te,Ke).call(this,"effects")}get usage(){return Ze(this,Te,Ke).call(this,"usage")}get description(){return Ze(this,Te,Ke).call(this,"description")}get bestContrast(){return Os(this.color,"black")>Os(this.color,"white")?"black":"white"}getDescriptiveList(e,t){let r=[...this.descriptiveWords];if(e&&(r=Is(r)),t&&(r=r.slice(0,t)),r.length===0)return"";if(r.length>1){let n=r.pop();return`${r.join(", ")} and ${n}`}else return r[0]}};Te=new WeakSet,Vs=function(e){let t=_s(e);if(!t)throw new TypeError(`Invalid color: "${e}". Check the culori documentation.`);return t},Ke=function(e="descriptive",t=!1,r){let n=this.formats.oklch,o=n&&n.l<.28&&n.c<.025,a=this.descriptions.reduce((s,i)=>{if(!i.hasOwnProperty(e)||o&&i.criteria.oklch?.h!=null)return s;let l=i[e].filter(u=>typeof u=="string"&&u.trim().length>0);return Object.keys(i.criteria).every(u=>{let d=this.formats[u];return d?Object.entries(i.criteria[u]).every(([c,h])=>{if(h===null)return!0;if(!(c in d)||d[c]===void 0||d[c]===null)return!1;let m=d[c];return c==="h"&&(m=Math.round(m)%360),Array.isArray(h)?c==="h"?m>=h[0]&&m<h[1]:qu(m,h[0],h[1]):isNaN(h)?!1:m===h}):!1})?[...new Set([...s,...l])]:s},[]);return t?Is(a).slice(0,r):a.slice(0,r)};var Us=Yd;var Wd=new Set("a an and are as at be but by colors colour colours color feel feeling for from give has have i in into is it its like look looks make me more most my of on or our please so some that the theme this to very want we website site app with".split(" ")),Vd=["iness","ness","ing","ful","ous","ish","ity","ly","ed","es","s","y"];function Js(e){for(let t of Vd)if(e.endsWith(t)&&e.length-t.length>=3)return e.slice(0,-t.length);return e}function Ud(e,t){if(e===t)return!0;let r=Js(e),n=Js(t);return r===n||r.length>=5&&n.length>=5&&r.slice(0,5)===n.slice(0,5)}function Jd(e){let t=new Set;for(let r of e.toLowerCase().split(/[^a-z]+/))r.length>1&&!Wd.has(r)&&t.add(r);return[...t]}var Zd=e=>e.toLowerCase().split(/[^a-z]+/).filter(Boolean),jr=(e,t)=>Number(e.toFixed(t));function Qs(e){return new Us(e)}function ei(e){let t=new E(e).toGamut({space:"srgb",method:"css"}).to("srgb").toString({format:"hex"}),r=Qs(t);return{summary:r.getDescriptiveList(!1,3),words:r.descriptiveWords,nouns:r.nouns,meanings:r.meanings,effects:r.effects,usage:r.usage,temperature:r.temperatureWords?.descriptive??[]}}var Bt;function Kd(){if(Bt)return Bt;Bt=[];for(let e=.35;e<=.9001;e+=.05)for(let t=.03;t<=.2701;t+=.03)for(let r=0;r<360;r+=15){let n=new E("oklch",[e,t,r]);if(!n.inGamut("srgb"))continue;let o=`oklch(${jr(e*100,2)}% ${jr(t,3)} ${r})`,a=Qs(o),s=l=>new Set((l??[]).flatMap(Zd)),i=n.to("oklab").coords.map(Number);Bt.push({css:o,oklch:[jr(e,4),jr(t,4),r],lab:i,categories:[{weight:1,tokens:s(a.descriptiveWords.slice(0,3))},{weight:3,tokens:s(a.descriptiveWords)},{weight:3,tokens:s(a.nouns)},{weight:2,tokens:s([...a.meanings,...a.effects,...a.usage])},{weight:1,tokens:s(a.description),prose:!0}],summary:a.getDescriptiveList(!1,3)})}return Bt}function Zs(e,t,r){let n=0;for(let o of e.categories)if(!(o.prose&&!r)){for(let a of o.tokens)if(Ud(t,a)){n+=o.weight;break}}return n}var Ks=e=>{let t=[...e].sort((r,n)=>r-n);return t[Math.floor(t.length/2)]};function Qd(e){let t=0;for(;t<e.length;){let r=t;for(;r<e.length&&e[r].score===e[t].score&&e[r].matched.length===e[t].matched.length;)r+=1;let n=e.slice(t,r),o=Ks(n.map(i=>i.entry.oklch[0])),a=Ks(n.map(i=>i.entry.oklch[1])),s=i=>Math.hypot(i.oklch[0]-o,(i.oklch[1]-a)*2);n.sort((i,l)=>s(i.entry)-s(l.entry)),e.splice(t,n.length,...n),t=r}}var eh=(e,t)=>Math.hypot(e.lab[0]-t.lab[0],e.lab[1]-t.lab[1],e.lab[2]-t.lab[2]);function ti(e,t={}){let r=Math.max(1,Math.floor(t.count??6)),n=Jd(e),o=new Set,a=Kd(),s=new Map(n.map(u=>[u,!a.some(d=>Zs(d,u,!1)>0)])),i=a.map(u=>{let d=[],c=0;for(let h of n){let m=Zs(u,h,s.get(h)??!1);m>0&&(d.push(h),o.add(h),c+=m)}return{entry:u,matched:d,score:c}}).filter(u=>u.score>0).sort((u,d)=>d.matched.length-u.matched.length||d.score-u.score);Qd(i);let l=[];for(let u of i){if(l.length>=r)break;l.every(d=>eh(d.entry,u.entry)>.06)&&l.push(u)}return{colors:l.map(({entry:u,matched:d,score:c})=>({css:u.css,hex:new E(u.css).to("srgb").toString({format:"hex",collapse:!1}),oklch:u.oklch,score:c,matched:d,summary:u.summary})),matchedWords:n.filter(u=>o.has(u)),unmatchedWords:n.filter(u=>!o.has(u))}}function ri(e){let t=new E(e).to("srgb-linear").coords.map(r=>Number(r)||0);return[t[0],t[1],t[2]]}function th(e,t){return Ce(V(ri(e)),V(ri(t)))}function ni(e,t,r="wcag2"){return r==="apca"?Math.abs(mt(e,t)):th(e,t)}function oi(e,t={}){let r=Rr({...t,colors:{brand:e},status:!0,roles:{accent:null}}),n={};for(let[o,a]of Object.entries(r.modes)){let s={};for(let i of Sn){let{css:l,hex:u,oklch:d,contrast:c,target:h,capped:m}=a.roles[i];s[i]={css:l,hex:u,oklch:d,contrast:c,target:h,...m&&{capped:m}}}n[o]={colors:s,...a.feedback&&{check:a.feedback}}}return{modes:n,warnings:r.warnings}}var li=`chromagentic: accessible, perceptual UI color for AI agents
+// src/cli/run.ts
+import { mkdir, readFile, writeFile } from "fs/promises";
+import { dirname, join, resolve } from "path";
+import { parseArgs } from "util";
+
+// node_modules/colorjs.io/src/multiply-matrices.js
+function multiplyMatrices(A, B) {
+  let m = A.length;
+  if (!Array.isArray(A[0])) {
+    A = [A];
+  }
+  if (!Array.isArray(B[0])) {
+    B = B.map((x) => [x]);
+  }
+  let p2 = B[0].length;
+  let B_cols = B[0].map((_, i) => B.map((x) => x[i]));
+  let product = A.map((row) => B_cols.map((col) => {
+    let ret = 0;
+    if (!Array.isArray(row)) {
+      for (let c of col) {
+        ret += row * c;
+      }
+      return ret;
+    }
+    for (let i = 0; i < row.length; i++) {
+      ret += row[i] * (col[i] || 0);
+    }
+    return ret;
+  }));
+  if (m === 1) {
+    product = product[0];
+  }
+  if (p2 === 1) {
+    return product.map((x) => x[0]);
+  }
+  return product;
+}
+
+// node_modules/colorjs.io/src/util.js
+function isString(str) {
+  return type(str) === "string";
+}
+function type(o) {
+  let str = Object.prototype.toString.call(o);
+  return (str.match(/^\[object\s+(.*?)\]$/)[1] || "").toLowerCase();
+}
+function serializeNumber(n2, { precision, unit }) {
+  if (isNone(n2)) {
+    return "none";
+  }
+  return toPrecision(n2, precision) + (unit ?? "");
+}
+function isNone(n2) {
+  return Number.isNaN(n2) || n2 instanceof Number && n2?.none;
+}
+function toPrecision(n2, precision) {
+  if (n2 === 0) {
+    return 0;
+  }
+  let integer = ~~n2;
+  let digits = 0;
+  if (integer && precision) {
+    digits = ~~Math.log10(Math.abs(integer)) + 1;
+  }
+  const multiplier = 10 ** (precision - digits);
+  return Math.floor(n2 * multiplier + 0.5) / multiplier;
+}
+var angleFactor = {
+  deg: 1,
+  grad: 0.9,
+  rad: 180 / Math.PI,
+  turn: 360
+};
+function parseFunction(str) {
+  if (!str) {
+    return;
+  }
+  str = str.trim();
+  const isFunctionRegex = /^([a-z]+)\((.+?)\)$/i;
+  const isNumberRegex = /^-?[\d.]+$/;
+  const unitValueRegex = /%|deg|g?rad|turn$/;
+  const singleArgument = /\/?\s*(none|[-\w.]+(?:%|deg|g?rad|turn)?)/g;
+  let parts = str.match(isFunctionRegex);
+  if (parts) {
+    let args = [];
+    parts[2].replace(singleArgument, ($0, rawArg) => {
+      let match = rawArg.match(unitValueRegex);
+      let arg = rawArg;
+      if (match) {
+        let unit = match[0];
+        let unitlessArg = arg.slice(0, -unit.length);
+        if (unit === "%") {
+          arg = new Number(unitlessArg / 100);
+          arg.type = "<percentage>";
+        } else {
+          arg = new Number(unitlessArg * angleFactor[unit]);
+          arg.type = "<angle>";
+          arg.unit = unit;
+        }
+      } else if (isNumberRegex.test(arg)) {
+        arg = new Number(arg);
+        arg.type = "<number>";
+      } else if (arg === "none") {
+        arg = new Number(NaN);
+        arg.none = true;
+      }
+      if ($0.startsWith("/")) {
+        arg = arg instanceof Number ? arg : new Number(arg);
+        arg.alpha = true;
+      }
+      if (typeof arg === "object" && arg instanceof Number) {
+        arg.raw = rawArg;
+      }
+      args.push(arg);
+    });
+    return {
+      name: parts[1].toLowerCase(),
+      rawName: parts[1],
+      rawArgs: parts[2],
+      // An argument could be (as of css-color-4):
+      // a number, percentage, degrees (hue), ident (in color())
+      args
+    };
+  }
+}
+function last(arr) {
+  return arr[arr.length - 1];
+}
+function interpolate(start, end, p2) {
+  if (isNaN(start)) {
+    return end;
+  }
+  if (isNaN(end)) {
+    return start;
+  }
+  return start + (end - start) * p2;
+}
+function interpolateInv(start, end, value) {
+  return (value - start) / (end - start);
+}
+function mapRange(from, to2, value) {
+  return interpolate(to2[0], to2[1], interpolateInv(from[0], from[1], value));
+}
+function parseCoordGrammar(coordGrammars) {
+  return coordGrammars.map((coordGrammar2) => {
+    return coordGrammar2.split("|").map((type2) => {
+      type2 = type2.trim();
+      let range = type2.match(/^(<[a-z]+>)\[(-?[.\d]+),\s*(-?[.\d]+)\]?$/);
+      if (range) {
+        let ret = new String(range[1]);
+        ret.range = [+range[2], +range[3]];
+        return ret;
+      }
+      return type2;
+    });
+  });
+}
+function clamp(min, val, max) {
+  return Math.max(Math.min(max, val), min);
+}
+function copySign(to2, from) {
+  return Math.sign(to2) === Math.sign(from) ? to2 : -to2;
+}
+function spow(base, exp) {
+  return copySign(Math.abs(base) ** exp, base);
+}
+function zdiv(n2, d2) {
+  return d2 === 0 ? 0 : n2 / d2;
+}
+function bisectLeft(arr, value, lo = 0, hi = arr.length) {
+  while (lo < hi) {
+    const mid = lo + hi >> 1;
+    if (arr[mid] < value) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+  return lo;
+}
+
+// node_modules/colorjs.io/src/hooks.js
+var Hooks = class {
+  add(name, callback, first) {
+    if (typeof arguments[0] != "string") {
+      for (var name in arguments[0]) {
+        this.add(name, arguments[0][name], arguments[1]);
+      }
+      return;
+    }
+    (Array.isArray(name) ? name : [name]).forEach(function(name2) {
+      this[name2] = this[name2] || [];
+      if (callback) {
+        this[name2][first ? "unshift" : "push"](callback);
+      }
+    }, this);
+  }
+  run(name, env) {
+    this[name] = this[name] || [];
+    this[name].forEach(function(callback) {
+      callback.call(env && env.context ? env.context : env, env);
+    });
+  }
+};
+var hooks = new Hooks();
+var hooks_default = hooks;
+
+// node_modules/colorjs.io/src/adapt.js
+var WHITES = {
+  // for compatibility, the four-digit chromaticity-derived ones everyone else uses
+  D50: [0.3457 / 0.3585, 1, (1 - 0.3457 - 0.3585) / 0.3585],
+  D65: [0.3127 / 0.329, 1, (1 - 0.3127 - 0.329) / 0.329]
+};
+function getWhite(name) {
+  if (Array.isArray(name)) {
+    return name;
+  }
+  return WHITES[name];
+}
+function adapt(W1, W2, XYZ, options = {}) {
+  W1 = getWhite(W1);
+  W2 = getWhite(W2);
+  if (!W1 || !W2) {
+    throw new TypeError(`Missing white point to convert ${!W1 ? "from" : ""}${!W1 && !W2 ? "/" : ""}${!W2 ? "to" : ""}`);
+  }
+  if (W1 === W2) {
+    return XYZ;
+  }
+  let env = { W1, W2, XYZ, options };
+  hooks_default.run("chromatic-adaptation-start", env);
+  if (!env.M) {
+    if (env.W1 === WHITES.D65 && env.W2 === WHITES.D50) {
+      env.M = [
+        [1.0479297925449969, 0.022946870601609652, -0.05019226628920524],
+        [0.02962780877005599, 0.9904344267538799, -0.017073799063418826],
+        [-0.009243040646204504, 0.015055191490298152, 0.7518742814281371]
+      ];
+    } else if (env.W1 === WHITES.D50 && env.W2 === WHITES.D65) {
+      env.M = [
+        [0.955473421488075, -0.02309845494876471, 0.06325924320057072],
+        [-0.0283697093338637, 1.0099953980813041, 0.021041441191917323],
+        [0.012314014864481998, -0.020507649298898964, 1.330365926242124]
+      ];
+    }
+  }
+  hooks_default.run("chromatic-adaptation-end", env);
+  if (env.M) {
+    return multiplyMatrices(env.M, env.XYZ);
+  } else {
+    throw new TypeError("Only Bradford CAT with white points D50 and D65 supported for now.");
+  }
+}
+
+// node_modules/colorjs.io/src/defaults.js
+var defaults_default = {
+  gamut_mapping: "css",
+  precision: 5,
+  deltaE: "76",
+  // Default deltaE method
+  verbose: globalThis?.process?.env?.NODE_ENV?.toLowerCase() !== "test",
+  warn: function warn(msg) {
+    if (this.verbose) {
+      globalThis?.console?.warn?.(msg);
+    }
+  }
+};
+
+// node_modules/colorjs.io/src/parse.js
+var noneTypes = /* @__PURE__ */ new Set(["<number>", "<percentage>", "<angle>"]);
+function coerceCoords(space, format, name, coords) {
+  let types = Object.entries(space.coords).map(([id, coordMeta], i) => {
+    let coordGrammar2 = format.coordGrammar[i];
+    let arg = coords[i];
+    let providedType = arg?.type;
+    let type2;
+    if (arg.none) {
+      type2 = coordGrammar2.find((c) => noneTypes.has(c));
+    } else {
+      type2 = coordGrammar2.find((c) => c == providedType);
+    }
+    if (!type2) {
+      let coordName = coordMeta.name || id;
+      throw new TypeError(`${providedType ?? arg.raw} not allowed for ${coordName} in ${name}()`);
+    }
+    let fromRange = type2.range;
+    if (providedType === "<percentage>") {
+      fromRange ||= [0, 1];
+    }
+    let toRange = coordMeta.range || coordMeta.refRange;
+    if (fromRange && toRange) {
+      coords[i] = mapRange(fromRange, toRange, coords[i]);
+    }
+    return type2;
+  });
+  return types;
+}
+function parse(str, { meta } = {}) {
+  let env = { "str": String(str)?.trim() };
+  hooks_default.run("parse-start", env);
+  if (env.color) {
+    return env.color;
+  }
+  env.parsed = parseFunction(env.str);
+  if (env.parsed) {
+    let name = env.parsed.name;
+    if (name === "color") {
+      let id = env.parsed.args.shift();
+      let alternateId = id.startsWith("--") ? id.substring(2) : `--${id}`;
+      let ids = [id, alternateId];
+      let alpha = env.parsed.rawArgs.indexOf("/") > 0 ? env.parsed.args.pop() : 1;
+      for (let space of ColorSpace.all) {
+        let colorSpec = space.getFormat("color");
+        if (colorSpec) {
+          if (ids.includes(colorSpec.id) || colorSpec.ids?.filter((specId) => ids.includes(specId)).length) {
+            const coords = Object.keys(space.coords).map((_, i) => env.parsed.args[i] || 0);
+            let types;
+            if (colorSpec.coordGrammar) {
+              types = coerceCoords(space, colorSpec, "color", coords);
+            }
+            if (meta) {
+              Object.assign(meta, { formatId: "color", types });
+            }
+            if (colorSpec.id.startsWith("--") && !id.startsWith("--")) {
+              defaults_default.warn(`${space.name} is a non-standard space and not currently supported in the CSS spec. Use prefixed color(${colorSpec.id}) instead of color(${id}).`);
+            }
+            if (id.startsWith("--") && !colorSpec.id.startsWith("--")) {
+              defaults_default.warn(`${space.name} is a standard space and supported in the CSS spec. Use color(${colorSpec.id}) instead of prefixed color(${id}).`);
+            }
+            return { spaceId: space.id, coords, alpha };
+          }
+        }
+      }
+      let didYouMean = "";
+      let registryId = id in ColorSpace.registry ? id : alternateId;
+      if (registryId in ColorSpace.registry) {
+        let cssId = ColorSpace.registry[registryId].formats?.color?.id;
+        if (cssId) {
+          didYouMean = `Did you mean color(${cssId})?`;
+        }
+      }
+      throw new TypeError(`Cannot parse color(${id}). ` + (didYouMean || "Missing a plugin?"));
+    } else {
+      for (let space of ColorSpace.all) {
+        let format = space.getFormat(name);
+        if (format && format.type === "function") {
+          let alpha = 1;
+          if (format.lastAlpha || last(env.parsed.args).alpha) {
+            alpha = env.parsed.args.pop();
+          }
+          let coords = env.parsed.args;
+          let types;
+          if (format.coordGrammar) {
+            types = coerceCoords(space, format, name, coords);
+          }
+          if (meta) {
+            Object.assign(meta, { formatId: format.name, types });
+          }
+          return {
+            spaceId: space.id,
+            coords,
+            alpha
+          };
+        }
+      }
+    }
+  } else {
+    for (let space of ColorSpace.all) {
+      for (let formatId in space.formats) {
+        let format = space.formats[formatId];
+        if (format.type !== "custom") {
+          continue;
+        }
+        if (format.test && !format.test(env.str)) {
+          continue;
+        }
+        let color = format.parse(env.str);
+        if (color) {
+          color.alpha ??= 1;
+          if (meta) {
+            meta.formatId = formatId;
+          }
+          return color;
+        }
+      }
+    }
+  }
+  throw new TypeError(`Could not parse ${str} as a color. Missing a plugin?`);
+}
+
+// node_modules/colorjs.io/src/getColor.js
+function getColor(color) {
+  if (Array.isArray(color)) {
+    return color.map(getColor);
+  }
+  if (!color) {
+    throw new TypeError("Empty color reference");
+  }
+  if (isString(color)) {
+    color = parse(color);
+  }
+  let space = color.space || color.spaceId;
+  if (!(space instanceof ColorSpace)) {
+    color.space = ColorSpace.get(space);
+  }
+  if (color.alpha === void 0) {
+    color.alpha = 1;
+  }
+  return color;
+}
+
+// node_modules/colorjs.io/src/space.js
+var \u03B5 = 75e-6;
+var ColorSpace = class _ColorSpace {
+  constructor(options) {
+    this.id = options.id;
+    this.name = options.name;
+    this.base = options.base ? _ColorSpace.get(options.base) : null;
+    this.aliases = options.aliases;
+    if (this.base) {
+      this.fromBase = options.fromBase;
+      this.toBase = options.toBase;
+    }
+    let coords = options.coords ?? this.base.coords;
+    for (let name in coords) {
+      if (!("name" in coords[name])) {
+        coords[name].name = name;
+      }
+    }
+    this.coords = coords;
+    let white4 = options.white ?? this.base.white ?? "D65";
+    this.white = getWhite(white4);
+    this.formats = options.formats ?? {};
+    for (let name in this.formats) {
+      let format = this.formats[name];
+      format.type ||= "function";
+      format.name ||= name;
+    }
+    if (!this.formats.color?.id) {
+      this.formats.color = {
+        ...this.formats.color ?? {},
+        id: options.cssId || this.id
+      };
+    }
+    if (options.gamutSpace) {
+      this.gamutSpace = options.gamutSpace === "self" ? this : _ColorSpace.get(options.gamutSpace);
+    } else {
+      if (this.isPolar) {
+        this.gamutSpace = this.base;
+      } else {
+        this.gamutSpace = this;
+      }
+    }
+    if (this.gamutSpace.isUnbounded) {
+      this.inGamut = (coords2, options2) => {
+        return true;
+      };
+    }
+    this.referred = options.referred;
+    Object.defineProperty(this, "path", {
+      value: getPath(this).reverse(),
+      writable: false,
+      enumerable: true,
+      configurable: true
+    });
+    hooks_default.run("colorspace-init-end", this);
+  }
+  inGamut(coords, { epsilon = \u03B5 } = {}) {
+    if (!this.equals(this.gamutSpace)) {
+      coords = this.to(this.gamutSpace, coords);
+      return this.gamutSpace.inGamut(coords, { epsilon });
+    }
+    let coordMeta = Object.values(this.coords);
+    return coords.every((c, i) => {
+      let meta = coordMeta[i];
+      if (meta.type !== "angle" && meta.range) {
+        if (Number.isNaN(c)) {
+          return true;
+        }
+        let [min, max] = meta.range;
+        return (min === void 0 || c >= min - epsilon) && (max === void 0 || c <= max + epsilon);
+      }
+      return true;
+    });
+  }
+  get isUnbounded() {
+    return Object.values(this.coords).every((coord) => !("range" in coord));
+  }
+  get cssId() {
+    return this.formats?.color?.id || this.id;
+  }
+  get isPolar() {
+    for (let id in this.coords) {
+      if (this.coords[id].type === "angle") {
+        return true;
+      }
+    }
+    return false;
+  }
+  getFormat(format) {
+    if (typeof format === "object") {
+      format = processFormat(format, this);
+      return format;
+    }
+    let ret;
+    if (format === "default") {
+      ret = Object.values(this.formats)[0];
+    } else {
+      ret = this.formats[format];
+    }
+    if (ret) {
+      ret = processFormat(ret, this);
+      return ret;
+    }
+    return null;
+  }
+  /**
+   * Check if this color space is the same as another color space reference.
+   * Allows proxying color space objects and comparing color spaces with ids.
+   * @param {string | ColorSpace} space ColorSpace object or id to compare to
+   * @returns {boolean}
+   */
+  equals(space) {
+    if (!space) {
+      return false;
+    }
+    return this === space || this.id === space || this.id === space.id;
+  }
+  to(space, coords) {
+    if (arguments.length === 1) {
+      const color = getColor(space);
+      [space, coords] = [color.space, color.coords];
+    }
+    space = _ColorSpace.get(space);
+    if (this.equals(space)) {
+      return coords;
+    }
+    coords = coords.map((c) => Number.isNaN(c) ? 0 : c);
+    let myPath = this.path;
+    let otherPath = space.path;
+    let connectionSpace, connectionSpaceIndex;
+    for (let i = 0; i < myPath.length; i++) {
+      if (myPath[i].equals(otherPath[i])) {
+        connectionSpace = myPath[i];
+        connectionSpaceIndex = i;
+      } else {
+        break;
+      }
+    }
+    if (!connectionSpace) {
+      throw new Error(`Cannot convert between color spaces ${this} and ${space}: no connection space was found`);
+    }
+    for (let i = myPath.length - 1; i > connectionSpaceIndex; i--) {
+      coords = myPath[i].toBase(coords);
+    }
+    for (let i = connectionSpaceIndex + 1; i < otherPath.length; i++) {
+      coords = otherPath[i].fromBase(coords);
+    }
+    return coords;
+  }
+  from(space, coords) {
+    if (arguments.length === 1) {
+      const color = getColor(space);
+      [space, coords] = [color.space, color.coords];
+    }
+    space = _ColorSpace.get(space);
+    return space.to(this, coords);
+  }
+  toString() {
+    return `${this.name} (${this.id})`;
+  }
+  getMinCoords() {
+    let ret = [];
+    for (let id in this.coords) {
+      let meta = this.coords[id];
+      let range = meta.range || meta.refRange;
+      ret.push(range?.min ?? 0);
+    }
+    return ret;
+  }
+  static registry = {};
+  // Returns array of unique color spaces
+  static get all() {
+    return [...new Set(Object.values(_ColorSpace.registry))];
+  }
+  static register(id, space) {
+    if (arguments.length === 1) {
+      space = arguments[0];
+      id = space.id;
+    }
+    space = this.get(space);
+    if (this.registry[id] && this.registry[id] !== space) {
+      throw new Error(`Duplicate color space registration: '${id}'`);
+    }
+    this.registry[id] = space;
+    if (arguments.length === 1 && space.aliases) {
+      for (let alias of space.aliases) {
+        this.register(alias, space);
+      }
+    }
+    return space;
+  }
+  /**
+   * Lookup ColorSpace object by name
+   * @param {ColorSpace | string} name
+   */
+  static get(space, ...alternatives) {
+    if (!space || space instanceof _ColorSpace) {
+      return space;
+    }
+    let argType = type(space);
+    if (argType === "string") {
+      let ret = _ColorSpace.registry[space.toLowerCase()];
+      if (!ret) {
+        throw new TypeError(`No color space found with id = "${space}"`);
+      }
+      return ret;
+    }
+    if (alternatives.length) {
+      return _ColorSpace.get(...alternatives);
+    }
+    throw new TypeError(`${space} is not a valid color space`);
+  }
+  /**
+   * Get metadata about a coordinate of a color space
+   *
+   * @static
+   * @param {Array | string} ref
+   * @param {ColorSpace | string} [workingSpace]
+   * @return {Object}
+   */
+  static resolveCoord(ref, workingSpace) {
+    let coordType = type(ref);
+    let space, coord;
+    if (coordType === "string") {
+      if (ref.includes(".")) {
+        [space, coord] = ref.split(".");
+      } else {
+        [space, coord] = [, ref];
+      }
+    } else if (Array.isArray(ref)) {
+      [space, coord] = ref;
+    } else {
+      space = ref.space;
+      coord = ref.coordId;
+    }
+    space = _ColorSpace.get(space);
+    if (!space) {
+      space = workingSpace;
+    }
+    if (!space) {
+      throw new TypeError(`Cannot resolve coordinate reference ${ref}: No color space specified and relative references are not allowed here`);
+    }
+    coordType = type(coord);
+    if (coordType === "number" || coordType === "string" && coord >= 0) {
+      let meta = Object.entries(space.coords)[coord];
+      if (meta) {
+        return { space, id: meta[0], index: coord, ...meta[1] };
+      }
+    }
+    space = _ColorSpace.get(space);
+    let normalizedCoord = coord.toLowerCase();
+    let i = 0;
+    for (let id in space.coords) {
+      let meta = space.coords[id];
+      if (id.toLowerCase() === normalizedCoord || meta.name?.toLowerCase() === normalizedCoord) {
+        return { space, id, index: i, ...meta };
+      }
+      i++;
+    }
+    throw new TypeError(`No "${coord}" coordinate found in ${space.name}. Its coordinates are: ${Object.keys(space.coords).join(", ")}`);
+  }
+  static DEFAULT_FORMAT = {
+    type: "functions",
+    name: "color"
+  };
+};
+function getPath(space) {
+  let ret = [space];
+  for (let s = space; s = s.base; ) {
+    ret.push(s);
+  }
+  return ret;
+}
+function processFormat(format, { coords } = {}) {
+  if (format.coords && !format.coordGrammar) {
+    format.type ||= "function";
+    format.name ||= "color";
+    format.coordGrammar = parseCoordGrammar(format.coords);
+    let coordFormats = Object.entries(coords).map(([id, coordMeta], i) => {
+      let outputType = format.coordGrammar[i][0];
+      let fromRange = coordMeta.range || coordMeta.refRange;
+      let toRange = outputType.range, suffix = "";
+      if (outputType == "<percentage>") {
+        toRange = [0, 100];
+        suffix = "%";
+      } else if (outputType == "<angle>") {
+        suffix = "deg";
+      }
+      return { fromRange, toRange, suffix };
+    });
+    format.serializeCoords = (coords2, precision) => {
+      return coords2.map((c, i) => {
+        let { fromRange, toRange, suffix } = coordFormats[i];
+        if (fromRange && toRange) {
+          c = mapRange(fromRange, toRange, c);
+        }
+        c = serializeNumber(c, { precision, unit: suffix });
+        return c;
+      });
+    };
+  }
+  return format;
+}
+
+// node_modules/colorjs.io/src/spaces/xyz-d65.js
+var xyz_d65_default = new ColorSpace({
+  id: "xyz-d65",
+  name: "XYZ D65",
+  coords: {
+    x: { name: "X" },
+    y: { name: "Y" },
+    z: { name: "Z" }
+  },
+  white: "D65",
+  formats: {
+    color: {
+      ids: ["xyz-d65", "xyz"]
+    }
+  },
+  aliases: ["xyz"]
+});
+
+// node_modules/colorjs.io/src/rgbspace.js
+var RGBColorSpace = class extends ColorSpace {
+  /**
+   * Creates a new RGB ColorSpace.
+   * If coords are not specified, they will use the default RGB coords.
+   * Instead of `fromBase()` and `toBase()` functions,
+   * you can specify to/from XYZ matrices and have `toBase()` and `fromBase()` automatically generated.
+   * @param {*} options - Same options as {@link ColorSpace} plus:
+   * @param {number[][]} options.toXYZ_M - Matrix to convert to XYZ
+   * @param {number[][]} options.fromXYZ_M - Matrix to convert from XYZ
+   */
+  constructor(options) {
+    if (!options.coords) {
+      options.coords = {
+        r: {
+          range: [0, 1],
+          name: "Red"
+        },
+        g: {
+          range: [0, 1],
+          name: "Green"
+        },
+        b: {
+          range: [0, 1],
+          name: "Blue"
+        }
+      };
+    }
+    if (!options.base) {
+      options.base = xyz_d65_default;
+    }
+    if (options.toXYZ_M && options.fromXYZ_M) {
+      options.toBase ??= (rgb) => {
+        let xyz = multiplyMatrices(options.toXYZ_M, rgb);
+        if (this.white !== this.base.white) {
+          xyz = adapt(this.white, this.base.white, xyz);
+        }
+        return xyz;
+      };
+      options.fromBase ??= (xyz) => {
+        xyz = adapt(this.base.white, this.white, xyz);
+        return multiplyMatrices(options.fromXYZ_M, xyz);
+      };
+    }
+    options.referred ??= "display";
+    super(options);
+  }
+};
+
+// node_modules/colorjs.io/src/getAll.js
+function getAll(color, space) {
+  color = getColor(color);
+  if (!space || color.space.equals(space)) {
+    return color.coords.slice();
+  }
+  space = ColorSpace.get(space);
+  return space.from(color);
+}
+
+// node_modules/colorjs.io/src/get.js
+function get(color, prop) {
+  color = getColor(color);
+  let { space, index } = ColorSpace.resolveCoord(prop, color.space);
+  let coords = getAll(color, space);
+  return coords[index];
+}
+
+// node_modules/colorjs.io/src/setAll.js
+function setAll(color, space, coords) {
+  color = getColor(color);
+  space = ColorSpace.get(space);
+  color.coords = space.to(color.space, coords);
+  return color;
+}
+setAll.returns = "color";
+
+// node_modules/colorjs.io/src/set.js
+function set(color, prop, value) {
+  color = getColor(color);
+  if (arguments.length === 2 && type(arguments[1]) === "object") {
+    let object = arguments[1];
+    for (let p2 in object) {
+      set(color, p2, object[p2]);
+    }
+  } else {
+    if (typeof value === "function") {
+      value = value(get(color, prop));
+    }
+    let { space, index } = ColorSpace.resolveCoord(prop, color.space);
+    let coords = getAll(color, space);
+    coords[index] = value;
+    setAll(color, space, coords);
+  }
+  return color;
+}
+set.returns = "color";
+
+// node_modules/colorjs.io/src/spaces/xyz-d50.js
+var xyz_d50_default = new ColorSpace({
+  id: "xyz-d50",
+  name: "XYZ D50",
+  white: "D50",
+  base: xyz_d65_default,
+  fromBase: (coords) => adapt(xyz_d65_default.white, "D50", coords),
+  toBase: (coords) => adapt("D50", xyz_d65_default.white, coords)
+});
+
+// node_modules/colorjs.io/src/spaces/lab.js
+var \u03B52 = 216 / 24389;
+var \u03B53 = 24 / 116;
+var \u03BA = 24389 / 27;
+var white = WHITES.D50;
+var lab_default = new ColorSpace({
+  id: "lab",
+  name: "Lab",
+  coords: {
+    l: {
+      refRange: [0, 100],
+      name: "Lightness"
+    },
+    a: {
+      refRange: [-125, 125]
+    },
+    b: {
+      refRange: [-125, 125]
+    }
+  },
+  // Assuming XYZ is relative to D50, convert to CIE Lab
+  // from CIE standard, which now defines these as a rational fraction
+  white,
+  base: xyz_d50_default,
+  // Convert D50-adapted XYX to Lab
+  //  CIE 15.3:2004 section 8.2.1.1
+  fromBase(XYZ) {
+    let xyz = XYZ.map((value, i) => value / white[i]);
+    let f2 = xyz.map((value) => value > \u03B52 ? Math.cbrt(value) : (\u03BA * value + 16) / 116);
+    return [
+      116 * f2[1] - 16,
+      // L
+      500 * (f2[0] - f2[1]),
+      // a
+      200 * (f2[1] - f2[2])
+      // b
+    ];
+  },
+  // Convert Lab to D50-adapted XYZ
+  // Same result as CIE 15.3:2004 Appendix D although the derivation is different
+  // http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+  toBase(Lab) {
+    let f2 = [];
+    f2[1] = (Lab[0] + 16) / 116;
+    f2[0] = Lab[1] / 500 + f2[1];
+    f2[2] = f2[1] - Lab[2] / 200;
+    let xyz = [
+      f2[0] > \u03B53 ? Math.pow(f2[0], 3) : (116 * f2[0] - 16) / \u03BA,
+      Lab[0] > 8 ? Math.pow((Lab[0] + 16) / 116, 3) : Lab[0] / \u03BA,
+      f2[2] > \u03B53 ? Math.pow(f2[2], 3) : (116 * f2[2] - 16) / \u03BA
+    ];
+    return xyz.map((value, i) => value * white[i]);
+  },
+  formats: {
+    "lab": {
+      coords: ["<number> | <percentage>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"]
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/angles.js
+function constrain(angle) {
+  return (angle % 360 + 360) % 360;
+}
+
+// node_modules/colorjs.io/src/spaces/lch.js
+var lch_default = new ColorSpace({
+  id: "lch",
+  name: "LCH",
+  coords: {
+    l: {
+      refRange: [0, 100],
+      name: "Lightness"
+    },
+    c: {
+      refRange: [0, 150],
+      name: "Chroma"
+    },
+    h: {
+      refRange: [0, 360],
+      type: "angle",
+      name: "Hue"
+    }
+  },
+  base: lab_default,
+  fromBase(Lab) {
+    let [L, a, b2] = Lab;
+    let hue;
+    const \u03B56 = 0.02;
+    if (Math.abs(a) < \u03B56 && Math.abs(b2) < \u03B56) {
+      hue = NaN;
+    } else {
+      hue = Math.atan2(b2, a) * 180 / Math.PI;
+    }
+    return [
+      L,
+      // L is still L
+      Math.sqrt(a ** 2 + b2 ** 2),
+      // Chroma
+      constrain(hue)
+      // Hue, in degrees [0 to 360)
+    ];
+  },
+  toBase(LCH) {
+    let [Lightness, Chroma, Hue] = LCH;
+    if (Chroma < 0) {
+      Chroma = 0;
+    }
+    if (isNaN(Hue)) {
+      Hue = 0;
+    }
+    return [
+      Lightness,
+      // L is still L
+      Chroma * Math.cos(Hue * Math.PI / 180),
+      // a
+      Chroma * Math.sin(Hue * Math.PI / 180)
+      // b
+    ];
+  },
+  formats: {
+    "lch": {
+      coords: ["<number> | <percentage>", "<number> | <percentage>", "<number> | <angle>"]
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/deltaE/deltaE2000.js
+var Gfactor = 25 ** 7;
+var \u03C0 = Math.PI;
+var r2d = 180 / \u03C0;
+var d2r = \u03C0 / 180;
+function pow7(x) {
+  const x2 = x * x;
+  const x7 = x2 * x2 * x2 * x;
+  return x7;
+}
+function deltaE2000_default(color, sample, { kL = 1, kC = 1, kH = 1 } = {}) {
+  [color, sample] = getColor([color, sample]);
+  let [L1, a1, b1] = lab_default.from(color);
+  let C1 = lch_default.from(lab_default, [L1, a1, b1])[1];
+  let [L2, a2, b2] = lab_default.from(sample);
+  let C2 = lch_default.from(lab_default, [L2, a2, b2])[1];
+  if (C1 < 0) {
+    C1 = 0;
+  }
+  if (C2 < 0) {
+    C2 = 0;
+  }
+  let Cbar = (C1 + C2) / 2;
+  let C7 = pow7(Cbar);
+  let G = 0.5 * (1 - Math.sqrt(C7 / (C7 + Gfactor)));
+  let adash1 = (1 + G) * a1;
+  let adash2 = (1 + G) * a2;
+  let Cdash1 = Math.sqrt(adash1 ** 2 + b1 ** 2);
+  let Cdash2 = Math.sqrt(adash2 ** 2 + b2 ** 2);
+  let h1 = adash1 === 0 && b1 === 0 ? 0 : Math.atan2(b1, adash1);
+  let h2 = adash2 === 0 && b2 === 0 ? 0 : Math.atan2(b2, adash2);
+  if (h1 < 0) {
+    h1 += 2 * \u03C0;
+  }
+  if (h2 < 0) {
+    h2 += 2 * \u03C0;
+  }
+  h1 *= r2d;
+  h2 *= r2d;
+  let \u0394L = L2 - L1;
+  let \u0394C = Cdash2 - Cdash1;
+  let hdiff = h2 - h1;
+  let hsum = h1 + h2;
+  let habs = Math.abs(hdiff);
+  let \u0394h;
+  if (Cdash1 * Cdash2 === 0) {
+    \u0394h = 0;
+  } else if (habs <= 180) {
+    \u0394h = hdiff;
+  } else if (hdiff > 180) {
+    \u0394h = hdiff - 360;
+  } else if (hdiff < -180) {
+    \u0394h = hdiff + 360;
+  } else {
+    defaults_default.warn("the unthinkable has happened");
+  }
+  let \u0394H = 2 * Math.sqrt(Cdash2 * Cdash1) * Math.sin(\u0394h * d2r / 2);
+  let Ldash = (L1 + L2) / 2;
+  let Cdash = (Cdash1 + Cdash2) / 2;
+  let Cdash7 = pow7(Cdash);
+  let hdash;
+  if (Cdash1 * Cdash2 === 0) {
+    hdash = hsum;
+  } else if (habs <= 180) {
+    hdash = hsum / 2;
+  } else if (hsum < 360) {
+    hdash = (hsum + 360) / 2;
+  } else {
+    hdash = (hsum - 360) / 2;
+  }
+  let lsq = (Ldash - 50) ** 2;
+  let SL = 1 + 0.015 * lsq / Math.sqrt(20 + lsq);
+  let SC = 1 + 0.045 * Cdash;
+  let T = 1;
+  T -= 0.17 * Math.cos((hdash - 30) * d2r);
+  T += 0.24 * Math.cos(2 * hdash * d2r);
+  T += 0.32 * Math.cos((3 * hdash + 6) * d2r);
+  T -= 0.2 * Math.cos((4 * hdash - 63) * d2r);
+  let SH = 1 + 0.015 * Cdash * T;
+  let \u0394\u03B8 = 30 * Math.exp(-1 * ((hdash - 275) / 25) ** 2);
+  let RC = 2 * Math.sqrt(Cdash7 / (Cdash7 + Gfactor));
+  let RT = -1 * Math.sin(2 * \u0394\u03B8 * d2r) * RC;
+  let dE = (\u0394L / (kL * SL)) ** 2;
+  dE += (\u0394C / (kC * SC)) ** 2;
+  dE += (\u0394H / (kH * SH)) ** 2;
+  dE += RT * (\u0394C / (kC * SC)) * (\u0394H / (kH * SH));
+  return Math.sqrt(dE);
+}
+
+// node_modules/colorjs.io/src/spaces/oklab.js
+var XYZtoLMS_M = [
+  [0.819022437996703, 0.3619062600528904, -0.1288737815209879],
+  [0.0329836539323885, 0.9292868615863434, 0.0361446663506424],
+  [0.0481771893596242, 0.2642395317527308, 0.6335478284694309]
+];
+var LMStoXYZ_M = [
+  [1.2268798758459243, -0.5578149944602171, 0.2813910456659647],
+  [-0.0405757452148008, 1.112286803280317, -0.0717110580655164],
+  [-0.0763729366746601, -0.4214933324022432, 1.5869240198367816]
+];
+var LMStoLab_M = [
+  [0.210454268309314, 0.7936177747023054, -0.0040720430116193],
+  [1.9779985324311684, -2.42859224204858, 0.450593709617411],
+  [0.0259040424655478, 0.7827717124575296, -0.8086757549230774]
+];
+var LabtoLMS_M = [
+  [1, 0.3963377773761749, 0.2158037573099136],
+  [1, -0.1055613458156586, -0.0638541728258133],
+  [1, -0.0894841775298119, -1.2914855480194092]
+];
+var oklab_default = new ColorSpace({
+  id: "oklab",
+  name: "Oklab",
+  coords: {
+    l: {
+      refRange: [0, 1],
+      name: "Lightness"
+    },
+    a: {
+      refRange: [-0.4, 0.4]
+    },
+    b: {
+      refRange: [-0.4, 0.4]
+    }
+  },
+  // Note that XYZ is relative to D65
+  white: "D65",
+  base: xyz_d65_default,
+  fromBase(XYZ) {
+    let LMS = multiplyMatrices(XYZtoLMS_M, XYZ);
+    let LMSg = LMS.map((val) => Math.cbrt(val));
+    return multiplyMatrices(LMStoLab_M, LMSg);
+  },
+  toBase(OKLab) {
+    let LMSg = multiplyMatrices(LabtoLMS_M, OKLab);
+    let LMS = LMSg.map((val) => val ** 3);
+    return multiplyMatrices(LMStoXYZ_M, LMS);
+  },
+  formats: {
+    "oklab": {
+      coords: ["<percentage> | <number>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"]
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/deltaE/deltaEOK.js
+function deltaEOK_default(color, sample) {
+  [color, sample] = getColor([color, sample]);
+  let [L1, a1, b1] = oklab_default.from(color);
+  let [L2, a2, b2] = oklab_default.from(sample);
+  let \u0394L = L1 - L2;
+  let \u0394a = a1 - a2;
+  let \u0394b = b1 - b2;
+  return Math.sqrt(\u0394L ** 2 + \u0394a ** 2 + \u0394b ** 2);
+}
+
+// node_modules/colorjs.io/src/inGamut.js
+var \u03B54 = 75e-6;
+function inGamut(color, space, { epsilon = \u03B54 } = {}) {
+  color = getColor(color);
+  if (!space) {
+    space = color.space;
+  }
+  space = ColorSpace.get(space);
+  let coords = color.coords;
+  if (space !== color.space) {
+    coords = space.from(color);
+  }
+  return space.inGamut(coords, { epsilon });
+}
+
+// node_modules/colorjs.io/src/clone.js
+function clone(color) {
+  return {
+    space: color.space,
+    coords: color.coords.slice(),
+    alpha: color.alpha
+  };
+}
+
+// node_modules/colorjs.io/src/distance.js
+function distance(color1, color2, space = "lab") {
+  space = ColorSpace.get(space);
+  let coords1 = space.from(color1);
+  let coords2 = space.from(color2);
+  return Math.sqrt(coords1.reduce((acc, c13, i) => {
+    let c23 = coords2[i];
+    if (isNaN(c13) || isNaN(c23)) {
+      return acc;
+    }
+    return acc + (c23 - c13) ** 2;
+  }, 0));
+}
+
+// node_modules/colorjs.io/src/deltaE/deltaE76.js
+function deltaE76(color, sample) {
+  return distance(color, sample, "lab");
+}
+
+// node_modules/colorjs.io/src/deltaE/deltaECMC.js
+var \u03C02 = Math.PI;
+var d2r2 = \u03C02 / 180;
+function deltaECMC_default(color, sample, { l = 2, c = 1 } = {}) {
+  [color, sample] = getColor([color, sample]);
+  let [L1, a1, b1] = lab_default.from(color);
+  let [, C1, H1] = lch_default.from(lab_default, [L1, a1, b1]);
+  let [L2, a2, b2] = lab_default.from(sample);
+  let C2 = lch_default.from(lab_default, [L2, a2, b2])[1];
+  if (C1 < 0) {
+    C1 = 0;
+  }
+  if (C2 < 0) {
+    C2 = 0;
+  }
+  let \u0394L = L1 - L2;
+  let \u0394C = C1 - C2;
+  let \u0394a = a1 - a2;
+  let \u0394b = b1 - b2;
+  let H2 = \u0394a ** 2 + \u0394b ** 2 - \u0394C ** 2;
+  let SL = 0.511;
+  if (L1 >= 16) {
+    SL = 0.040975 * L1 / (1 + 0.01765 * L1);
+  }
+  let SC = 0.0638 * C1 / (1 + 0.0131 * C1) + 0.638;
+  let T;
+  if (Number.isNaN(H1)) {
+    H1 = 0;
+  }
+  if (H1 >= 164 && H1 <= 345) {
+    T = 0.56 + Math.abs(0.2 * Math.cos((H1 + 168) * d2r2));
+  } else {
+    T = 0.36 + Math.abs(0.4 * Math.cos((H1 + 35) * d2r2));
+  }
+  let C4 = Math.pow(C1, 4);
+  let F = Math.sqrt(C4 / (C4 + 1900));
+  let SH = SC * (F * T + 1 - F);
+  let dE = (\u0394L / (l * SL)) ** 2;
+  dE += (\u0394C / (c * SC)) ** 2;
+  dE += H2 / SH ** 2;
+  return Math.sqrt(dE);
+}
+
+// node_modules/colorjs.io/src/spaces/xyz-abs-d65.js
+var Yw = 203;
+var xyz_abs_d65_default = new ColorSpace({
+  // Absolute CIE XYZ, with a D65 whitepoint,
+  // as used in most HDR colorspaces as a starting point.
+  // SDR spaces are converted per BT.2048
+  // so that diffuse, media white is 203 cd/m²
+  id: "xyz-abs-d65",
+  cssId: "--xyz-abs-d65",
+  name: "Absolute XYZ D65",
+  coords: {
+    x: {
+      refRange: [0, 9504.7],
+      name: "Xa"
+    },
+    y: {
+      refRange: [0, 1e4],
+      name: "Ya"
+    },
+    z: {
+      refRange: [0, 10888.3],
+      name: "Za"
+    }
+  },
+  base: xyz_d65_default,
+  fromBase(XYZ) {
+    return XYZ.map((v) => Math.max(v * Yw, 0));
+  },
+  toBase(AbsXYZ) {
+    return AbsXYZ.map((v) => Math.max(v / Yw, 0));
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/jzazbz.js
+var b = 1.15;
+var g = 0.66;
+var n = 2610 / 2 ** 14;
+var ninv = 2 ** 14 / 2610;
+var c1 = 3424 / 2 ** 12;
+var c2 = 2413 / 2 ** 7;
+var c3 = 2392 / 2 ** 7;
+var p = 1.7 * 2523 / 2 ** 5;
+var pinv = 2 ** 5 / (1.7 * 2523);
+var d = -0.56;
+var d0 = 16295499532821565e-27;
+var XYZtoCone_M = [
+  [0.41478972, 0.579999, 0.014648],
+  [-0.20151, 1.120649, 0.0531008],
+  [-0.0166008, 0.2648, 0.6684799]
+];
+var ConetoXYZ_M = [
+  [1.9242264357876067, -1.0047923125953657, 0.037651404030618],
+  [0.35031676209499907, 0.7264811939316552, -0.06538442294808501],
+  [-0.09098281098284752, -0.3127282905230739, 1.5227665613052603]
+];
+var ConetoIab_M = [
+  [0.5, 0.5, 0],
+  [3.524, -4.066708, 0.542708],
+  [0.199076, 1.096799, -1.295875]
+];
+var IabtoCone_M = [
+  [1, 0.1386050432715393, 0.05804731615611886],
+  [0.9999999999999999, -0.1386050432715393, -0.05804731615611886],
+  [0.9999999999999998, -0.09601924202631895, -0.8118918960560388]
+];
+var jzazbz_default = new ColorSpace({
+  id: "jzazbz",
+  name: "Jzazbz",
+  coords: {
+    jz: {
+      refRange: [0, 1],
+      name: "Jz"
+    },
+    az: {
+      refRange: [-0.5, 0.5]
+    },
+    bz: {
+      refRange: [-0.5, 0.5]
+    }
+  },
+  base: xyz_abs_d65_default,
+  fromBase(XYZ) {
+    let [Xa, Ya, Za] = XYZ;
+    let Xm = b * Xa - (b - 1) * Za;
+    let Ym = g * Ya - (g - 1) * Xa;
+    let LMS = multiplyMatrices(XYZtoCone_M, [Xm, Ym, Za]);
+    let PQLMS = LMS.map(function(val) {
+      let num = c1 + c2 * (val / 1e4) ** n;
+      let denom = 1 + c3 * (val / 1e4) ** n;
+      return (num / denom) ** p;
+    });
+    let [Iz, az, bz] = multiplyMatrices(ConetoIab_M, PQLMS);
+    let Jz = (1 + d) * Iz / (1 + d * Iz) - d0;
+    return [Jz, az, bz];
+  },
+  toBase(Jzazbz) {
+    let [Jz, az, bz] = Jzazbz;
+    let Iz = (Jz + d0) / (1 + d - d * (Jz + d0));
+    let PQLMS = multiplyMatrices(IabtoCone_M, [Iz, az, bz]);
+    let LMS = PQLMS.map(function(val) {
+      let num = c1 - val ** pinv;
+      let denom = c3 * val ** pinv - c2;
+      let x = 1e4 * (num / denom) ** ninv;
+      return x;
+    });
+    let [Xm, Ym, Za] = multiplyMatrices(ConetoXYZ_M, LMS);
+    let Xa = (Xm + (b - 1) * Za) / b;
+    let Ya = (Ym + (g - 1) * Xa) / g;
+    return [Xa, Ya, Za];
+  },
+  formats: {
+    // https://drafts.csswg.org/css-color-hdr/#Jzazbz
+    "color": {
+      coords: ["<number> | <percentage>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"]
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/jzczhz.js
+var jzczhz_default = new ColorSpace({
+  id: "jzczhz",
+  name: "JzCzHz",
+  coords: {
+    jz: {
+      refRange: [0, 1],
+      name: "Jz"
+    },
+    cz: {
+      refRange: [0, 1],
+      name: "Chroma"
+    },
+    hz: {
+      refRange: [0, 360],
+      type: "angle",
+      name: "Hue"
+    }
+  },
+  base: jzazbz_default,
+  fromBase(jzazbz) {
+    let [Jz, az, bz] = jzazbz;
+    let hue;
+    const \u03B56 = 2e-4;
+    if (Math.abs(az) < \u03B56 && Math.abs(bz) < \u03B56) {
+      hue = NaN;
+    } else {
+      hue = Math.atan2(bz, az) * 180 / Math.PI;
+    }
+    return [
+      Jz,
+      // Jz is still Jz
+      Math.sqrt(az ** 2 + bz ** 2),
+      // Chroma
+      constrain(hue)
+      // Hue, in degrees [0 to 360)
+    ];
+  },
+  toBase(jzczhz) {
+    return [
+      jzczhz[0],
+      // Jz is still Jz
+      jzczhz[1] * Math.cos(jzczhz[2] * Math.PI / 180),
+      // az
+      jzczhz[1] * Math.sin(jzczhz[2] * Math.PI / 180)
+      // bz
+    ];
+  }
+});
+
+// node_modules/colorjs.io/src/deltaE/deltaEJz.js
+function deltaEJz_default(color, sample) {
+  [color, sample] = getColor([color, sample]);
+  let [Jz1, Cz1, Hz1] = jzczhz_default.from(color);
+  let [Jz2, Cz2, Hz2] = jzczhz_default.from(sample);
+  let \u0394J = Jz1 - Jz2;
+  let \u0394C = Cz1 - Cz2;
+  if (Number.isNaN(Hz1) && Number.isNaN(Hz2)) {
+    Hz1 = 0;
+    Hz2 = 0;
+  } else if (Number.isNaN(Hz1)) {
+    Hz1 = Hz2;
+  } else if (Number.isNaN(Hz2)) {
+    Hz2 = Hz1;
+  }
+  let \u0394h = Hz1 - Hz2;
+  let \u0394H = 2 * Math.sqrt(Cz1 * Cz2) * Math.sin(\u0394h / 2 * (Math.PI / 180));
+  return Math.sqrt(\u0394J ** 2 + \u0394C ** 2 + \u0394H ** 2);
+}
+
+// node_modules/colorjs.io/src/spaces/ictcp.js
+var c12 = 3424 / 4096;
+var c22 = 2413 / 128;
+var c32 = 2392 / 128;
+var m1 = 2610 / 16384;
+var m2 = 2523 / 32;
+var im1 = 16384 / 2610;
+var im2 = 32 / 2523;
+var XYZtoLMS_M2 = [
+  [0.3592832590121217, 0.6976051147779502, -0.035891593232029],
+  [-0.1920808463704993, 1.100476797037432, 0.0753748658519118],
+  [0.0070797844607479, 0.0748396662186362, 0.8433265453898765]
+];
+var LMStoIPT_M = [
+  [2048 / 4096, 2048 / 4096, 0],
+  [6610 / 4096, -13613 / 4096, 7003 / 4096],
+  [17933 / 4096, -17390 / 4096, -543 / 4096]
+];
+var IPTtoLMS_M = [
+  [0.9999999999999998, 0.0086090370379328, 0.111029625003026],
+  [0.9999999999999998, -0.0086090370379328, -0.1110296250030259],
+  [0.9999999999999998, 0.5600313357106791, -0.3206271749873188]
+];
+var LMStoXYZ_M2 = [
+  [2.0701522183894223, -1.3263473389671563, 0.2066510476294053],
+  [0.3647385209748072, 0.6805660249472273, -0.0453045459220347],
+  [-0.0497472075358123, -0.0492609666966131, 1.1880659249923042]
+];
+var ictcp_default = new ColorSpace({
+  id: "ictcp",
+  name: "ICTCP",
+  // From BT.2100-2 page 7:
+  // During production, signal values are expected to exceed the
+  // range E′ = [0.0 : 1.0]. This provides processing headroom and avoids
+  // signal degradation during cascaded processing. Such values of E′,
+  // below 0.0 or exceeding 1.0, should not be clipped during production
+  // and exchange.
+  // Values below 0.0 should not be clipped in reference displays (even
+  // though they represent “negative” light) to allow the black level of
+  // the signal (LB) to be properly set using test signals known as “PLUGE”
+  coords: {
+    i: {
+      refRange: [0, 1],
+      // Constant luminance,
+      name: "I"
+    },
+    ct: {
+      refRange: [-0.5, 0.5],
+      // Full BT.2020 gamut in range [-0.5, 0.5]
+      name: "CT"
+    },
+    cp: {
+      refRange: [-0.5, 0.5],
+      name: "CP"
+    }
+  },
+  base: xyz_abs_d65_default,
+  fromBase(XYZ) {
+    let LMS = multiplyMatrices(XYZtoLMS_M2, XYZ);
+    return LMStoICtCp(LMS);
+  },
+  toBase(ICtCp) {
+    let LMS = ICtCptoLMS(ICtCp);
+    return multiplyMatrices(LMStoXYZ_M2, LMS);
+  }
+});
+function LMStoICtCp(LMS) {
+  let PQLMS = LMS.map(function(val) {
+    let num = c12 + c22 * (val / 1e4) ** m1;
+    let denom = 1 + c32 * (val / 1e4) ** m1;
+    return (num / denom) ** m2;
+  });
+  return multiplyMatrices(LMStoIPT_M, PQLMS);
+}
+function ICtCptoLMS(ICtCp) {
+  let PQLMS = multiplyMatrices(IPTtoLMS_M, ICtCp);
+  let LMS = PQLMS.map(function(val) {
+    let num = Math.max(val ** im2 - c12, 0);
+    let denom = c22 - c32 * val ** im2;
+    return 1e4 * (num / denom) ** im1;
+  });
+  return LMS;
+}
+
+// node_modules/colorjs.io/src/deltaE/deltaEITP.js
+function deltaEITP_default(color, sample) {
+  [color, sample] = getColor([color, sample]);
+  let [I1, T1, P1] = ictcp_default.from(color);
+  let [I2, T2, P2] = ictcp_default.from(sample);
+  return 720 * Math.sqrt((I1 - I2) ** 2 + 0.25 * (T1 - T2) ** 2 + (P1 - P2) ** 2);
+}
+
+// node_modules/colorjs.io/src/spaces/cam16.js
+var white2 = WHITES.D65;
+var adaptedCoef = 0.42;
+var adaptedCoefInv = 1 / adaptedCoef;
+var tau = 2 * Math.PI;
+var cat16 = [
+  [0.401288, 0.650173, -0.051461],
+  [-0.250268, 1.204414, 0.045854],
+  [-2079e-6, 0.048952, 0.953127]
+];
+var cat16Inv = [
+  [1.8620678550872327, -1.0112546305316843, 0.14918677544445175],
+  [0.38752654323613717, 0.6214474419314753, -0.008973985167612518],
+  [-0.015841498849333856, -0.03412293802851557, 1.0499644368778496]
+];
+var m12 = [
+  [460, 451, 288],
+  [460, -891, -261],
+  [460, -220, -6300]
+];
+var surroundMap = {
+  dark: [0.8, 0.525, 0.8],
+  dim: [0.9, 0.59, 0.9],
+  average: [1, 0.69, 1]
+};
+var hueQuadMap = {
+  // Red, Yellow, Green, Blue, Red
+  h: [20.14, 90, 164.25, 237.53, 380.14],
+  e: [0.8, 0.7, 1, 1.2, 0.8],
+  H: [0, 100, 200, 300, 400]
+};
+var rad2deg = 180 / Math.PI;
+var deg2rad = Math.PI / 180;
+function adapt2(coords, fl) {
+  const temp = coords.map((c) => {
+    const x = spow(fl * Math.abs(c) * 0.01, adaptedCoef);
+    return 400 * copySign(x, c) / (x + 27.13);
+  });
+  return temp;
+}
+function unadapt(adapted, fl) {
+  const constant = 100 / fl * 27.13 ** adaptedCoefInv;
+  return adapted.map((c) => {
+    const cabs = Math.abs(c);
+    return copySign(constant * spow(cabs / (400 - cabs), adaptedCoefInv), c);
+  });
+}
+function hueQuadrature(h) {
+  let hp = constrain(h);
+  if (hp <= hueQuadMap.h[0]) {
+    hp += 360;
+  }
+  const i = bisectLeft(hueQuadMap.h, hp) - 1;
+  const [hi, hii] = hueQuadMap.h.slice(i, i + 2);
+  const [ei, eii] = hueQuadMap.e.slice(i, i + 2);
+  const Hi = hueQuadMap.H[i];
+  const t = (hp - hi) / ei;
+  return Hi + 100 * t / (t + (hii - hp) / eii);
+}
+function invHueQuadrature(H) {
+  let Hp = (H % 400 + 400) % 400;
+  const i = Math.floor(0.01 * Hp);
+  Hp = Hp % 100;
+  const [hi, hii] = hueQuadMap.h.slice(i, i + 2);
+  const [ei, eii] = hueQuadMap.e.slice(i, i + 2);
+  return constrain(
+    (Hp * (eii * hi - ei * hii) - 100 * hi * eii) / (Hp * (eii - ei) - 100 * eii)
+  );
+}
+function environment(refWhite, adaptingLuminance, backgroundLuminance2, surround, discounting) {
+  const env = {};
+  env.discounting = discounting;
+  env.refWhite = refWhite;
+  env.surround = surround;
+  const xyzW = refWhite.map((c) => {
+    return c * 100;
+  });
+  env.la = adaptingLuminance;
+  env.yb = backgroundLuminance2;
+  const yw = xyzW[1];
+  const rgbW = multiplyMatrices(cat16, xyzW);
+  surround = surroundMap[env.surround];
+  const f2 = surround[0];
+  env.c = surround[1];
+  env.nc = surround[2];
+  const k = 1 / (5 * env.la + 1);
+  const k4 = k ** 4;
+  env.fl = k4 * env.la + 0.1 * (1 - k4) * (1 - k4) * Math.cbrt(5 * env.la);
+  env.flRoot = env.fl ** 0.25;
+  env.n = env.yb / yw;
+  env.z = 1.48 + Math.sqrt(env.n);
+  env.nbb = 0.725 * env.n ** -0.2;
+  env.ncb = env.nbb;
+  const d2 = discounting ? 1 : Math.max(
+    Math.min(f2 * (1 - 1 / 3.6 * Math.exp((-env.la - 42) / 92)), 1),
+    0
+  );
+  env.dRgb = rgbW.map((c) => {
+    return interpolate(1, yw / c, d2);
+  });
+  env.dRgbInv = env.dRgb.map((c) => {
+    return 1 / c;
+  });
+  const rgbCW = rgbW.map((c, i) => {
+    return c * env.dRgb[i];
+  });
+  const rgbAW = adapt2(rgbCW, env.fl);
+  env.aW = env.nbb * (2 * rgbAW[0] + rgbAW[1] + 0.05 * rgbAW[2]);
+  return env;
+}
+var viewingConditions = environment(
+  white2,
+  64 / Math.PI * 0.2,
+  20,
+  "average",
+  false
+);
+function fromCam16(cam16, env) {
+  if (!(cam16.J !== void 0 ^ cam16.Q !== void 0)) {
+    throw new Error("Conversion requires one and only one: 'J' or 'Q'");
+  }
+  if (!(cam16.C !== void 0 ^ cam16.M !== void 0 ^ cam16.s !== void 0)) {
+    throw new Error("Conversion requires one and only one: 'C', 'M' or 's'");
+  }
+  if (!(cam16.h !== void 0 ^ cam16.H !== void 0)) {
+    throw new Error("Conversion requires one and only one: 'h' or 'H'");
+  }
+  if (cam16.J === 0 || cam16.Q === 0) {
+    return [0, 0, 0];
+  }
+  let hRad = 0;
+  if (cam16.h !== void 0) {
+    hRad = constrain(cam16.h) * deg2rad;
+  } else {
+    hRad = invHueQuadrature(cam16.H) * deg2rad;
+  }
+  const cosh = Math.cos(hRad);
+  const sinh = Math.sin(hRad);
+  let Jroot = 0;
+  if (cam16.J !== void 0) {
+    Jroot = spow(cam16.J, 1 / 2) * 0.1;
+  } else if (cam16.Q !== void 0) {
+    Jroot = 0.25 * env.c * cam16.Q / ((env.aW + 4) * env.flRoot);
+  }
+  let alpha = 0;
+  if (cam16.C !== void 0) {
+    alpha = cam16.C / Jroot;
+  } else if (cam16.M !== void 0) {
+    alpha = cam16.M / env.flRoot / Jroot;
+  } else if (cam16.s !== void 0) {
+    alpha = 4e-4 * cam16.s ** 2 * (env.aW + 4) / env.c;
+  }
+  const t = spow(
+    alpha * Math.pow(1.64 - Math.pow(0.29, env.n), -0.73),
+    10 / 9
+  );
+  const et = 0.25 * (Math.cos(hRad + 2) + 3.8);
+  const A = env.aW * spow(Jroot, 2 / env.c / env.z);
+  const p1 = 5e4 / 13 * env.nc * env.ncb * et;
+  const p2 = A / env.nbb;
+  const r = 23 * (p2 + 0.305) * zdiv(t, 23 * p1 + t * (11 * cosh + 108 * sinh));
+  const a = r * cosh;
+  const b2 = r * sinh;
+  const rgb_c = unadapt(
+    multiplyMatrices(m12, [p2, a, b2]).map((c) => {
+      return c * 1 / 1403;
+    }),
+    env.fl
+  );
+  return multiplyMatrices(
+    cat16Inv,
+    rgb_c.map((c, i) => {
+      return c * env.dRgbInv[i];
+    })
+  ).map((c) => {
+    return c / 100;
+  });
+}
+function toCam16(xyzd65, env) {
+  const xyz100 = xyzd65.map((c) => {
+    return c * 100;
+  });
+  const rgbA = adapt2(
+    multiplyMatrices(cat16, xyz100).map((c, i) => {
+      return c * env.dRgb[i];
+    }),
+    env.fl
+  );
+  const a = rgbA[0] + (-12 * rgbA[1] + rgbA[2]) / 11;
+  const b2 = (rgbA[0] + rgbA[1] - 2 * rgbA[2]) / 9;
+  const hRad = (Math.atan2(b2, a) % tau + tau) % tau;
+  const et = 0.25 * (Math.cos(hRad + 2) + 3.8);
+  const t = 5e4 / 13 * env.nc * env.ncb * zdiv(
+    et * Math.sqrt(a ** 2 + b2 ** 2),
+    rgbA[0] + rgbA[1] + 1.05 * rgbA[2] + 0.305
+  );
+  const alpha = spow(t, 0.9) * Math.pow(1.64 - Math.pow(0.29, env.n), 0.73);
+  const A = env.nbb * (2 * rgbA[0] + rgbA[1] + 0.05 * rgbA[2]);
+  const Jroot = spow(A / env.aW, 0.5 * env.c * env.z);
+  const J = 100 * spow(Jroot, 2);
+  const Q = 4 / env.c * Jroot * (env.aW + 4) * env.flRoot;
+  const C = alpha * Jroot;
+  const M = C * env.flRoot;
+  const h = constrain(hRad * rad2deg);
+  const H = hueQuadrature(h);
+  const s = 50 * spow(env.c * alpha / (env.aW + 4), 1 / 2);
+  return { J, C, h, s, Q, M, H };
+}
+var cam16_default = new ColorSpace({
+  id: "cam16-jmh",
+  cssId: "--cam16-jmh",
+  name: "CAM16-JMh",
+  coords: {
+    j: {
+      refRange: [0, 100],
+      name: "J"
+    },
+    m: {
+      refRange: [0, 105],
+      name: "Colorfulness"
+    },
+    h: {
+      refRange: [0, 360],
+      type: "angle",
+      name: "Hue"
+    }
+  },
+  base: xyz_d65_default,
+  fromBase(xyz) {
+    const cam16 = toCam16(xyz, viewingConditions);
+    return [cam16.J, cam16.M, cam16.h];
+  },
+  toBase(cam16) {
+    return fromCam16(
+      { J: cam16[0], M: cam16[1], h: cam16[2] },
+      viewingConditions
+    );
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/hct.js
+var white3 = WHITES.D65;
+var \u03B55 = 216 / 24389;
+var \u03BA2 = 24389 / 27;
+function toLstar(y) {
+  const fy = y > \u03B55 ? Math.cbrt(y) : (\u03BA2 * y + 16) / 116;
+  return 116 * fy - 16;
+}
+function fromLstar(lstar) {
+  return lstar > 8 ? Math.pow((lstar + 16) / 116, 3) : lstar / \u03BA2;
+}
+function fromHct(coords, env) {
+  let [h, c, t] = coords;
+  let xyz = [];
+  let j = 0;
+  if (t === 0) {
+    return [0, 0, 0];
+  }
+  let y = fromLstar(t);
+  if (t > 0) {
+    j = 0.00379058511492914 * t ** 2 + 0.608983189401032 * t + 0.9155088574762233;
+  } else {
+    j = 9514440756550361e-21 * t ** 2 + 0.08693057439788597 * t - 21.928975842194614;
+  }
+  const threshold = 2e-12;
+  const max_attempts = 15;
+  let attempt = 0;
+  let last2 = Infinity;
+  let best = j;
+  while (attempt <= max_attempts) {
+    xyz = fromCam16({ J: j, C: c, h }, env);
+    const delta = Math.abs(xyz[1] - y);
+    if (delta < last2) {
+      if (delta <= threshold) {
+        return xyz;
+      }
+      best = j;
+      last2 = delta;
+    }
+    j = j - (xyz[1] - y) * j / (2 * xyz[1]);
+    attempt += 1;
+  }
+  return fromCam16({ J: j, C: c, h }, env);
+}
+function toHct(xyz, env) {
+  const t = toLstar(xyz[1]);
+  if (t === 0) {
+    return [0, 0, 0];
+  }
+  const cam16 = toCam16(xyz, viewingConditions2);
+  return [constrain(cam16.h), cam16.C, t];
+}
+var viewingConditions2 = environment(
+  white3,
+  200 / Math.PI * fromLstar(50),
+  fromLstar(50) * 100,
+  "average",
+  false
+);
+var hct_default = new ColorSpace({
+  id: "hct",
+  name: "HCT",
+  coords: {
+    h: {
+      refRange: [0, 360],
+      type: "angle",
+      name: "Hue"
+    },
+    c: {
+      refRange: [0, 145],
+      name: "Colorfulness"
+    },
+    t: {
+      refRange: [0, 100],
+      name: "Tone"
+    }
+  },
+  base: xyz_d65_default,
+  fromBase(xyz) {
+    return toHct(xyz, viewingConditions2);
+  },
+  toBase(hct) {
+    return fromHct(hct, viewingConditions2);
+  },
+  formats: {
+    color: {
+      id: "--hct",
+      coords: ["<number> | <angle>", "<percentage> | <number>", "<percentage> | <number>"]
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/deltaE/deltaEHCT.js
+var rad2deg2 = 180 / Math.PI;
+var deg2rad2 = Math.PI / 180;
+var ucsCoeff = [1, 7e-3, 0.0228];
+function convertUcsAb(coords) {
+  if (coords[1] < 0) {
+    coords = hct_default.fromBase(hct_default.toBase(coords));
+  }
+  const M = Math.log(Math.max(1 + ucsCoeff[2] * coords[1] * viewingConditions2.flRoot, 1)) / ucsCoeff[2];
+  const hrad = coords[0] * deg2rad2;
+  const a = M * Math.cos(hrad);
+  const b2 = M * Math.sin(hrad);
+  return [coords[2], a, b2];
+}
+function deltaEHCT_default(color, sample) {
+  [color, sample] = getColor([color, sample]);
+  let [t1, a1, b1] = convertUcsAb(hct_default.from(color));
+  let [t2, a2, b2] = convertUcsAb(hct_default.from(sample));
+  return Math.sqrt((t1 - t2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2);
+}
+
+// node_modules/colorjs.io/src/deltaE/index.js
+var deltaE_default = {
+  deltaE76,
+  deltaECMC: deltaECMC_default,
+  deltaE2000: deltaE2000_default,
+  deltaEJz: deltaEJz_default,
+  deltaEITP: deltaEITP_default,
+  deltaEOK: deltaEOK_default,
+  deltaEHCT: deltaEHCT_default
+};
+
+// node_modules/colorjs.io/src/toGamut.js
+function calcEpsilon(jnd) {
+  const order = !jnd ? 0 : Math.floor(Math.log10(Math.abs(jnd)));
+  return Math.max(parseFloat(`1e${order - 2}`), 1e-6);
+}
+var GMAPPRESET = {
+  "hct": {
+    method: "hct.c",
+    jnd: 2,
+    deltaEMethod: "hct",
+    blackWhiteClamp: {}
+  },
+  "hct-tonal": {
+    method: "hct.c",
+    jnd: 0,
+    deltaEMethod: "hct",
+    blackWhiteClamp: { channel: "hct.t", min: 0, max: 100 }
+  }
+};
+function toGamut(color, {
+  method = defaults_default.gamut_mapping,
+  space = void 0,
+  deltaEMethod = "",
+  jnd = 2,
+  blackWhiteClamp = {}
+} = {}) {
+  color = getColor(color);
+  if (isString(arguments[1])) {
+    space = arguments[1];
+  } else if (!space) {
+    space = color.space;
+  }
+  space = ColorSpace.get(space);
+  if (inGamut(color, space, { epsilon: 0 })) {
+    return color;
+  }
+  let spaceColor;
+  if (method === "css") {
+    spaceColor = toGamutCSS(color, { space });
+  } else {
+    if (method !== "clip" && !inGamut(color, space)) {
+      if (Object.prototype.hasOwnProperty.call(GMAPPRESET, method)) {
+        ({ method, jnd, deltaEMethod, blackWhiteClamp } = GMAPPRESET[method]);
+      }
+      let de = deltaE2000_default;
+      if (deltaEMethod !== "") {
+        for (let m in deltaE_default) {
+          if ("deltae" + deltaEMethod.toLowerCase() === m.toLowerCase()) {
+            de = deltaE_default[m];
+            break;
+          }
+        }
+      }
+      let clipped = toGamut(to(color, space), { method: "clip", space });
+      if (de(color, clipped) > jnd) {
+        if (Object.keys(blackWhiteClamp).length === 3) {
+          let channelMeta = ColorSpace.resolveCoord(blackWhiteClamp.channel);
+          let channel = get(to(color, channelMeta.space), channelMeta.id);
+          if (isNone(channel)) {
+            channel = 0;
+          }
+          if (channel >= blackWhiteClamp.max) {
+            return to({ space: "xyz-d65", coords: WHITES["D65"] }, color.space);
+          } else if (channel <= blackWhiteClamp.min) {
+            return to({ space: "xyz-d65", coords: [0, 0, 0] }, color.space);
+          }
+        }
+        let coordMeta = ColorSpace.resolveCoord(method);
+        let mapSpace = coordMeta.space;
+        let coordId = coordMeta.id;
+        let mappedColor = to(color, mapSpace);
+        mappedColor.coords.forEach((c, i) => {
+          if (isNone(c)) {
+            mappedColor.coords[i] = 0;
+          }
+        });
+        let bounds = coordMeta.range || coordMeta.refRange;
+        let min = bounds[0];
+        let \u03B56 = calcEpsilon(jnd);
+        let low = min;
+        let high = get(mappedColor, coordId);
+        while (high - low > \u03B56) {
+          let clipped2 = clone(mappedColor);
+          clipped2 = toGamut(clipped2, { space, method: "clip" });
+          let deltaE2 = de(mappedColor, clipped2);
+          if (deltaE2 - jnd < \u03B56) {
+            low = get(mappedColor, coordId);
+          } else {
+            high = get(mappedColor, coordId);
+          }
+          set(mappedColor, coordId, (low + high) / 2);
+        }
+        spaceColor = to(mappedColor, space);
+      } else {
+        spaceColor = clipped;
+      }
+    } else {
+      spaceColor = to(color, space);
+    }
+    if (method === "clip" || !inGamut(spaceColor, space, { epsilon: 0 })) {
+      let bounds = Object.values(space.coords).map((c) => c.range || []);
+      spaceColor.coords = spaceColor.coords.map((c, i) => {
+        let [min, max] = bounds[i];
+        if (min !== void 0) {
+          c = Math.max(min, c);
+        }
+        if (max !== void 0) {
+          c = Math.min(c, max);
+        }
+        return c;
+      });
+    }
+  }
+  if (space !== color.space) {
+    spaceColor = to(spaceColor, color.space);
+  }
+  color.coords = spaceColor.coords;
+  return color;
+}
+toGamut.returns = "color";
+var COLORS = {
+  WHITE: { space: oklab_default, coords: [1, 0, 0] },
+  BLACK: { space: oklab_default, coords: [0, 0, 0] }
+};
+function toGamutCSS(origin, { space } = {}) {
+  const JND = 0.02;
+  const \u03B56 = 1e-4;
+  origin = getColor(origin);
+  if (!space) {
+    space = origin.space;
+  }
+  space = ColorSpace.get(space);
+  const oklchSpace = ColorSpace.get("oklch");
+  if (space.isUnbounded) {
+    return to(origin, space);
+  }
+  const origin_OKLCH = to(origin, oklchSpace);
+  let L = origin_OKLCH.coords[0];
+  if (L >= 1) {
+    const white4 = to(COLORS.WHITE, space);
+    white4.alpha = origin.alpha;
+    return to(white4, space);
+  }
+  if (L <= 0) {
+    const black = to(COLORS.BLACK, space);
+    black.alpha = origin.alpha;
+    return to(black, space);
+  }
+  if (inGamut(origin_OKLCH, space, { epsilon: 0 })) {
+    return to(origin_OKLCH, space);
+  }
+  function clip(_color) {
+    const destColor = to(_color, space);
+    const spaceCoords = Object.values(space.coords);
+    destColor.coords = destColor.coords.map((coord, index) => {
+      if ("range" in spaceCoords[index]) {
+        const [min2, max2] = spaceCoords[index].range;
+        return clamp(min2, coord, max2);
+      }
+      return coord;
+    });
+    return destColor;
+  }
+  let min = 0;
+  let max = origin_OKLCH.coords[1];
+  let min_inGamut = true;
+  let current = clone(origin_OKLCH);
+  let clipped = clip(current);
+  let E = deltaEOK_default(clipped, current);
+  if (E < JND) {
+    return clipped;
+  }
+  while (max - min > \u03B56) {
+    const chroma = (min + max) / 2;
+    current.coords[1] = chroma;
+    if (min_inGamut && inGamut(current, space, { epsilon: 0 })) {
+      min = chroma;
+    } else {
+      clipped = clip(current);
+      E = deltaEOK_default(clipped, current);
+      if (E < JND) {
+        if (JND - E < \u03B56) {
+          break;
+        } else {
+          min_inGamut = false;
+          min = chroma;
+        }
+      } else {
+        max = chroma;
+      }
+    }
+  }
+  return clipped;
+}
+
+// node_modules/colorjs.io/src/to.js
+function to(color, space, { inGamut: inGamut2 } = {}) {
+  color = getColor(color);
+  space = ColorSpace.get(space);
+  let coords = space.from(color);
+  let ret = { space, coords, alpha: color.alpha };
+  if (inGamut2) {
+    ret = toGamut(ret, inGamut2 === true ? void 0 : inGamut2);
+  }
+  return ret;
+}
+to.returns = "color";
+
+// node_modules/colorjs.io/src/serialize.js
+function serialize(color, {
+  precision = defaults_default.precision,
+  format = "default",
+  inGamut: inGamut2 = true,
+  ...customOptions
+} = {}) {
+  let ret;
+  color = getColor(color);
+  let formatId = format;
+  format = color.space.getFormat(format) ?? color.space.getFormat("default") ?? ColorSpace.DEFAULT_FORMAT;
+  let coords = color.coords.slice();
+  inGamut2 ||= format.toGamut;
+  if (inGamut2 && !inGamut(color)) {
+    coords = toGamut(clone(color), inGamut2 === true ? void 0 : inGamut2).coords;
+  }
+  if (format.type === "custom") {
+    customOptions.precision = precision;
+    if (format.serialize) {
+      ret = format.serialize(coords, color.alpha, customOptions);
+    } else {
+      throw new TypeError(`format ${formatId} can only be used to parse colors, not for serialization`);
+    }
+  } else {
+    let name = format.name || "color";
+    if (format.serializeCoords) {
+      coords = format.serializeCoords(coords, precision);
+    } else {
+      if (precision !== null) {
+        coords = coords.map((c) => {
+          return serializeNumber(c, { precision });
+        });
+      }
+    }
+    let args = [...coords];
+    if (name === "color") {
+      let cssId = format.id || format.ids?.[0] || color.space.id;
+      args.unshift(cssId);
+    }
+    let alpha = color.alpha;
+    if (precision !== null) {
+      alpha = serializeNumber(alpha, { precision });
+    }
+    let strAlpha = color.alpha >= 1 || format.noAlpha ? "" : `${format.commas ? "," : " /"} ${alpha}`;
+    ret = `${name}(${args.join(format.commas ? ", " : " ")}${strAlpha})`;
+  }
+  return ret;
+}
+
+// node_modules/colorjs.io/src/spaces/rec2020-linear.js
+var toXYZ_M = [
+  [0.6369580483012914, 0.14461690358620832, 0.1688809751641721],
+  [0.2627002120112671, 0.6779980715188708, 0.05930171646986196],
+  [0, 0.028072693049087428, 1.060985057710791]
+];
+var fromXYZ_M = [
+  [1.716651187971268, -0.355670783776392, -0.25336628137366],
+  [-0.666684351832489, 1.616481236634939, 0.0157685458139111],
+  [0.017639857445311, -0.042770613257809, 0.942103121235474]
+];
+var rec2020_linear_default = new RGBColorSpace({
+  id: "rec2020-linear",
+  cssId: "--rec2020-linear",
+  name: "Linear REC.2020",
+  white: "D65",
+  toXYZ_M,
+  fromXYZ_M
+});
+
+// node_modules/colorjs.io/src/spaces/rec2020.js
+var \u03B1 = 1.09929682680944;
+var \u03B2 = 0.018053968510807;
+var rec2020_default = new RGBColorSpace({
+  id: "rec2020",
+  name: "REC.2020",
+  base: rec2020_linear_default,
+  // Non-linear transfer function from Rec. ITU-R BT.2020-2 table 4
+  toBase(RGB) {
+    return RGB.map(function(val) {
+      if (val < \u03B2 * 4.5) {
+        return val / 4.5;
+      }
+      return Math.pow((val + \u03B1 - 1) / \u03B1, 1 / 0.45);
+    });
+  },
+  fromBase(RGB) {
+    return RGB.map(function(val) {
+      if (val >= \u03B2) {
+        return \u03B1 * Math.pow(val, 0.45) - (\u03B1 - 1);
+      }
+      return 4.5 * val;
+    });
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/p3-linear.js
+var toXYZ_M2 = [
+  [0.4865709486482162, 0.26566769316909306, 0.1982172852343625],
+  [0.2289745640697488, 0.6917385218365064, 0.079286914093745],
+  [0, 0.04511338185890264, 1.043944368900976]
+];
+var fromXYZ_M2 = [
+  [2.493496911941425, -0.9313836179191239, -0.40271078445071684],
+  [-0.8294889695615747, 1.7626640603183463, 0.023624685841943577],
+  [0.03584583024378447, -0.07617238926804182, 0.9568845240076872]
+];
+var p3_linear_default = new RGBColorSpace({
+  id: "p3-linear",
+  cssId: "--display-p3-linear",
+  name: "Linear P3",
+  white: "D65",
+  toXYZ_M: toXYZ_M2,
+  fromXYZ_M: fromXYZ_M2
+});
+
+// node_modules/colorjs.io/src/spaces/srgb-linear.js
+var toXYZ_M3 = [
+  [0.41239079926595934, 0.357584339383878, 0.1804807884018343],
+  [0.21263900587151027, 0.715168678767756, 0.07219231536073371],
+  [0.01933081871559182, 0.11919477979462598, 0.9505321522496607]
+];
+var fromXYZ_M3 = [
+  [3.2409699419045226, -1.537383177570094, -0.4986107602930034],
+  [-0.9692436362808796, 1.8759675015077202, 0.04155505740717559],
+  [0.05563007969699366, -0.20397695888897652, 1.0569715142428786]
+];
+var srgb_linear_default = new RGBColorSpace({
+  id: "srgb-linear",
+  name: "Linear sRGB",
+  white: "D65",
+  toXYZ_M: toXYZ_M3,
+  fromXYZ_M: fromXYZ_M3
+});
+
+// node_modules/colorjs.io/src/keywords.js
+var keywords_default = {
+  "aliceblue": [240 / 255, 248 / 255, 1],
+  "antiquewhite": [250 / 255, 235 / 255, 215 / 255],
+  "aqua": [0, 1, 1],
+  "aquamarine": [127 / 255, 1, 212 / 255],
+  "azure": [240 / 255, 1, 1],
+  "beige": [245 / 255, 245 / 255, 220 / 255],
+  "bisque": [1, 228 / 255, 196 / 255],
+  "black": [0, 0, 0],
+  "blanchedalmond": [1, 235 / 255, 205 / 255],
+  "blue": [0, 0, 1],
+  "blueviolet": [138 / 255, 43 / 255, 226 / 255],
+  "brown": [165 / 255, 42 / 255, 42 / 255],
+  "burlywood": [222 / 255, 184 / 255, 135 / 255],
+  "cadetblue": [95 / 255, 158 / 255, 160 / 255],
+  "chartreuse": [127 / 255, 1, 0],
+  "chocolate": [210 / 255, 105 / 255, 30 / 255],
+  "coral": [1, 127 / 255, 80 / 255],
+  "cornflowerblue": [100 / 255, 149 / 255, 237 / 255],
+  "cornsilk": [1, 248 / 255, 220 / 255],
+  "crimson": [220 / 255, 20 / 255, 60 / 255],
+  "cyan": [0, 1, 1],
+  "darkblue": [0, 0, 139 / 255],
+  "darkcyan": [0, 139 / 255, 139 / 255],
+  "darkgoldenrod": [184 / 255, 134 / 255, 11 / 255],
+  "darkgray": [169 / 255, 169 / 255, 169 / 255],
+  "darkgreen": [0, 100 / 255, 0],
+  "darkgrey": [169 / 255, 169 / 255, 169 / 255],
+  "darkkhaki": [189 / 255, 183 / 255, 107 / 255],
+  "darkmagenta": [139 / 255, 0, 139 / 255],
+  "darkolivegreen": [85 / 255, 107 / 255, 47 / 255],
+  "darkorange": [1, 140 / 255, 0],
+  "darkorchid": [153 / 255, 50 / 255, 204 / 255],
+  "darkred": [139 / 255, 0, 0],
+  "darksalmon": [233 / 255, 150 / 255, 122 / 255],
+  "darkseagreen": [143 / 255, 188 / 255, 143 / 255],
+  "darkslateblue": [72 / 255, 61 / 255, 139 / 255],
+  "darkslategray": [47 / 255, 79 / 255, 79 / 255],
+  "darkslategrey": [47 / 255, 79 / 255, 79 / 255],
+  "darkturquoise": [0, 206 / 255, 209 / 255],
+  "darkviolet": [148 / 255, 0, 211 / 255],
+  "deeppink": [1, 20 / 255, 147 / 255],
+  "deepskyblue": [0, 191 / 255, 1],
+  "dimgray": [105 / 255, 105 / 255, 105 / 255],
+  "dimgrey": [105 / 255, 105 / 255, 105 / 255],
+  "dodgerblue": [30 / 255, 144 / 255, 1],
+  "firebrick": [178 / 255, 34 / 255, 34 / 255],
+  "floralwhite": [1, 250 / 255, 240 / 255],
+  "forestgreen": [34 / 255, 139 / 255, 34 / 255],
+  "fuchsia": [1, 0, 1],
+  "gainsboro": [220 / 255, 220 / 255, 220 / 255],
+  "ghostwhite": [248 / 255, 248 / 255, 1],
+  "gold": [1, 215 / 255, 0],
+  "goldenrod": [218 / 255, 165 / 255, 32 / 255],
+  "gray": [128 / 255, 128 / 255, 128 / 255],
+  "green": [0, 128 / 255, 0],
+  "greenyellow": [173 / 255, 1, 47 / 255],
+  "grey": [128 / 255, 128 / 255, 128 / 255],
+  "honeydew": [240 / 255, 1, 240 / 255],
+  "hotpink": [1, 105 / 255, 180 / 255],
+  "indianred": [205 / 255, 92 / 255, 92 / 255],
+  "indigo": [75 / 255, 0, 130 / 255],
+  "ivory": [1, 1, 240 / 255],
+  "khaki": [240 / 255, 230 / 255, 140 / 255],
+  "lavender": [230 / 255, 230 / 255, 250 / 255],
+  "lavenderblush": [1, 240 / 255, 245 / 255],
+  "lawngreen": [124 / 255, 252 / 255, 0],
+  "lemonchiffon": [1, 250 / 255, 205 / 255],
+  "lightblue": [173 / 255, 216 / 255, 230 / 255],
+  "lightcoral": [240 / 255, 128 / 255, 128 / 255],
+  "lightcyan": [224 / 255, 1, 1],
+  "lightgoldenrodyellow": [250 / 255, 250 / 255, 210 / 255],
+  "lightgray": [211 / 255, 211 / 255, 211 / 255],
+  "lightgreen": [144 / 255, 238 / 255, 144 / 255],
+  "lightgrey": [211 / 255, 211 / 255, 211 / 255],
+  "lightpink": [1, 182 / 255, 193 / 255],
+  "lightsalmon": [1, 160 / 255, 122 / 255],
+  "lightseagreen": [32 / 255, 178 / 255, 170 / 255],
+  "lightskyblue": [135 / 255, 206 / 255, 250 / 255],
+  "lightslategray": [119 / 255, 136 / 255, 153 / 255],
+  "lightslategrey": [119 / 255, 136 / 255, 153 / 255],
+  "lightsteelblue": [176 / 255, 196 / 255, 222 / 255],
+  "lightyellow": [1, 1, 224 / 255],
+  "lime": [0, 1, 0],
+  "limegreen": [50 / 255, 205 / 255, 50 / 255],
+  "linen": [250 / 255, 240 / 255, 230 / 255],
+  "magenta": [1, 0, 1],
+  "maroon": [128 / 255, 0, 0],
+  "mediumaquamarine": [102 / 255, 205 / 255, 170 / 255],
+  "mediumblue": [0, 0, 205 / 255],
+  "mediumorchid": [186 / 255, 85 / 255, 211 / 255],
+  "mediumpurple": [147 / 255, 112 / 255, 219 / 255],
+  "mediumseagreen": [60 / 255, 179 / 255, 113 / 255],
+  "mediumslateblue": [123 / 255, 104 / 255, 238 / 255],
+  "mediumspringgreen": [0, 250 / 255, 154 / 255],
+  "mediumturquoise": [72 / 255, 209 / 255, 204 / 255],
+  "mediumvioletred": [199 / 255, 21 / 255, 133 / 255],
+  "midnightblue": [25 / 255, 25 / 255, 112 / 255],
+  "mintcream": [245 / 255, 1, 250 / 255],
+  "mistyrose": [1, 228 / 255, 225 / 255],
+  "moccasin": [1, 228 / 255, 181 / 255],
+  "navajowhite": [1, 222 / 255, 173 / 255],
+  "navy": [0, 0, 128 / 255],
+  "oldlace": [253 / 255, 245 / 255, 230 / 255],
+  "olive": [128 / 255, 128 / 255, 0],
+  "olivedrab": [107 / 255, 142 / 255, 35 / 255],
+  "orange": [1, 165 / 255, 0],
+  "orangered": [1, 69 / 255, 0],
+  "orchid": [218 / 255, 112 / 255, 214 / 255],
+  "palegoldenrod": [238 / 255, 232 / 255, 170 / 255],
+  "palegreen": [152 / 255, 251 / 255, 152 / 255],
+  "paleturquoise": [175 / 255, 238 / 255, 238 / 255],
+  "palevioletred": [219 / 255, 112 / 255, 147 / 255],
+  "papayawhip": [1, 239 / 255, 213 / 255],
+  "peachpuff": [1, 218 / 255, 185 / 255],
+  "peru": [205 / 255, 133 / 255, 63 / 255],
+  "pink": [1, 192 / 255, 203 / 255],
+  "plum": [221 / 255, 160 / 255, 221 / 255],
+  "powderblue": [176 / 255, 224 / 255, 230 / 255],
+  "purple": [128 / 255, 0, 128 / 255],
+  "rebeccapurple": [102 / 255, 51 / 255, 153 / 255],
+  "red": [1, 0, 0],
+  "rosybrown": [188 / 255, 143 / 255, 143 / 255],
+  "royalblue": [65 / 255, 105 / 255, 225 / 255],
+  "saddlebrown": [139 / 255, 69 / 255, 19 / 255],
+  "salmon": [250 / 255, 128 / 255, 114 / 255],
+  "sandybrown": [244 / 255, 164 / 255, 96 / 255],
+  "seagreen": [46 / 255, 139 / 255, 87 / 255],
+  "seashell": [1, 245 / 255, 238 / 255],
+  "sienna": [160 / 255, 82 / 255, 45 / 255],
+  "silver": [192 / 255, 192 / 255, 192 / 255],
+  "skyblue": [135 / 255, 206 / 255, 235 / 255],
+  "slateblue": [106 / 255, 90 / 255, 205 / 255],
+  "slategray": [112 / 255, 128 / 255, 144 / 255],
+  "slategrey": [112 / 255, 128 / 255, 144 / 255],
+  "snow": [1, 250 / 255, 250 / 255],
+  "springgreen": [0, 1, 127 / 255],
+  "steelblue": [70 / 255, 130 / 255, 180 / 255],
+  "tan": [210 / 255, 180 / 255, 140 / 255],
+  "teal": [0, 128 / 255, 128 / 255],
+  "thistle": [216 / 255, 191 / 255, 216 / 255],
+  "tomato": [1, 99 / 255, 71 / 255],
+  "turquoise": [64 / 255, 224 / 255, 208 / 255],
+  "violet": [238 / 255, 130 / 255, 238 / 255],
+  "wheat": [245 / 255, 222 / 255, 179 / 255],
+  "white": [1, 1, 1],
+  "whitesmoke": [245 / 255, 245 / 255, 245 / 255],
+  "yellow": [1, 1, 0],
+  "yellowgreen": [154 / 255, 205 / 255, 50 / 255]
+};
+
+// node_modules/colorjs.io/src/spaces/srgb.js
+var coordGrammar = Array(3).fill("<percentage> | <number>[0, 255]");
+var coordGrammarNumber = Array(3).fill("<number>[0, 255]");
+var srgb_default = new RGBColorSpace({
+  id: "srgb",
+  name: "sRGB",
+  base: srgb_linear_default,
+  fromBase: (rgb) => {
+    return rgb.map((val) => {
+      let sign = val < 0 ? -1 : 1;
+      let abs = val * sign;
+      if (abs > 31308e-7) {
+        return sign * (1.055 * abs ** (1 / 2.4) - 0.055);
+      }
+      return 12.92 * val;
+    });
+  },
+  toBase: (rgb) => {
+    return rgb.map((val) => {
+      let sign = val < 0 ? -1 : 1;
+      let abs = val * sign;
+      if (abs <= 0.04045) {
+        return val / 12.92;
+      }
+      return sign * ((abs + 0.055) / 1.055) ** 2.4;
+    });
+  },
+  formats: {
+    "rgb": {
+      coords: coordGrammar
+    },
+    "rgb_number": {
+      name: "rgb",
+      commas: true,
+      coords: coordGrammarNumber,
+      noAlpha: true
+    },
+    "color": {
+      /* use defaults */
+    },
+    "rgba": {
+      coords: coordGrammar,
+      commas: true,
+      lastAlpha: true
+    },
+    "rgba_number": {
+      name: "rgba",
+      commas: true,
+      coords: coordGrammarNumber
+    },
+    "hex": {
+      type: "custom",
+      toGamut: true,
+      test: (str) => /^#([a-f0-9]{3,4}){1,2}$/i.test(str),
+      parse(str) {
+        if (str.length <= 5) {
+          str = str.replace(/[a-f0-9]/gi, "$&$&");
+        }
+        let rgba = [];
+        str.replace(/[a-f0-9]{2}/gi, (component) => {
+          rgba.push(parseInt(component, 16) / 255);
+        });
+        return {
+          spaceId: "srgb",
+          coords: rgba.slice(0, 3),
+          alpha: rgba.slice(3)[0]
+        };
+      },
+      serialize: (coords, alpha, {
+        collapse = true
+        // collapse to 3-4 digit hex when possible?
+      } = {}) => {
+        if (alpha < 1) {
+          coords.push(alpha);
+        }
+        coords = coords.map((c) => Math.round(c * 255));
+        let collapsible = collapse && coords.every((c) => c % 17 === 0);
+        let hex = coords.map((c) => {
+          if (collapsible) {
+            return (c / 17).toString(16);
+          }
+          return c.toString(16).padStart(2, "0");
+        }).join("");
+        return "#" + hex;
+      }
+    },
+    "keyword": {
+      type: "custom",
+      test: (str) => /^[a-z]+$/i.test(str),
+      parse(str) {
+        str = str.toLowerCase();
+        let ret = { spaceId: "srgb", coords: null, alpha: 1 };
+        if (str === "transparent") {
+          ret.coords = keywords_default.black;
+          ret.alpha = 0;
+        } else {
+          ret.coords = keywords_default[str];
+        }
+        if (ret.coords) {
+          return ret;
+        }
+      }
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/p3.js
+var p3_default = new RGBColorSpace({
+  id: "p3",
+  cssId: "display-p3",
+  name: "P3",
+  base: p3_linear_default,
+  // Gamma encoding/decoding is the same as sRGB
+  fromBase: srgb_default.fromBase,
+  toBase: srgb_default.toBase
+});
+
+// node_modules/colorjs.io/src/spaces/hsl.js
+var hsl_default = new ColorSpace({
+  id: "hsl",
+  name: "HSL",
+  coords: {
+    h: {
+      refRange: [0, 360],
+      type: "angle",
+      name: "Hue"
+    },
+    s: {
+      range: [0, 100],
+      name: "Saturation"
+    },
+    l: {
+      range: [0, 100],
+      name: "Lightness"
+    }
+  },
+  base: srgb_default,
+  // Adapted from https://drafts.csswg.org/css-color-4/better-rgbToHsl.js
+  fromBase: (rgb) => {
+    let max = Math.max(...rgb);
+    let min = Math.min(...rgb);
+    let [r, g2, b2] = rgb;
+    let [h, s, l] = [NaN, 0, (min + max) / 2];
+    let d2 = max - min;
+    if (d2 !== 0) {
+      s = l === 0 || l === 1 ? 0 : (max - l) / Math.min(l, 1 - l);
+      switch (max) {
+        case r:
+          h = (g2 - b2) / d2 + (g2 < b2 ? 6 : 0);
+          break;
+        case g2:
+          h = (b2 - r) / d2 + 2;
+          break;
+        case b2:
+          h = (r - g2) / d2 + 4;
+      }
+      h = h * 60;
+    }
+    if (s < 0) {
+      h += 180;
+      s = Math.abs(s);
+    }
+    if (h >= 360) {
+      h -= 360;
+    }
+    return [h, s * 100, l * 100];
+  },
+  // Adapted from https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB_alternative
+  toBase: (hsl) => {
+    let [h, s, l] = hsl;
+    h = h % 360;
+    if (h < 0) {
+      h += 360;
+    }
+    s /= 100;
+    l /= 100;
+    function f2(n2) {
+      let k = (n2 + h / 30) % 12;
+      let a = s * Math.min(l, 1 - l);
+      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    }
+    return [f2(0), f2(8), f2(4)];
+  },
+  formats: {
+    "hsl": {
+      coords: ["<number> | <angle>", "<percentage>", "<percentage>"]
+    },
+    "hsla": {
+      coords: ["<number> | <angle>", "<percentage>", "<percentage>"],
+      commas: true,
+      lastAlpha: true
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/hsv.js
+var hsv_default = new ColorSpace({
+  id: "hsv",
+  name: "HSV",
+  coords: {
+    h: {
+      refRange: [0, 360],
+      type: "angle",
+      name: "Hue"
+    },
+    s: {
+      range: [0, 100],
+      name: "Saturation"
+    },
+    v: {
+      range: [0, 100],
+      name: "Value"
+    }
+  },
+  base: hsl_default,
+  // https://en.wikipedia.org/wiki/HSL_and_HSV#Interconversion
+  fromBase(hsl) {
+    let [h, s, l] = hsl;
+    s /= 100;
+    l /= 100;
+    let v = l + s * Math.min(l, 1 - l);
+    return [
+      h,
+      // h is the same
+      v === 0 ? 0 : 200 * (1 - l / v),
+      // s
+      100 * v
+    ];
+  },
+  // https://en.wikipedia.org/wiki/HSL_and_HSV#Interconversion
+  toBase(hsv) {
+    let [h, s, v] = hsv;
+    s /= 100;
+    v /= 100;
+    let l = v * (1 - s / 2);
+    return [
+      h,
+      // h is the same
+      l === 0 || l === 1 ? 0 : (v - l) / Math.min(l, 1 - l) * 100,
+      l * 100
+    ];
+  },
+  formats: {
+    color: {
+      id: "--hsv",
+      coords: ["<number> | <angle>", "<percentage> | <number>", "<percentage> | <number>"]
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/hwb.js
+var hwb_default = new ColorSpace({
+  id: "hwb",
+  name: "HWB",
+  coords: {
+    h: {
+      refRange: [0, 360],
+      type: "angle",
+      name: "Hue"
+    },
+    w: {
+      range: [0, 100],
+      name: "Whiteness"
+    },
+    b: {
+      range: [0, 100],
+      name: "Blackness"
+    }
+  },
+  base: hsv_default,
+  fromBase(hsv) {
+    let [h, s, v] = hsv;
+    return [h, v * (100 - s) / 100, 100 - v];
+  },
+  toBase(hwb) {
+    let [h, w, b2] = hwb;
+    w /= 100;
+    b2 /= 100;
+    let sum = w + b2;
+    if (sum >= 1) {
+      let gray = w / sum;
+      return [h, 0, gray * 100];
+    }
+    let v = 1 - b2;
+    let s = v === 0 ? 0 : 1 - w / v;
+    return [h, s * 100, v * 100];
+  },
+  formats: {
+    "hwb": {
+      coords: ["<number> | <angle>", "<percentage> | <number>", "<percentage> | <number>"]
+    }
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/a98rgb-linear.js
+var toXYZ_M4 = [
+  [0.5766690429101305, 0.1855582379065463, 0.1882286462349947],
+  [0.29734497525053605, 0.6273635662554661, 0.07529145849399788],
+  [0.02703136138641234, 0.07068885253582723, 0.9913375368376388]
+];
+var fromXYZ_M4 = [
+  [2.0415879038107465, -0.5650069742788596, -0.34473135077832956],
+  [-0.9692436362808795, 1.8759675015077202, 0.04155505740717557],
+  [0.013444280632031142, -0.11836239223101838, 1.0151749943912054]
+];
+var a98rgb_linear_default = new RGBColorSpace({
+  id: "a98rgb-linear",
+  cssId: "--a98-rgb-linear",
+  name: "Linear Adobe\xAE 98 RGB compatible",
+  white: "D65",
+  toXYZ_M: toXYZ_M4,
+  fromXYZ_M: fromXYZ_M4
+});
+
+// node_modules/colorjs.io/src/spaces/a98rgb.js
+var a98rgb_default = new RGBColorSpace({
+  id: "a98rgb",
+  cssId: "a98-rgb",
+  name: "Adobe\xAE 98 RGB compatible",
+  base: a98rgb_linear_default,
+  toBase: (RGB) => RGB.map((val) => Math.pow(Math.abs(val), 563 / 256) * Math.sign(val)),
+  fromBase: (RGB) => RGB.map((val) => Math.pow(Math.abs(val), 256 / 563) * Math.sign(val))
+});
+
+// node_modules/colorjs.io/src/spaces/prophoto-linear.js
+var toXYZ_M5 = [
+  [0.7977666449006423, 0.13518129740053308, 0.0313477341283922],
+  [0.2880748288194013, 0.711835234241873, 8993693872564e-17],
+  [0, 0, 0.8251046025104602]
+];
+var fromXYZ_M5 = [
+  [1.3457868816471583, -0.25557208737979464, -0.05110186497554526],
+  [-0.5446307051249019, 1.5082477428451468, 0.02052744743642139],
+  [0, 0, 1.2119675456389452]
+];
+var prophoto_linear_default = new RGBColorSpace({
+  id: "prophoto-linear",
+  cssId: "--prophoto-rgb-linear",
+  name: "Linear ProPhoto",
+  white: "D50",
+  base: xyz_d50_default,
+  toXYZ_M: toXYZ_M5,
+  fromXYZ_M: fromXYZ_M5
+});
+
+// node_modules/colorjs.io/src/spaces/prophoto.js
+var Et = 1 / 512;
+var Et2 = 16 / 512;
+var prophoto_default = new RGBColorSpace({
+  id: "prophoto",
+  cssId: "prophoto-rgb",
+  name: "ProPhoto",
+  base: prophoto_linear_default,
+  toBase(RGB) {
+    return RGB.map((v) => v < Et2 ? v / 16 : v ** 1.8);
+  },
+  fromBase(RGB) {
+    return RGB.map((v) => v >= Et ? v ** (1 / 1.8) : 16 * v);
+  }
+});
+
+// node_modules/colorjs.io/src/spaces/oklch.js
+var oklch_default = new ColorSpace({
+  id: "oklch",
+  name: "Oklch",
+  coords: {
+    l: {
+      refRange: [0, 1],
+      name: "Lightness"
+    },
+    c: {
+      refRange: [0, 0.4],
+      name: "Chroma"
+    },
+    h: {
+      refRange: [0, 360],
+      type: "angle",
+      name: "Hue"
+    }
+  },
+  white: "D65",
+  base: oklab_default,
+  fromBase(oklab) {
+    let [L, a, b2] = oklab;
+    let h;
+    const \u03B56 = 2e-4;
+    if (Math.abs(a) < \u03B56 && Math.abs(b2) < \u03B56) {
+      h = NaN;
+    } else {
+      h = Math.atan2(b2, a) * 180 / Math.PI;
+    }
+    return [
+      L,
+      // OKLab L is still L
+      Math.sqrt(a ** 2 + b2 ** 2),
+      // Chroma
+      constrain(h)
+      // Hue, in degrees [0 to 360)
+    ];
+  },
+  // Convert from polar form
+  toBase(oklch) {
+    let [L, C, h] = oklch;
+    let a, b2;
+    if (isNaN(h)) {
+      a = 0;
+      b2 = 0;
+    } else {
+      a = C * Math.cos(h * Math.PI / 180);
+      b2 = C * Math.sin(h * Math.PI / 180);
+    }
+    return [L, a, b2];
+  },
+  formats: {
+    "oklch": {
+      coords: ["<percentage> | <number>", "<number> | <percentage>[0,1]", "<number> | <angle>"]
+    }
+  }
+});
+
+// src/math/color.ts
+for (const space of [srgb_default, srgb_linear_default, hsl_default, hwb_default, lab_default, lch_default, oklab_default, oklch_default, p3_default, p3_linear_default, rec2020_default, rec2020_linear_default, a98rgb_default, a98rgb_linear_default, prophoto_default, prophoto_linear_default, xyz_d65_default, xyz_d50_default])
+  ColorSpace.register(space);
+var Color = class _Color {
+  static Space = ColorSpace;
+  space;
+  coords;
+  alpha;
+  constructor(color, coords, alpha = 1) {
+    const plain = coords ? { space: ColorSpace.get(color), coords: [...coords], alpha } : getColor(color);
+    this.space = plain.space;
+    this.coords = plain.coords;
+    this.alpha = plain.alpha;
+  }
+  to(space) {
+    return new _Color(to(this, space));
+  }
+  toGamut(options) {
+    return new _Color(toGamut(this, options));
+  }
+  inGamut(space, options) {
+    return inGamut(this, space, options);
+  }
+  clone() {
+    return new _Color(clone(this));
+  }
+  toString(options) {
+    return serialize(this, options);
+  }
+};
+
+// src/math/outputSettings.ts
+var COLOR_GAMUTS = ["srgb", "display-p3", "rec2020"];
+var COLOR_FORMATS = ["rgb", "oklch", "hex", "hsl"];
+function outputGamut(settings) {
+  return settings.mapOutputsToSrgb ? "srgb" : settings.authoringGamut;
+}
+function isColorOutputSettings(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const record = value;
+  return Object.keys(record).length === 3 && COLOR_GAMUTS.some((gamut) => gamut === record.authoringGamut) && COLOR_FORMATS.some((format) => format === record.outputFormat) && typeof record.mapOutputsToSrgb === "boolean" && (record.mapOutputsToSrgb || record.authoringGamut === "srgb" || record.outputFormat === "rgb" || record.outputFormat === "oklch");
+}
+function colorJsSpace(gamut) {
+  return gamut === "display-p3" ? "p3" : gamut;
+}
+
+// src/math/outputSerialization.ts
+var COLOR_OUTPUT_MAPPING_METHOD = "css";
+var COLOR_OUTPUT_PRECISION = 2;
+function number(value) {
+  if (!Number.isFinite(value))
+    throw new Error("Color output contains an unavailable channel.");
+  const rounded = value.toFixed(COLOR_OUTPUT_PRECISION);
+  if (Number(rounded) === 0) return "0";
+  return rounded.replace(/(?:\.0+|(\.\d*?)0+)$/, "$1");
+}
+function coordinates(color) {
+  const [first, second, third] = color.coords;
+  if (first === null || second === null || third === null || ![first, second, third].every((value) => Number.isFinite(Number(value))))
+    throw new Error("Color output contains an unavailable channel.");
+  return [Number(first), Number(second), Number(third)];
+}
+function serializeRgb(channels, alpha, settings) {
+  if (settings.outputFormat === "hex") {
+    const byte = (value) => Math.round(Math.min(1, Math.max(0, value)) * 255).toString(16).padStart(2, "0");
+    const opacity = byte(alpha);
+    return `#${channels.map(byte).join("")}${opacity === "ff" ? "" : opacity}`;
+  }
+  const suffix = alpha === 1 ? "" : ` / ${number(alpha)}`;
+  const clamped = channels.map((value) => Math.min(1, Math.max(0, value)));
+  if (outputGamut(settings) === "srgb") {
+    const rgb = clamped.map((value) => Math.round(value * 255)).join(", ");
+    return alpha === 1 ? `rgb(${rgb})` : `rgba(${rgb}, ${number(alpha)})`;
+  }
+  return `color(${outputGamut(settings)} ${clamped.map(number).join(" ")}${suffix})`;
+}
+function serializeOklch(lightness, chroma, hue, suffix, settings) {
+  const roundedLightness = Number(number(lightness * 100)) / 100;
+  const roundedHue = Number(number(hue)) % 360;
+  const chromaTicks = 25e3;
+  let low = 0;
+  let high = Math.round(chroma * chromaTicks);
+  const space = colorJsSpace(outputGamut(settings));
+  const fits = (ticks) => new Color("oklch", [
+    roundedLightness,
+    ticks / chromaTicks,
+    roundedHue
+  ]).inGamut(space, { epsilon: 1e-8 });
+  if (!fits(high)) {
+    while (low < high) {
+      const middle = Math.ceil((low + high) / 2);
+      if (fits(middle)) low = middle;
+      else high = middle - 1;
+    }
+    high = low;
+  }
+  return `oklch(${number(roundedLightness * 100)}% ${number(high / 100)}% ${high === 0 ? "0" : number(roundedHue)}${suffix})`;
+}
+var serializedCache = /* @__PURE__ */ new Map();
+function serializeLinearOutputColor(linear, settings) {
+  const key = `${linear.join(",")}|${JSON.stringify(settings)}`;
+  const cached = serializedCache.get(key);
+  if (cached !== void 0) return cached;
+  const css = serializeLinearUncached(linear, settings);
+  serializedCache.set(key, css);
+  if (serializedCache.size > 4096) serializedCache.delete(serializedCache.keys().next().value);
+  return css;
+}
+function serializeLinearUncached(linear, settings) {
+  const space = colorJsSpace(outputGamut(settings));
+  if (isColorOutputSettings(settings) && (settings.outputFormat === "hex" || settings.outputFormat === "rgb") && linear.length === 3 && linear.every(
+    (channel) => Number.isFinite(channel) && channel >= 0 && channel <= 1
+  )) {
+    const channels = Color.Space.get(`${space}-linear`).to(space, [...linear]);
+    if (channels.some((channel) => channel === null || !Number.isFinite(channel)))
+      throw new Error("Color output contains an unavailable channel.");
+    return serializeRgb(channels.map(Number), 1, settings);
+  }
+  return serializeOutputColor(
+    new Color(`${space}-linear`, [...linear]),
+    settings
+  );
+}
+function mapOutputColor(source, settings) {
+  if (!isColorOutputSettings(settings))
+    throw new Error("Invalid color output configuration.");
+  const alpha = Number(source.alpha);
+  if (source.alpha === null || !Number.isFinite(alpha) || alpha < 0 || alpha > 1) {
+    throw new Error("Color output has invalid opacity.");
+  }
+  const copy = source.clone();
+  copy.coords = coordinates(source);
+  copy.alpha = alpha;
+  const space = colorJsSpace(outputGamut(settings));
+  return copy.toGamut({ space, method: COLOR_OUTPUT_MAPPING_METHOD }).to(space);
+}
+function serializeOutputColor(source, settings) {
+  const color = mapOutputColor(source, settings);
+  const alpha = settings.outputFormat === "hex" ? Number(color.alpha) : Number(number(Number(color.alpha)));
+  const suffix = alpha === 1 ? "" : ` / ${number(alpha)}`;
+  if (settings.outputFormat === "hex" || settings.outputFormat === "rgb")
+    return serializeRgb(coordinates(color), alpha, settings);
+  if (settings.outputFormat === "hsl") {
+    const converted2 = color.to("hsl");
+    if (!Number.isFinite(converted2.coords[0])) converted2.coords[0] = 0;
+    const [hue2, saturation, lightness2] = coordinates(converted2);
+    return `hsl(${number(hue2)} ${number(saturation)}% ${number(lightness2)}%${suffix})`;
+  }
+  const converted = color.to("oklch");
+  const rgb = coordinates(color);
+  if (Math.max(...rgb) - Math.min(...rgb) < 1e-12) {
+    const linear = coordinates(
+      color.to(`${colorJsSpace(outputGamut(settings))}-linear`)
+    );
+    return serializeOklch(Math.cbrt(linear[0]), 0, 0, suffix, settings);
+  }
+  if (!Number.isFinite(converted.coords[2])) converted.coords[2] = 0;
+  const [lightness, chroma, hue] = coordinates(converted);
+  return serializeOklch(lightness, chroma, hue, suffix, settings);
+}
+
+// src/math/colorMath.ts
+var MAX_CHROMA = 0.4;
+var RGB_TRANSFER = {
+  srgb: {
+    linearThreshold: 31308e-7,
+    encodedThreshold: 0.04045,
+    slope: 12.92,
+    factor: 1.055,
+    offset: 0.055,
+    exponent: 1 / 2.4
+  },
+  rec2020: {
+    linearThreshold: 0.018053968510807,
+    encodedThreshold: 0.0812428582986315,
+    slope: 4.5,
+    factor: 1.09929682680944,
+    offset: 0.09929682680944,
+    exponent: 0.45
+  }
+};
+function clamp01(value) {
+  return Math.min(1, Math.max(0, value));
+}
+function mapLinearRgb(color, transform) {
+  return [
+    transform(color[0], 0),
+    transform(color[1], 1),
+    transform(color[2], 2)
+  ];
+}
+function toLinear(channel, gamut = "srgb") {
+  const transfer = RGB_TRANSFER[gamut === "rec2020" ? "rec2020" : "srgb"];
+  const magnitude = gamut === "rec2020" ? Math.abs(channel) : channel;
+  const linear = magnitude <= transfer.encodedThreshold ? magnitude / transfer.slope : ((magnitude + transfer.offset) / transfer.factor) ** (1 / transfer.exponent);
+  return gamut === "rec2020" ? Math.sign(channel) * linear : linear;
+}
+function toGamma(channel, gamut = "srgb") {
+  const transfer = RGB_TRANSFER[gamut === "rec2020" ? "rec2020" : "srgb"];
+  const magnitude = gamut === "rec2020" ? Math.abs(channel) : channel;
+  const encoded = magnitude <= transfer.linearThreshold ? magnitude * transfer.slope : transfer.factor * magnitude ** transfer.exponent - transfer.offset;
+  return gamut === "rec2020" ? Math.sign(channel) * encoded : encoded;
+}
+function convertLinearGamut(color, from, to2) {
+  if (from === to2) return color;
+  return xyzD65ToLinear(linearToXyzD65(color, from), to2);
+}
+function linearToXyzD65([red, green, blue], gamut = "srgb") {
+  return applyMatrix(TO_XYZ[gamut], [red, green, blue]);
+}
+function xyzD65ToLinear([x, y, z], gamut = "srgb") {
+  return applyMatrix(FROM_XYZ[gamut], [x, y, z]);
+}
+function linearToHex(color, gamut = "srgb") {
+  const srgb = convertLinearGamut(color, gamut, "srgb");
+  const channels = srgb.map(
+    (channel) => Math.round(clamp01(toGamma(channel)) * 255).toString(16).padStart(2, "0")
+  );
+  return `#${channels.join("")}`;
+}
+function colorOutputSettings(output) {
+  if (typeof output === "object") return output;
+  return {
+    authoringGamut: output === "oklch" ? "srgb" : output,
+    outputFormat: output === "srgb" ? "hex" : output === "oklch" ? "oklch" : "rgb",
+    mapOutputsToSrgb: false
+  };
+}
+function outputColorCss(color, output = "srgb", inputGamut = renderGamutForOutput(output)) {
+  const settings = colorOutputSettings(output);
+  if (inputGamut === outputGamut(settings))
+    return serializeLinearOutputColor(color, settings);
+  return serializeOutputColor(
+    new Color(`${colorJsSpace(inputGamut)}-linear`, [...color]),
+    settings
+  );
+}
+function renderGamutForOutput(output) {
+  return typeof output === "object" ? outputGamut(output) : output === "oklch" ? "srgb" : output;
+}
+function luminance([red, green, blue], gamut = "srgb") {
+  if (red === green && green === blue) return red;
+  if (gamut === "rec2020")
+    return 0.2627002120112671 * red + 0.6779980715188708 * green + 0.05930171646986196 * blue;
+  return gamut === "display-p3" ? 0.2289745640697488 * red + 0.6917385218365064 * green + 0.079286914093745 * blue : 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+function contrastRatio(first, second) {
+  return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+}
+function targetLuminance(background, targetContrast, isDark) {
+  return clamp01(
+    isDark ? (background + 0.05) / targetContrast - 0.05 : targetContrast * (background + 0.05) - 0.05
+  );
+}
+function linearToOklab([red, green, blue]) {
+  const long = 0.4122214708 * red + 0.5363325363 * green + 0.0514459929 * blue;
+  const medium = 0.2119034982 * red + 0.6806995451 * green + 0.1073969566 * blue;
+  const short = 0.0883024619 * red + 0.2817188376 * green + 0.6299787005 * blue;
+  const longRoot = Math.cbrt(long);
+  const mediumRoot = Math.cbrt(medium);
+  const shortRoot = Math.cbrt(short);
+  return [
+    0.2104542553 * longRoot + 0.793617785 * mediumRoot - 0.0040720468 * shortRoot,
+    1.9779984951 * longRoot - 2.428592205 * mediumRoot + 0.4505937099 * shortRoot,
+    0.0259040371 * longRoot + 0.7827717662 * mediumRoot - 0.808675766 * shortRoot
+  ];
+}
+function oklabToLinear([lightness, a, b2]) {
+  const longRoot = (lightness + 0.3963377774 * a + 0.2158037573 * b2) ** 3;
+  const mediumRoot = (lightness - 0.1055613458 * a - 0.0638541728 * b2) ** 3;
+  const shortRoot = (lightness - 0.0894841775 * a - 1.291485548 * b2) ** 3;
+  return [
+    4.0767416621 * longRoot - 3.3077115913 * mediumRoot + 0.2309699292 * shortRoot,
+    -1.2684380046 * longRoot + 2.6097574011 * mediumRoot - 0.3413193965 * shortRoot,
+    -0.0041960863 * longRoot - 0.7034186147 * mediumRoot + 1.707614701 * shortRoot
+  ];
+}
+function oklabToOklch([lightness, a, b2]) {
+  const chroma = Math.hypot(a, b2);
+  const hue = (Math.atan2(b2, a) * 180 / Math.PI + 360) % 360;
+  return [lightness, chroma, hue];
+}
+function oklchToOklab([lightness, chroma, hue]) {
+  const hueRadians = hue * Math.PI / 180;
+  return [
+    lightness,
+    chroma * Math.cos(hueRadians),
+    chroma * Math.sin(hueRadians)
+  ];
+}
+function linearToOklch(color) {
+  return oklabToOklch(linearToOklab(color));
+}
+function oklchToLinear(color) {
+  return oklabToLinear(oklchToOklab(color));
+}
+function isInSrgbGamut(color) {
+  return color.every((channel) => channel >= 0 && channel <= 1);
+}
+function checkedCoordinates(color) {
+  const [first, second, third] = color.coords;
+  if (first === null || second === null || third === null || ![first, second, third].every(Number.isFinite)) {
+    throw new Error("Color conversion returned unavailable channels.");
+  }
+  return [first, second, third];
+}
+function colorMatrix(from, to2) {
+  return [
+    checkedCoordinates(new Color(from, [1, 0, 0]).to(to2)),
+    checkedCoordinates(new Color(from, [0, 1, 0]).to(to2)),
+    checkedCoordinates(new Color(from, [0, 0, 1]).to(to2))
+  ];
+}
+var TO_XYZ = {
+  srgb: colorMatrix("srgb-linear", "xyz-d65"),
+  "display-p3": colorMatrix("p3-linear", "xyz-d65"),
+  rec2020: colorMatrix("rec2020-linear", "xyz-d65")
+};
+var FROM_XYZ = {
+  srgb: colorMatrix("xyz-d65", "srgb-linear"),
+  "display-p3": colorMatrix("xyz-d65", "p3-linear"),
+  rec2020: colorMatrix("xyz-d65", "rec2020-linear")
+};
+function applyMatrix([red, green, blue], [first, second, third]) {
+  return [
+    red[0] * first + green[0] * second + blue[0] * third,
+    red[1] * first + green[1] * second + blue[1] * third,
+    red[2] * first + green[2] * second + blue[2] * third
+  ];
+}
+function requiresOutputGamutMapping(output) {
+  return typeof output === "object" && output.mapOutputsToSrgb && output.authoringGamut !== "srgb";
+}
+function gamutClamp(lightness, chroma, hue, gamut = "srgb", preserveAppearance = false) {
+  if (lightness <= 0) return [0, 0, 0];
+  if (lightness >= 1) return [1, 1, 1];
+  if (preserveAppearance) {
+    const color = new Color("oklch", [lightness, chroma, hue]);
+    return checkedCoordinates(
+      color.toGamut({
+        space: colorJsSpace(gamut),
+        method: COLOR_OUTPUT_MAPPING_METHOD
+      }).to(`${colorJsSpace(gamut)}-linear`)
+    );
+  }
+  const inGamut2 = (color) => isInSrgbGamut(convertLinearGamut(color, "srgb", gamut));
+  const unbounded = oklchToLinear([lightness, chroma, hue]);
+  if (inGamut2(unbounded)) {
+    return convertLinearGamut(unbounded, "srgb", gamut);
+  }
+  let minimum = 0;
+  let maximum = chroma;
+  for (let iteration = 0; iteration < 22; iteration += 1) {
+    const midpoint = (minimum + maximum) / 2;
+    if (inGamut2(oklchToLinear([lightness, midpoint, hue]))) {
+      minimum = midpoint;
+    } else {
+      maximum = midpoint;
+    }
+  }
+  return convertLinearGamut(
+    oklchToLinear([lightness, minimum, hue]),
+    "srgb",
+    gamut
+  );
+}
+function interpolateHue(from, to2, fraction) {
+  const delta = (to2 - from + 540) % 360 - 180;
+  return (from + delta * fraction + 360) % 360;
+}
+function deltaE(first, second) {
+  return Math.hypot(
+    first[0] - second[0],
+    first[1] - second[1],
+    first[2] - second[2]
+  );
+}
+
+// src/math/outputContrast.ts
+var parsedOutputs = /* @__PURE__ */ new Map();
+var parsedCharacters = 0;
+function parsedOutput(css, gamut) {
+  const key = `${gamut}\0${css}`;
+  const cached = parsedOutputs.get(key);
+  if (cached) return cached;
+  const entry = { color: new Color(css) };
+  if (key.length > 512) return entry;
+  while (parsedOutputs.size >= 4096 || parsedCharacters + key.length > 262144) {
+    const oldest = parsedOutputs.keys().next().value;
+    if (oldest === void 0) break;
+    parsedOutputs.delete(oldest);
+    parsedCharacters -= oldest.length;
+  }
+  parsedOutputs.set(key, entry);
+  parsedCharacters += key.length;
+  return entry;
+}
+function parsedOutputLinear(css, gamut) {
+  const entry = parsedOutput(css, gamut);
+  if (entry.linear) return [...entry.linear];
+  const parsed = entry.color;
+  if (parsed.space.id === "oklch" && Number(parsed.coords[1]) === 0) {
+    const neutral = Number(parsed.coords[0]) ** 3;
+    entry.linear = [neutral, neutral, neutral];
+    return [neutral, neutral, neutral];
+  }
+  const color = parsed.to(`${colorJsSpace(gamut)}-linear`);
+  const values = color.coords.map(Number);
+  if (values.length !== 3 || !values.every(Number.isFinite))
+    throw new Error(`Cannot measure output color ${css}.`);
+  entry.linear = [values[0], values[1], values[2]];
+  return [...entry.linear];
+}
+function renderedOutputLinear(css, backgroundCss, gamut) {
+  const foregroundEntry = parsedOutput(css, gamut), backgroundEntry = parsedOutput(backgroundCss, gamut);
+  const foreground = foregroundEntry.color, background = backgroundEntry.color;
+  if (Number(background.alpha) !== 1)
+    throw new Error("A contrast background must be opaque.");
+  const alpha = Number(foreground.alpha);
+  if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1)
+    throw new Error("A contrast foreground has invalid opacity.");
+  const encodedChannels = (entry) => {
+    if (entry.encoded) return entry.encoded;
+    const color = entry.color;
+    if (color.space.id === "oklch" && Number(color.coords[1]) === 0) {
+      const neutral = toGamma(Number(color.coords[0]) ** 3, gamut);
+      entry.encoded = [neutral, neutral, neutral];
+    } else {
+      entry.encoded = color.to(colorJsSpace(gamut)).coords.map(Number);
+    }
+    return entry.encoded;
+  };
+  const fg = encodedChannels(foregroundEntry), bg = encodedChannels(backgroundEntry);
+  const encoded = fg.map(
+    (channel, index) => channel * alpha + bg[index] * (1 - alpha)
+  );
+  if (!encoded.every(Number.isFinite))
+    throw new Error("Cannot measure the composited output color.");
+  return [
+    toLinear(encoded[0], gamut),
+    toLinear(encoded[1], gamut),
+    toLinear(encoded[2], gamut)
+  ];
+}
+function measureOutputContrast(css, backgroundCss, gamut) {
+  return contrastRatio(
+    luminance(renderedOutputLinear(css, backgroundCss, gamut), gamut),
+    luminance(parsedOutputLinear(backgroundCss, gamut), gamut)
+  );
+}
+function validateTarget(target) {
+  if (!Number.isFinite(target) || target < 1 || target > 21)
+    throw new Error("Choose a finite contrast target from 1:1 to 21:1.");
+}
+function enforceOutputContrast(candidate, backgroundCss, target, settings, isDark, _source) {
+  void _source;
+  validateTarget(target);
+  const gamut = outputGamut(settings);
+  const evaluations = /* @__PURE__ */ new Map();
+  const evaluate = (linear) => {
+    const css = serializeLinearOutputColor(linear, settings);
+    const previous = evaluations.get(css);
+    if (previous) return previous;
+    const result = {
+      css,
+      linear: parsedOutputLinear(css, gamut),
+      measuredContrast: measureOutputContrast(css, backgroundCss, gamut)
+    };
+    evaluations.set(css, result);
+    return result;
+  };
+  const initial = evaluate(candidate);
+  if (initial.measuredContrast >= target) return initial;
+  const endpoint = isDark ? [0, 0, 0] : [1, 1, 1];
+  let best = evaluate(endpoint);
+  if (best.measuredContrast < target) return best;
+  let low = 0, high = 1;
+  for (let iteration = 0; iteration < 46; iteration += 1) {
+    const fraction = (low + high) / 2;
+    const result = evaluate(
+      mapLinearRgb(
+        candidate,
+        (channel, index) => channel + fraction * (endpoint[index] - channel)
+      )
+    );
+    if (result.measuredContrast >= target) {
+      high = fraction;
+      best = result;
+    } else low = fraction;
+  }
+  return best;
+}
+
+// src/math/apca.ts
+var NORM_BG = 0.56;
+var NORM_TXT = 0.57;
+var REV_TXT = 0.62;
+var REV_BG = 0.65;
+var BLK_THRS = 0.022;
+var BLK_CLMP = 1.414;
+var SCALE = 1.14;
+var OFFSET = 0.027;
+var LO_CLIP = 0.1;
+var DELTA_Y_MIN = 5e-4;
+var MAX_APCA = 108;
+function apcaLuminance(encoded) {
+  const lin = (value) => Math.sign(value) * Math.abs(value) ** 2.4;
+  return lin(encoded[0]) * 0.2126729 + lin(encoded[1]) * 0.7151522 + lin(encoded[2]) * 0.072175;
+}
+function softClamp(y) {
+  return y >= BLK_THRS ? y : y + (BLK_THRS - y) ** BLK_CLMP;
+}
+function apcaFromLuminance(textY, backgroundY, smooth = true) {
+  const txt = softClamp(textY);
+  const bg = softClamp(backgroundY);
+  if (Math.abs(bg - txt) < DELTA_Y_MIN) return 0;
+  const raw = bg > txt ? (bg ** NORM_BG - txt ** NORM_TXT) * SCALE : (bg ** REV_BG - txt ** REV_TXT) * SCALE;
+  const magnitude = Math.abs(raw);
+  const sign = Math.sign(raw);
+  if (magnitude < LO_CLIP) {
+    return smooth ? sign * magnitude * ((LO_CLIP - OFFSET) / LO_CLIP) * 100 : 0;
+  }
+  return sign * (magnitude - OFFSET) * 100;
+}
+function srgbCoords(color) {
+  const parsed = typeof color === "string" ? new Color(color) : color;
+  return parsed.to("srgb").coords.map((value) => Number(value) || 0);
+}
+function apcaContrast(text, background, smooth = true) {
+  return apcaFromLuminance(
+    apcaLuminance(srgbCoords(text)),
+    apcaLuminance(srgbCoords(background)),
+    smooth
+  );
+}
+
+// src/scales/scaleInterpolation.ts
+function scaleInterpolation(scale) {
+  return scale.interpolation ?? "oklch";
+}
+
+// src/scales/scaleData.ts
+var NEUTRAL_CHROMA = 2;
+var RAMP_STEPS = 33;
+var ANCHOR_INDICES = [4, 9, 14, 19, 24, 28];
+var RGB_ANCHOR_INDICES = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29];
+var scaleDataCache = /* @__PURE__ */ new Map();
+function scaleCacheKey(scale, output) {
+  return `${JSON.stringify(output)}|${scale.id}|${scaleInterpolation(scale)}|${scale.stops.map((stop) => `${stop.lightness},${stop.hue},${stop.chroma}`).join(";")}`;
+}
+function sortStops(stops) {
+  return [...stops].sort((first, second) => first.lightness - second.lightness);
+}
+function scaleHueChromaAt(stops, lightness) {
+  const sortedStops = sortStops(stops);
+  if (sortedStops.length === 0) {
+    throw new Error("A color scale requires at least one stop.");
+  }
+  const first = sortedStops[0];
+  const last2 = sortedStops.at(-1);
+  if (lightness <= first.lightness || sortedStops.length === 1) {
+    return { hue: first.hue, chroma: first.chroma };
+  }
+  if (lightness >= last2.lightness) {
+    return { hue: last2.hue, chroma: last2.chroma };
+  }
+  const upperIndex = sortedStops.findIndex(
+    (stop) => stop.lightness >= lightness
+  );
+  const lower = sortedStops[upperIndex - 1];
+  const upper = sortedStops[upperIndex];
+  const span = upper.lightness - lower.lightness;
+  const fraction = span === 0 ? 0 : (lightness - lower.lightness) / span;
+  return {
+    hue: interpolateHue(lower.hue, upper.hue, fraction),
+    chroma: lower.chroma + (upper.chroma - lower.chroma) * fraction
+  };
+}
+function stopLinear(stop, gamut, preserveAppearance) {
+  return gamutClamp(
+    clamp01(stop.lightness),
+    stop.chroma / 100 * MAX_CHROMA,
+    stop.hue,
+    gamut,
+    preserveAppearance
+  );
+}
+function rgbLinearAtLightness(stops, lightness, gamut, preserveAppearance) {
+  const points = [
+    { lightness: 0, gamma: [0, 0, 0] },
+    ...sortStops(stops).map((stop) => ({
+      lightness: clamp01(stop.lightness),
+      gamma: stopLinear(stop, gamut, preserveAppearance).map(
+        (channel) => toGamma(channel, gamut)
+      )
+    })),
+    { lightness: 1, gamma: [1, 1, 1] }
+  ];
+  const target = clamp01(lightness);
+  const upperIndex = Math.max(
+    1,
+    points.findIndex((point) => point.lightness >= target)
+  );
+  const lower = points[upperIndex - 1];
+  const upper = points[upperIndex];
+  const span = upper.lightness - lower.lightness;
+  const fraction = span <= 0 ? 1 : (target - lower.lightness) / span;
+  return lower.gamma.map(
+    (channel, index) => toLinear(channel + (upper.gamma[index] - channel) * fraction, gamut)
+  );
+}
+function scaleLinearAtLightness(scale, lightness, gamut, preserveAppearance) {
+  if (scaleInterpolation(scale) === "rgb") {
+    const linear2 = rgbLinearAtLightness(
+      scale.stops,
+      lightness,
+      gamut,
+      preserveAppearance
+    );
+    const [, chroma2, hue2] = linearToOklch(
+      convertLinearGamut(linear2, gamut, "srgb")
+    );
+    return {
+      linear: linear2,
+      hue: Number.isFinite(hue2) ? hue2 : 0,
+      chroma: chroma2 / MAX_CHROMA * 100
+    };
+  }
+  const { hue, chroma } = scaleHueChromaAt(scale.stops, lightness);
+  const linear = gamutClamp(
+    clamp01(lightness),
+    chroma / 100 * MAX_CHROMA,
+    hue,
+    gamut,
+    preserveAppearance
+  );
+  return { linear, hue, chroma };
+}
+function resolveScaleColorAtLightness(scale, lightness, output = "srgb") {
+  const gamut = renderGamutForOutput(output);
+  const resolvedLightness = clamp01(lightness);
+  const { linear, hue, chroma } = scaleLinearAtLightness(
+    scale,
+    resolvedLightness,
+    gamut,
+    requiresOutputGamutMapping(output)
+  );
+  return {
+    linear,
+    css: outputColorCss(linear, output, gamut),
+    hex: linearToHex(linear, gamut),
+    lightness: resolvedLightness,
+    hue,
+    chroma,
+    gamut
+  };
+}
+function buildRamp(scale, output = "srgb") {
+  const gamut = renderGamutForOutput(output);
+  const minimumLightness = Math.min(
+    ...scale.stops.map((stop) => stop.lightness),
+    0
+  );
+  const maximumLightness = Math.max(
+    ...scale.stops.map((stop) => stop.lightness),
+    1
+  );
+  return Array.from({ length: RAMP_STEPS }, (_, index) => {
+    const lightness = minimumLightness + (maximumLightness - minimumLightness) * index / (RAMP_STEPS - 1);
+    const { linear } = scaleLinearAtLightness(
+      scale,
+      lightness,
+      gamut,
+      requiresOutputGamutMapping(output)
+    );
+    return {
+      lightness,
+      linear,
+      luminance: luminance(linear, gamut),
+      hex: linearToHex(linear, gamut),
+      css: outputColorCss(linear, output, gamut)
+    };
+  }).sort((first, second) => first.luminance - second.luminance);
+}
+function rampAnchors(ramp, keyColors = []) {
+  const indices = keyColors.length > 0 ? RGB_ANCHOR_INDICES : ANCHOR_INDICES;
+  const samples = [
+    { luminance: 0, linear: [0, 0, 0] },
+    ...keyColors,
+    ...indices.map((index) => ({
+      luminance: ramp[index].luminance,
+      linear: ramp[index].linear
+    })),
+    { luminance: 1, linear: [1, 1, 1] }
+  ];
+  samples.sort((first, second) => first.luminance - second.luminance);
+  return samples.filter(
+    (anchor, index) => index === 0 || anchor.luminance - samples[index - 1].luminance >= 1e-4
+  );
+}
+function readAnchors(anchors, targetLuminance2) {
+  const target = clamp01(targetLuminance2);
+  if (target <= anchors[0].luminance) {
+    return anchors[0].linear;
+  }
+  const last2 = anchors.at(-1);
+  if (target >= last2.luminance) {
+    return last2.linear;
+  }
+  const upperIndex = anchors.findIndex((anchor) => anchor.luminance >= target);
+  const lower = anchors[upperIndex - 1];
+  const upper = anchors[upperIndex];
+  const fraction = (target - lower.luminance) / (upper.luminance - lower.luminance);
+  return [
+    lower.linear[0] + (upper.linear[0] - lower.linear[0]) * fraction,
+    lower.linear[1] + (upper.linear[1] - lower.linear[1]) * fraction,
+    lower.linear[2] + (upper.linear[2] - lower.linear[2]) * fraction
+  ];
+}
+function buildScaleData(scale, output = "srgb") {
+  const gamut = renderGamutForOutput(output);
+  const cacheKey = scaleCacheKey(scale, output);
+  const cached = scaleDataCache.get(cacheKey);
+  if (cached) {
+    if (cached.scale === scale) return cached;
+    const current = { ...cached, scale };
+    scaleDataCache.set(cacheKey, current);
+    return current;
+  }
+  const ramp = buildRamp(scale, output);
+  const keyColors = scaleInterpolation(scale) === "rgb" ? scale.stops.map((stop) => {
+    const linear = stopLinear(
+      stop,
+      gamut,
+      requiresOutputGamutMapping(output)
+    );
+    return { luminance: luminance(linear, gamut), linear };
+  }) : [];
+  const anchors = rampAnchors(ramp, keyColors);
+  const neutral = scale.stops.every((stop) => stop.chroma < NEUTRAL_CHROMA);
+  const result = {
+    scale,
+    neutral,
+    ramp,
+    anchors,
+    gamut,
+    output
+  };
+  scaleDataCache.set(cacheKey, result);
+  if (scaleDataCache.size > 256) {
+    const oldestKey = scaleDataCache.keys().next().value;
+    if (oldestKey) scaleDataCache.delete(oldestKey);
+  }
+  return result;
+}
+
+// src/modes/polarity.ts
+var DEFAULT_CONTRAST_REFERENCE = "light";
+var DEFAULT_POLARITY_COMPENSATION = 0;
+var MAX_POLARITY_OFFSET = 12;
+var ROLLOFF_EXPONENT = 2;
+var LOW_EXPANSION = 3;
+var MIN_RATIO = 1;
+var MAX_RATIO = 21;
+function clampRatio(ratio) {
+  return Math.min(MAX_RATIO, Math.max(MIN_RATIO, ratio));
+}
+function lightnessFromLuminance(y) {
+  return y > 216 / 24389 ? 116 * Math.cbrt(y) - 16 : 24389 / 27 * y;
+}
+function luminanceFromLightness(lightness) {
+  return lightness > 8 ? ((lightness + 16) / 116) ** 3 : lightness * 27 / 24389;
+}
+function darkLightnessDelta(ratio) {
+  return lightnessFromLuminance(0.05 * (clampRatio(ratio) - 1));
+}
+function ratioFromDarkLightnessDelta(delta) {
+  return clampRatio(
+    1 + luminanceFromLightness(Math.min(100, Math.max(0, delta))) / 0.05
+  );
+}
+function boost(delta, offset) {
+  return delta + offset * (1 - Math.exp(-delta / LOW_EXPANSION)) * (1 - (delta / 100) ** ROLLOFF_EXPONENT);
+}
+function unboost(target, offset) {
+  let low = 0;
+  let high = 100;
+  for (let step = 0; step < 40; step += 1) {
+    const middle = (low + high) / 2;
+    if (boost(middle, offset) < target) low = middle;
+    else high = middle;
+  }
+  return (low + high) / 2;
+}
+function contrastReference(document) {
+  return document.settings.contrastReference ?? DEFAULT_CONTRAST_REFERENCE;
+}
+function polarityCompensation(document) {
+  return document.settings.polarityCompensation ?? DEFAULT_POLARITY_COMPENSATION;
+}
+var DEFAULT_CONTRAST_MULTIPLIER = 1;
+var MAX_CONTRAST_MULTIPLIER = 3;
+function contrastMultiplier(document) {
+  return document.settings.contrastMultiplier ?? DEFAULT_CONTRAST_MULTIPLIER;
+}
+function multiplyContrast(ratio, multiplier) {
+  return clampRatio((clampRatio(ratio) - 1) * Math.max(0, multiplier) + 1);
+}
+function applyContrastMultiplier(document) {
+  const multiplier = contrastMultiplier(document);
+  if (multiplier === 1) return document;
+  return {
+    ...document,
+    contrasts: document.contrasts.map((contrast2) => ({
+      ...contrast2,
+      value: multiplyContrast(contrast2.value, multiplier)
+    })),
+    surfaces: document.surfaces.map(
+      (surface) => surface.base || surface.contrast === void 0 ? surface : {
+        ...surface,
+        contrast: multiplyContrast(surface.contrast, multiplier)
+      }
+    )
+  };
+}
+function compensatedContrast(ratio, strength, reference) {
+  const offset = Math.min(1, Math.max(0, strength)) * MAX_POLARITY_OFFSET;
+  if (offset === 0) return clampRatio(ratio);
+  const delta = darkLightnessDelta(ratio);
+  return ratioFromDarkLightnessDelta(
+    reference === "light" ? boost(delta, offset) : unboost(delta, offset)
+  );
+}
+function polarityWeight(backgroundLuminance2, reference) {
+  const lightness = Math.min(100, Math.max(0, lightnessFromLuminance(backgroundLuminance2))) / 100;
+  return reference === "light" ? 1 - lightness : lightness;
+}
+function oppositeContrast(contrast2, context) {
+  return contrast2.oppositeValue ?? compensatedContrast(contrast2.value, context.strength, context.reference);
+}
+function effectiveContrast(contrast2, context) {
+  const authored = clampRatio(contrast2.value);
+  if (context.weight <= 0) return authored;
+  const opposite = oppositeContrast(contrast2, context);
+  if (context.weight >= 1) return clampRatio(opposite);
+  return clampRatio(
+    Math.exp(
+      Math.log(authored) + context.weight * (Math.log(opposite) - Math.log(authored))
+    )
+  );
+}
+function backgroundLuminance(document) {
+  const scale = document.scales.find((item) => item.id === document.backgroundScaleId) ?? document.scales[0];
+  const background = resolveScaleColorAtLightness(
+    scale,
+    document.backgroundLightness,
+    document.settings.colorOutput
+  );
+  return luminance(
+    background.linear,
+    renderGamutForOutput(document.settings.colorOutput)
+  );
+}
+function polarityContext(document) {
+  const reference = contrastReference(document);
+  return {
+    weight: polarityWeight(backgroundLuminance(document), reference),
+    strength: polarityCompensation(document),
+    reference
+  };
+}
+function applyPolarityCompensation(document) {
+  const context = polarityContext(document);
+  const hasOpposites = document.contrasts.some(
+    (contrast2) => contrast2.oppositeValue !== void 0
+  );
+  if (context.weight === 0 || context.strength === 0 && !hasOpposites)
+    return document;
+  return {
+    ...document,
+    contrasts: document.contrasts.map((contrast2) => ({
+      ...contrast2,
+      value: effectiveContrast(contrast2, context)
+    })),
+    surfaces: document.surfaces.map(
+      (surface) => surface.base || surface.contrast === void 0 ? surface : {
+        ...surface,
+        contrast: effectiveContrast({ value: surface.contrast }, context)
+      }
+    )
+  };
+}
+
+// src/scales/colorAtContrast.ts
+var generationCache = /* @__PURE__ */ new WeakMap();
+function createGeneratedColor(linear, backgroundLuminance2, scaleData) {
+  return {
+    linear,
+    hex: linearToHex(linear, scaleData.gamut),
+    css: outputColorCss(linear, scaleData.output, scaleData.gamut),
+    measuredContrast: contrastRatio(
+      luminance(linear, scaleData.gamut),
+      backgroundLuminance2
+    )
+  };
+}
+function generateColors(scaleData, background, targetContrast, sideOverride) {
+  const cacheKey = JSON.stringify([background, targetContrast, sideOverride]);
+  const cache = generationCache.get(scaleData.anchors) ?? /* @__PURE__ */ new Map();
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+  const backgroundCss = outputColorCss(
+    background,
+    scaleData.output,
+    scaleData.gamut
+  );
+  if (typeof scaleData.output === "object")
+    background = parsedOutputLinear(backgroundCss, scaleData.gamut);
+  const backgroundLuminance2 = luminance(background, scaleData.gamut);
+  const isDark = sideOverride ?? backgroundLuminance2 > 0.1791;
+  const desiredLuminance = targetLuminance(
+    backgroundLuminance2,
+    targetContrast,
+    isDark
+  );
+  const extremity = scaleData.neutral ? 1 : clamp01((1 - targetContrast) / 11);
+  const endpoint = isDark ? 0 : 1;
+  const sourceLuminance = clamp01(
+    desiredLuminance + extremity * (endpoint - desiredLuminance)
+  );
+  const source = readAnchors(scaleData.anchors, sourceLuminance);
+  const sourceDifference = isDark ? Math.min(
+    luminance(source, scaleData.gamut) - backgroundLuminance2,
+    -1e-4
+  ) : Math.max(
+    luminance(source, scaleData.gamut) - backgroundLuminance2,
+    1e-4
+  );
+  const alpha = clamp01(
+    (desiredLuminance - backgroundLuminance2) / sourceDifference
+  );
+  const dynamicLinear = mapLinearRgb(
+    source,
+    (channel, index) => alpha * channel + (1 - alpha) * background[index]
+  );
+  const opaqueLinear = readAnchors(scaleData.anchors, desiredLuminance);
+  const final = (linear) => {
+    if (typeof scaleData.output !== "object")
+      return createGeneratedColor(linear, backgroundLuminance2, scaleData);
+    const result2 = enforceOutputContrast(
+      linear,
+      backgroundCss,
+      targetContrast,
+      scaleData.output,
+      isDark,
+      scaleData.scale.name
+    );
+    return { ...result2, hex: linearToHex(result2.linear, scaleData.gamut) };
+  };
+  let dynamic;
+  let opaque;
+  const resolveOpaque = () => opaque ??= final(opaqueLinear);
+  const result = {
+    targetContrast,
+    targetLuminance: desiredLuminance,
+    sourceLuminance,
+    alpha,
+    isDark,
+    sourceLinear: source,
+    get dynamic() {
+      return dynamic ??= final(dynamicLinear);
+    },
+    get opaque() {
+      return resolveOpaque();
+    },
+    get chromaDeltaE() {
+      return deltaE(
+        linearToOklab(
+          convertLinearGamut(result.dynamic.linear, scaleData.gamut, "srgb")
+        ),
+        linearToOklab(
+          convertLinearGamut(resolveOpaque().linear, scaleData.gamut, "srgb")
+        )
+      );
+    }
+  };
+  cache.set(cacheKey, result);
+  if (cache.size > 128) cache.delete(cache.keys().next().value);
+  generationCache.set(scaleData.anchors, cache);
+  return result;
+}
+
+// src/scales/apcaGeneration.ts
+function encodeSrgb(channel) {
+  const t = RGB_TRANSFER.srgb;
+  const magnitude = Math.abs(channel);
+  const encoded = magnitude <= t.linearThreshold ? magnitude * t.slope : t.factor * magnitude ** t.exponent - t.offset;
+  return Math.sign(channel) * encoded;
+}
+function apcaLuminanceOfLinear(linear, gamut) {
+  return apcaLuminance(convertLinearGamut(linear, gamut, "srgb").map(encodeSrgb));
+}
+function apcaPrefersDark(background, gamut) {
+  const bgY = apcaLuminanceOfLinear(background, gamut);
+  return Math.abs(apcaFromLuminance(0, bgY)) >= Math.abs(apcaFromLuminance(1, bgY));
+}
+function generateApcaColor(scaleData, background, backgroundCss, target, settings, isDark) {
+  const gamut = outputGamut(settings);
+  const bgY = apcaLuminanceOfLinear(background, gamut);
+  const bgLum = luminance(background, gamut);
+  const at = (fraction2) => {
+    const lum = bgLum + fraction2 * ((isDark ? 0 : 1) - bgLum);
+    return readAnchors(scaleData.anchors, lum);
+  };
+  const fast = (linear) => Math.abs(apcaFromLuminance(apcaLuminanceOfLinear(linear, gamut), bgY));
+  const measure = (linear) => {
+    const css = serializeLinearOutputColor(linear, settings);
+    return { css, linear: parsedOutputLinear(css, gamut), measuredContrast: Math.abs(apcaContrast(css, backgroundCss)) };
+  };
+  let low = 0;
+  let high = 1;
+  if (fast(at(1)) < target) {
+    const endpoint = isDark ? [0, 0, 0] : [1, 1, 1];
+    return { ...measure(endpoint), isDark };
+  }
+  for (let i = 0; i < 40; i += 1) {
+    const middle = (low + high) / 2;
+    if (fast(at(middle)) >= target) high = middle;
+    else low = middle;
+  }
+  let fraction = high;
+  let result = measure(at(fraction));
+  for (let i = 0; i < 60 && result.measuredContrast < target && fraction < 1; i += 1) {
+    fraction = Math.min(1, fraction + 2e-3);
+    result = measure(at(fraction));
+  }
+  if (result.measuredContrast < target) {
+    const endpoint = isDark ? [0, 0, 0] : [1, 1, 1];
+    const towardEnd = mapLinearRgb(result.linear, (c, i) => c + 0.5 * (endpoint[i] - c));
+    const fallback = measure(towardEnd);
+    if (fallback.measuredContrast >= target) result = fallback;
+  }
+  return { ...result, isDark };
+}
+
+// src/theme/surfaceGeneration.ts
+function goesLight(surface, reference, gamut) {
+  return !surface.forceDark && (surface.contrast ?? 1) <= 1.05 / (luminance(reference, gamut) + 0.05);
+}
+function deriveBaseSurface(surface, reference, gamut) {
+  const contrast2 = surface.contrast ?? 1;
+  const referenceLuminance = luminance(reference, gamut);
+  if (goesLight(surface, reference, gamut)) {
+    const maximum = Math.max(...reference, 1e-6);
+    const target2 = contrast2 * (referenceLuminance + 0.05) - 0.05;
+    const alpha = clamp01(
+      (target2 - referenceLuminance) / Math.max(referenceLuminance / maximum - referenceLuminance, 1e-6)
+    );
+    return mapLinearRgb(
+      reference,
+      (channel) => clamp01(channel + alpha * (channel / maximum - channel))
+    );
+  }
+  const target = (referenceLuminance + 0.05) / contrast2 - 0.05;
+  const factor = target / Math.max(referenceLuminance, 1e-6);
+  return mapLinearRgb(reference, (channel) => clamp01(factor * channel));
+}
+function surfaceLinear(surface, document, parent) {
+  const gamut = renderGamutForOutput(document.settings.colorOutput);
+  const base = resolvedBackgroundLinear(document);
+  if (surface.base) return base;
+  const reference = surface.reference === "base" || !parent ? base : parent;
+  if (!surface.sourceScaleId && (!surface.source || surface.source === "base")) {
+    const referenceCss = outputColorCss(
+      reference,
+      document.settings.colorOutput,
+      gamut
+    );
+    const actualReference = parsedOutputLinear(referenceCss, gamut);
+    return enforceOutputContrast(
+      deriveBaseSurface(surface, actualReference, gamut),
+      referenceCss,
+      surface.contrast ?? 1,
+      document.settings.colorOutput,
+      !goesLight(surface, actualReference, gamut),
+      surface.name
+    ).linear;
+  }
+  const scale = document.scales.find(
+    (candidate) => surface.sourceScaleId ? candidate.id === surface.sourceScaleId : candidate.name === surface.source
+  );
+  if (!scale)
+    throw new Error(`Surface ${surface.id} has an unresolved tint source.`);
+  return generateColors(
+    buildScaleData(scale, document.settings.colorOutput),
+    reference,
+    surface.contrast ?? 1,
+    !goesLight(surface, reference, gamut)
+  ).dynamic.linear;
+}
+function resolvedBackgroundLinear(document) {
+  const scale = document.scales.find((item) => item.id === document.backgroundScaleId) ?? document.scales[0];
+  return resolveScaleColorAtLightness(
+    scale,
+    document.backgroundLightness,
+    document.settings.colorOutput
+  ).linear;
+}
+
+// src/math/cvd.ts
+var VISIONS = ["normal", "protan", "deutan", "tritan"];
+var MACHADO = {
+  protan: [
+    [0.152286, 1.052583, -0.204868],
+    [0.114503, 0.786281, 0.099216],
+    [-3882e-6, -0.048116, 1.051998]
+  ],
+  deutan: [
+    [0.367322, 0.860646, -0.227968],
+    [0.280085, 0.672501, 0.047413],
+    [-0.01182, 0.04294, 0.968881]
+  ],
+  tritan: [
+    [1.255528, -0.076749, -0.178779],
+    [-0.078411, 0.930809, 0.147602],
+    [4733e-6, 0.691367, 0.3039]
+  ]
+};
+function simulateCvd(color, vision) {
+  const input = [clamp01(color[0]), clamp01(color[1]), clamp01(color[2])];
+  if (vision === "normal") return input;
+  const m = MACHADO[vision];
+  return m.map((row) => clamp01(row[0] * input[0] + row[1] * input[1] + row[2] * input[2]));
+}
+var D65 = linearToXyzD65([1, 1, 1]);
+var labF = (t) => t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116;
+function labOfLinear(color) {
+  const [x, y, z] = linearToXyzD65(color).map((v, i) => labF(v / D65[i]));
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+var rad = Math.PI / 180;
+function deltaE2000([l1, a1, b1], [l2, a2, b2]) {
+  const c13 = Math.hypot(a1, b1);
+  const c23 = Math.hypot(a2, b2);
+  const cBar7 = ((c13 + c23) / 2) ** 7;
+  const g2 = 0.5 * (1 - Math.sqrt(cBar7 / (cBar7 + 25 ** 7)));
+  const ap1 = a1 * (1 + g2);
+  const ap2 = a2 * (1 + g2);
+  const cp1 = Math.hypot(ap1, b1);
+  const cp2 = Math.hypot(ap2, b2);
+  const hueOf = (b3, a) => b3 === 0 && a === 0 ? 0 : (Math.atan2(b3, a) / rad + 360) % 360;
+  const hp1 = hueOf(b1, ap1);
+  const hp2 = hueOf(b2, ap2);
+  const dL = l2 - l1;
+  const dC = cp2 - cp1;
+  let dh = 0;
+  if (cp1 * cp2 !== 0) {
+    dh = hp2 - hp1;
+    if (dh > 180) dh -= 360;
+    else if (dh < -180) dh += 360;
+  }
+  const dH = 2 * Math.sqrt(cp1 * cp2) * Math.sin(dh / 2 * rad);
+  const lBar = (l1 + l2) / 2;
+  const cBar = (cp1 + cp2) / 2;
+  let hBar = hp1 + hp2;
+  if (cp1 * cp2 !== 0) {
+    if (Math.abs(hp1 - hp2) <= 180) hBar = (hp1 + hp2) / 2;
+    else hBar = hp1 + hp2 < 360 ? (hp1 + hp2 + 360) / 2 : (hp1 + hp2 - 360) / 2;
+  }
+  const t = 1 - 0.17 * Math.cos((hBar - 30) * rad) + 0.24 * Math.cos(2 * hBar * rad) + 0.32 * Math.cos((3 * hBar + 6) * rad) - 0.2 * Math.cos((4 * hBar - 63) * rad);
+  const dTheta = 30 * Math.exp(-(((hBar - 275) / 25) ** 2));
+  const cBarP7 = cBar ** 7;
+  const rc = 2 * Math.sqrt(cBarP7 / (cBarP7 + 25 ** 7));
+  const sl = 1 + 0.015 * (lBar - 50) ** 2 / Math.sqrt(20 + (lBar - 50) ** 2);
+  const sc = 1 + 0.045 * cBar;
+  const sh = 1 + 0.015 * cBar * t;
+  const rt = -Math.sin(2 * dTheta * rad) * rc;
+  return Math.sqrt(
+    (dL / sl) ** 2 + (dC / sc) ** 2 + (dH / sh) ** 2 + rt * (dC / sc) * (dH / sh)
+  );
+}
+
+// src/theme/feedbackHues.ts
+var FEEDBACK_HUES = {
+  error: [10, 45],
+  warning: [50, 100],
+  success: [125, 165],
+  info: [225, 265]
+};
+var FEEDBACK_LIGHTNESS = { error: 0.6, warning: 0.78, success: 0.65, info: 0.6 };
+var FEEDBACK_LIGHTNESS_RANGE = {
+  error: [0.4, 0.85],
+  warning: [0.3, 0.95],
+  success: [0.2, 0.98],
+  info: [0.2, 0.98]
+};
+var lightEnough = (name, lightness) => {
+  const [lo, hi] = FEEDBACK_LIGHTNESS_RANGE[name] ?? [0.02, 0.98];
+  return lightness >= lo && lightness <= hi;
+};
+var MIN_FEEDBACK_DELTA_E = 11;
+var MIN_CHROMA = 0.08;
+var MAX_CHROMA2 = 0.3;
+var wrap = (hue) => (hue % 360 + 360) % 360;
+function harmonizeFeedback(brand, names = Object.keys(FEEDBACK_HUES)) {
+  const [, c, h] = new Color(brand).to("oklch").coords.map((v) => Number(v) || 0);
+  const chroma = Math.min(MAX_CHROMA2, Math.max(MIN_CHROMA, c));
+  const result = {};
+  for (const name of names) {
+    const range = FEEDBACK_HUES[name];
+    if (!range) continue;
+    const center = (range[0] + range[1]) / 2;
+    let best = center;
+    let bestDistance = Infinity;
+    for (let n2 = 0; n2 < 12; n2 += 1) {
+      const hue = wrap(h + n2 * 30);
+      const distance3 = Math.abs(hue - center);
+      if (hue >= range[0] && hue <= range[1] && distance3 < bestDistance) [best, bestDistance] = [hue, distance3];
+    }
+    result[name] = [FEEDBACK_LIGHTNESS[name], chroma, Number(best.toFixed(2))];
+  }
+  return result;
+}
+function report(labs, required) {
+  const names = Object.keys(labs);
+  const failing = [];
+  let worst;
+  for (let i = 0; i < names.length; i += 1)
+    for (let j = i + 1; j < names.length; j += 1)
+      for (const vision of VISIONS) {
+        const deltaE2 = Number(deltaE2000(labs[names[i]][vision], labs[names[j]][vision]).toFixed(2));
+        const pair = { a: names[i], b: names[j], vision, deltaE: deltaE2 };
+        if (!worst || deltaE2 < worst.deltaE) worst = pair;
+        if (deltaE2 < required) failing.push(pair);
+      }
+  return { pass: failing.length === 0, required, ...worst && { worst }, failing };
+}
+var visionLabs = (linear) => Object.fromEntries(VISIONS.map((v) => [v, labOfLinear(simulateCvd(linear, v))]));
+function checkCvd(colors, required = MIN_FEEDBACK_DELTA_E) {
+  const labs = {};
+  for (const [name, css] of Object.entries(colors)) {
+    const linear = new Color(css).to("srgb-linear").coords.map((v) => Number(v) || 0);
+    labs[name] = visionLabs(linear);
+  }
+  return report(labs, required);
+}
+var minDeltaE = (a, b2) => Math.min(...VISIONS.map((v) => deltaE2000(a[v], b2[v])));
+function searchLightness(start, options, step, required) {
+  const names = Object.keys(start);
+  const offsets = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6].filter((v, i, a) => a.indexOf(v) === i);
+  const options_ = names.map(
+    (name) => offsets.map((k) => {
+      const [l, c, h] = start[name];
+      const value = [l + k * step, c, h];
+      return { k, value };
+    }).filter(({ k, value }) => k === 0 || lightEnough(name, value[0]) && value[0] > 0.02 && value[0] < 0.98 && options.accepts(name, value)).map(({ k, value }) => ({ k, value, labs: visionLabs(options.realize(value)) }))
+  );
+  const table = /* @__PURE__ */ new Map();
+  const pairMin = (i, a, j, b2) => {
+    const key = `${i}.${a}.${j}.${b2}`;
+    let value = table.get(key);
+    if (value === void 0) table.set(key, value = minDeltaE(options_[i][a].labs, options_[j][b2].labs));
+    return value;
+  };
+  let best;
+  const pick = [];
+  const walk = (index, min, cost) => {
+    if (best?.pass && cost >= best.cost) return;
+    if (index === names.length) {
+      const pass = min >= required;
+      if (!best || pass && (!best.pass || cost < best.cost) || !pass && !best.pass && min > best.min)
+        best = { pick: [...pick], pass, cost, min };
+      return;
+    }
+    for (let a = 0; a < options_[index].length; a += 1) {
+      let m = min;
+      for (let j = 0; j < index; j += 1) m = Math.min(m, pairMin(j, pick[j], index, a));
+      if (best?.pass && m < required) continue;
+      pick[index] = a;
+      walk(index + 1, m, cost + Math.abs(options_[index][a].k));
+    }
+  };
+  walk(0, Infinity, 0);
+  return Object.fromEntries(names.map((name, i) => [name, options_[i][best.pick[i]].value]));
+}
+function separateFeedback(start, options) {
+  const required = options.required ?? MIN_FEEDBACK_DELTA_E;
+  const step = options.lightnessStep ?? 0.05;
+  const colors = searchLightness(start, options, step, required);
+  const labs = {};
+  for (const [name, value] of Object.entries(colors)) labs[name] = visionLabs(options.realize(value));
+  const shortfall = (set2) => report(set2, required).failing.reduce((sum, pair) => sum + (required - pair.deltaE), 0);
+  const ranges = (name) => FEEDBACK_HUES[name] ?? [start[name][2] - 15, start[name][2] + 15];
+  let current = shortfall(labs);
+  for (let move = 0; move < (options.maxMoves ?? 60) && current > 0; move += 1) {
+    const involved = new Set(report(labs, required).failing.flatMap((p2) => [p2.a, p2.b]));
+    let applied = false;
+    for (const kind of ["hue", "chroma", "lightness"]) {
+      let best;
+      for (const name of involved) {
+        const [l, c, h] = colors[name];
+        const [lo, hi] = ranges(name);
+        const candidates = kind === "hue" ? [[l, c, h + 4], [l, c, h - 4]] : kind === "chroma" ? [[l, c * 1.1, h], [l, c * 0.9, h]] : [[l + step / 2, c, h], [l - step / 2, c, h]];
+        for (const value of candidates) {
+          if (value[0] <= 0.02 || value[0] >= 0.98 || !lightEnough(name, value[0]) || value[2] < lo || value[2] > hi || value[1] < 0.03) continue;
+          if (!options.accepts(name, value)) continue;
+          const trial = { ...labs, [name]: visionLabs(options.realize(value)) };
+          const score = shortfall(trial);
+          if (score < current - 1e-6 && (!best || score < best.score)) best = { name, value, labs: trial[name], score };
+        }
+      }
+      if (best) {
+        colors[best.name] = best.value;
+        labs[best.name] = best.labs;
+        current = best.score;
+        applied = true;
+        break;
+      }
+    }
+    if (!applied) break;
+  }
+  const changed = Object.keys(colors).filter((name) => colors[name].some((v, i) => Math.abs(v - start[name][i]) > 1e-9));
+  return { colors, report: report(labs, required), changed };
+}
+
+// src/theme/roles.ts
+var ROLE_KINDS = ["text", "icon", "border", "accent", "feedback", "tint", "on"];
+var ROLE_TIERS = ["subtle", "strong", "strongest"];
+var ROLE_STATES = ["hover", "active", "selected", "focus"];
+var FEEDBACK_NAMES = ["error", "success", "warning", "info"];
+var ROLE_FLOORS = {
+  wcag2: { text: 4.5, icon: 3, border: 3, accent: 3, feedback: 4.5, tint: 1, on: 4.5 },
+  apca: { text: 60, icon: 45, border: 45, accent: 45, feedback: 60, tint: 0, on: 60 }
+};
+var TIER_CONTRAST = {
+  wcag2: { subtle: 4.5, strong: 7.5, strongest: 12 },
+  apca: { subtle: 60, strong: 75, strongest: 90 }
+};
+var TINT_CONTRAST = { wcag2: 1.15, apca: 7.5 };
+function inferKind(name) {
+  const lower = name.toLowerCase();
+  if (/(^|-)on-/.test(lower)) return "on";
+  if (/^text(-|$)/.test(lower)) return "text";
+  if (/^icon(-|$)/.test(lower)) return "icon";
+  if (/(border|outline|divider|focus-ring)/.test(lower)) return "border";
+  if (/(background|tint|-bg$)/.test(lower)) return "tint";
+  if (FEEDBACK_NAMES.includes(lower)) return "feedback";
+  return "accent";
+}
+function inferTier(name) {
+  if (name === "text" || name.endsWith("-strongest")) return "strongest";
+  if (name.endsWith("-strong")) return "strong";
+  if (name.endsWith("-subtle")) return "subtle";
+  return void 0;
+}
+function pairOf(name) {
+  const match = /(?:^|-)on-(.+)$/.exec(name);
+  return match?.[1];
+}
+function normalizeRoleSpec(problems, name, spec, formula, scaleNames, defaultScale) {
+  if (!spec || typeof spec !== "object" || Array.isArray(spec)) {
+    problems.push(`roles.${name} must be a color reference like "gray.1400", an object like { "tier": "subtle" }, or null.`);
+    return void 0;
+  }
+  const max = formula === "apca" ? 108 : 21;
+  const kind = spec.kind ?? inferKind(name);
+  if (!ROLE_KINDS.includes(kind)) {
+    problems.push(`roles.${name}.kind must be one of ${ROLE_KINDS.join(", ")}.`);
+    return void 0;
+  }
+  if (spec.tier !== void 0 && !ROLE_TIERS.includes(spec.tier))
+    problems.push(`roles.${name}.tier must be one of ${ROLE_TIERS.join(", ")}.`);
+  for (const key of ["contrast", "min"]) {
+    const value = spec[key];
+    if (value !== void 0 && (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > max))
+      problems.push(`roles.${name}.${key} must be a contrast from 0 to ${max} for ${formula}.`);
+  }
+  if (spec.states !== void 0) {
+    if (!Array.isArray(spec.states) || spec.states.some((s) => !ROLE_STATES.includes(s)))
+      problems.push(`roles.${name}.states must be a list using ${ROLE_STATES.join(", ")}.`);
+    else if (kind === "on" || kind === "tint") problems.push(`roles.${name} is a ${kind} role and can't have states.`);
+  }
+  const scale = spec.color ?? defaultScale(kind);
+  if (kind !== "on") {
+    if (spec.color !== void 0 && !scaleNames.has(spec.color))
+      problems.push(`roles.${name}.color "${spec.color}" must be the name of one of your colors.`);
+    else if (!scale && scaleNames.size > 0) problems.push(`roles.${name} needs a color, for example { "color": "brand" }.`);
+  }
+  const floor = Math.max(ROLE_FLOORS[formula][kind], spec.min ?? 0);
+  const tier = kind === "text" ? spec.tier ?? inferTier(name) ?? "subtle" : spec.tier;
+  let contrast2 = spec.contrast;
+  if (contrast2 === void 0 && tier) contrast2 = TIER_CONTRAST[formula][tier];
+  if (contrast2 === void 0 && kind === "tint") contrast2 = TINT_CONTRAST[formula];
+  if (contrast2 === void 0 && kind !== "accent" && kind !== "on") contrast2 = floor;
+  const pair = kind === "on" ? pairOf(name) : void 0;
+  if (kind === "on" && !pair) problems.push(`roles.${name} is an on-color, so its name needs to say what it sits on, like "text-on-accent".`);
+  return {
+    name,
+    kind,
+    ...kind !== "on" && scale && { scale },
+    ...contrast2 !== void 0 && { contrast: Math.max(contrast2, kind === "tint" ? 0 : floor) },
+    floor,
+    ...tier && { tier },
+    ...pair && { pair }
+  };
+}
+function expandStates(roles, specs) {
+  const result = {};
+  for (const [name, role] of Object.entries(roles)) {
+    result[name] = role;
+    (specs[name]?.states ?? []).forEach((state, index) => {
+      const stateName = `${name}-${state}`;
+      if (roles[stateName]) return;
+      const added = { ...role, name: stateName, base: name, step: index + 1 };
+      delete added.tier;
+      result[stateName] = added;
+    });
+  }
+  return result;
+}
+
+// src/theme/config.ts
+var ThemeConfigError = class extends Error {
+  constructor(problems) {
+    super(`Invalid theme settings:
+- ${problems.join("\n- ")}`);
+    this.problems = problems;
+    this.name = "ThemeConfigError";
+  }
+  problems;
+};
+var DEFAULT_WCAG_STEPS = [
+  1.06,
+  1.15,
+  1.32,
+  1.6,
+  2,
+  2.6,
+  3.22,
+  3.95,
+  4.79,
+  6.29,
+  7.9,
+  10,
+  12.3,
+  14.8,
+  17,
+  19.5
+];
+var DEFAULT_APCA_STEPS = [3, 7.5, 15, 27, 39, 51, 60, 67, 73, 82, 88, 93, 98, 102, 104, 105.5];
+var DEFAULT_POLARITY = 0.1;
+var DEFAULT_SURFACES = {
+  raised: { contrast: 1.1, reference: "parent" },
+  floating: { contrast: 1.6, reference: "base" }
+};
+var DEFAULT_MODES = {
+  light: { backgroundLightness: 1 },
+  dark: { backgroundLightness: 0.15 },
+  "light-high-contrast": { backgroundLightness: 1, contrastMultiplier: 1.5 },
+  "dark-high-contrast": { backgroundLightness: 0.15, contrastMultiplier: 1.5 },
+  "light-low-contrast": { backgroundLightness: 1, contrastMultiplier: 0.8 },
+  "dark-low-contrast": { backgroundLightness: 0.15, contrastMultiplier: 0.8 }
+};
+var DEFAULT_STATUS = {
+  success: "green",
+  warning: "orange",
+  error: "red",
+  info: "blue"
+};
+var BUILT_IN_SCALES = {
+  gray: [[0.5692623996686854, 0, 0]],
+  red: [[0.675, 30.1, 53.3], [0.5779, 30.4, 51.1], [0.3001, 31.5, 25.5]],
+  orange: [[0.7736, 65.1, 43.4], [0.7319, 53, 46.5], [0.49, 42.3, 36.7]],
+  green: [[0.7335, 154.2, 44.5], [0.3528, 165.7, 18.4], [0.9011, 156.6, 20]],
+  blue: [[0.7893, 258.6, 25.6], [0.5335, 266.7, 59.7], [0.3224, 265.9, 38.9], [0.2409, 268.7, 21.8]]
+};
+var BASE_SURFACE = "background";
+var NAME = /^[a-z0-9][a-z0-9-]*$/i;
+var MEDIA = /^[a-z0-9\s():,.-]+$/i;
+var GAMUTS = ["srgb", "display-p3", "rec2020"];
+var FORMATS = ["oklch", "rgb", "hex", "hsl"];
+var CONFIG_KEYS = {
+  top: ["$schema", "colors", "background", "steps", "surfaces", "roles", "spacing", "status", "modes", "defaultMode", "formula", "polarityCompensation", "interpolation", "output"],
+  color: ["keys", "interpolation"],
+  background: ["color", "lightness"],
+  step: ["contrast", "opposite"],
+  surface: ["contrast", "reference", "color"],
+  roleRef: ["ref", "kind"],
+  role: ["kind", "color", "contrast", "min", "tier", "states"],
+  mode: ["backgroundLightness", "contrastMultiplier", "polarityCompensation", "media"],
+  output: ["gamut", "format"]
+};
+var KEY_HOMES = {
+  mode: "each mode, like modes.dark",
+  background: "background",
+  output: "output",
+  role: "a role, like roles.accent",
+  surface: "a surface, like surfaces.raised"
+};
+var isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+function editDistance(a, b2) {
+  let row = Array.from({ length: b2.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b2.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b2[j - 1] ? 0 : 1));
+    row = next;
+  }
+  return row[b2.length];
+}
+function checkKeys(problems, path, value, allowed, hintHome = true) {
+  if (!isObject(value)) return;
+  for (const key of Object.keys(value)) {
+    if (allowed.includes(key)) continue;
+    const close = allowed.find((name) => name.toLowerCase() === key.toLowerCase() || editDistance(name.toLowerCase(), key.toLowerCase()) <= 2);
+    const where = path ? ` in ${path}` : "";
+    const home = !hintHome ? void 0 : Object.entries(KEY_HOMES).find(([section]) => CONFIG_KEYS[section].includes(key))?.[1];
+    problems.push(
+      close ? `Unknown setting "${key}"${where}. Did you mean "${close}"?` : home ? `Unknown setting "${key}"${where}. It belongs in ${home}.` : `Unknown setting "${key}"${where}. Allowed: ${allowed.join(", ")}.`
+    );
+  }
+}
+function checkAllKeys(problems, config) {
+  const each = (section, path, allowed) => {
+    if (!isObject(section)) return;
+    for (const [name, value] of Object.entries(section))
+      checkKeys(problems, `${path}.${name}`, value, typeof allowed === "function" ? allowed(value) : allowed, path !== "roles");
+  };
+  checkKeys(problems, "", config, CONFIG_KEYS.top);
+  each(config.colors, "colors", CONFIG_KEYS.color);
+  checkKeys(problems, "background", config.background, CONFIG_KEYS.background);
+  if (!Array.isArray(config.steps)) each(config.steps, "steps", CONFIG_KEYS.step);
+  each(config.surfaces, "surfaces", CONFIG_KEYS.surface);
+  each(config.roles, "roles", (value) => isRef(value) ? CONFIG_KEYS.roleRef : CONFIG_KEYS.role);
+  each(config.modes, "modes", CONFIG_KEYS.mode);
+  checkKeys(problems, "output", config.output, CONFIG_KEYS.output);
+}
+function keyColorStop(css, id) {
+  const [lightness, chroma, hue] = new Color(css).to("oklch").coords.map((value) => Number(value));
+  const safeChroma = Number.isFinite(chroma) ? chroma : 0;
+  return {
+    id,
+    lightness: Math.min(1, Math.max(0, lightness)),
+    chroma: safeChroma / MAX_CHROMA * 100,
+    hue: Number.isFinite(hue) && safeChroma > 1e-6 ? hue : 0
+  };
+}
+function isRef(value) {
+  return typeof value === "string" || typeof value === "object" && value !== null && "ref" in value;
+}
+function isNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+function inRange(problems, label, value, min, max) {
+  if (value === void 0) return;
+  if (!isNumber(value) || value < min || value > max) {
+    problems.push(`${label} must be a number from ${min} to ${max} (got ${JSON.stringify(value)}).`);
+  }
+}
+function parseKeys(problems, name, input, fallback) {
+  const keys = typeof input === "string" ? [input] : Array.isArray(input) ? input : input?.keys;
+  const list2 = typeof keys === "string" ? [keys] : keys;
+  let interpolation = fallback;
+  if (input && typeof input === "object" && !Array.isArray(input) && input.interpolation !== void 0) {
+    if (input.interpolation !== "oklch" && input.interpolation !== "rgb") {
+      problems.push(`colors.${name}.interpolation must be "oklch" or "rgb".`);
+    } else interpolation = input.interpolation;
+  }
+  if (!Array.isArray(list2) || list2.length === 0) {
+    problems.push(`colors.${name} needs at least one key color, such as "#0066ff".`);
+    return void 0;
+  }
+  const stops = [];
+  list2.forEach((css, index) => {
+    try {
+      if (typeof css !== "string") throw new Error();
+      stops.push(keyColorStop(css, `${name}-${index}`));
+    } catch {
+      problems.push(`colors.${name}: "${String(css)}" is not a valid CSS color.`);
+    }
+  });
+  return stops.length === list2.length ? { stops, interpolation } : void 0;
+}
+function inferMedia(name) {
+  const words = name.toLowerCase().split(/[-_\s]+/);
+  const queries = [];
+  if (words.includes("dark")) queries.push("(prefers-color-scheme: dark)");
+  const contrastWord = words.includes("contrast");
+  if (contrastWord && words.some((w) => ["high", "more", "increased", "max"].includes(w)))
+    queries.push("(prefers-contrast: more)");
+  else if (contrastWord && words.some((w) => ["low", "less", "reduced", "min"].includes(w)))
+    queries.push("(prefers-contrast: less)");
+  return queries.length > 0 ? queries.join(" and ") : void 0;
+}
+function closestStep(steps, defaults, index) {
+  const wanted = defaults[index];
+  return steps.reduce(
+    (best, step) => Math.abs(step.contrast - wanted) < Math.abs(best.contrast - wanted) ? step : best
+  ).name;
+}
+function validName(problems, label, name) {
+  if (NAME.test(name)) return true;
+  problems.push(`${label} name "${name}" can only use letters, numbers, and dashes.`);
+  return false;
+}
+function isNeutral(scale) {
+  return scale.stops.every((stop) => stop.chroma < 2);
+}
+function addBuiltIn(scales, name, interpolation) {
+  scales.push({
+    name,
+    stops: BUILT_IN_SCALES[name].map(([lightness, hue, chroma], i) => ({ id: `${name}-${i}`, lightness, hue, chroma })),
+    interpolation: name === "gray" ? interpolation : "rgb",
+    builtIn: true
+  });
+}
+function normalizeColors(problems, config, interpolation) {
+  const scales = [];
+  const colors = config.colors;
+  if (!colors || typeof colors !== "object" || Array.isArray(colors) || Object.keys(colors).length === 0) {
+    problems.push(`colors needs at least one named color, for example { "brand": "#0066ff" }.`);
+    return scales;
+  }
+  for (const [name, input] of Object.entries(colors)) {
+    if (!validName(problems, "Color", name)) continue;
+    const parsed = parseKeys(problems, name, input, interpolation);
+    if (parsed) scales.push({ name, ...parsed, builtIn: false });
+  }
+  return scales;
+}
+function pickBackground(problems, config, scales, interpolation) {
+  let backgroundScale = config.background?.color;
+  if (backgroundScale !== void 0 && !scales.some((s) => s.name === backgroundScale)) {
+    problems.push(`background.color "${backgroundScale}" must be the name of one of your colors.`);
+  }
+  if (backgroundScale === void 0) {
+    backgroundScale = scales.find(isNeutral)?.name;
+    if (!backgroundScale && scales.length > 0) {
+      backgroundScale = "gray";
+      if (!scales.some((s) => s.name === "gray")) addBuiltIn(scales, "gray", interpolation);
+    }
+  }
+  inRange(problems, "background.lightness", config.background?.lightness, 0, 1);
+  return backgroundScale;
+}
+function normalizeStatus(problems, config, scales, backgroundScale, roleFirst, interpolation) {
+  const statusRoles = {};
+  const wantStatus = config.status === void 0 ? !roleFirst : config.status !== false;
+  if (!wantStatus) return statusRoles;
+  const brand = scales.find((s) => !s.builtIn && !isNeutral(s) && s.name !== backgroundScale);
+  const harmonized = roleFirst && config.status === true && brand ? Object.fromEntries(
+    Object.entries(harmonizeFeedback(`oklch(${brand.stops[0].lightness} ${brand.stops[0].chroma / 100 * MAX_CHROMA} ${brand.stops[0].hue})`)).map(([name, [l, c, h]]) => [name, `oklch(${l} ${c.toFixed(4)} ${h})`])
+  ) : void 0;
+  const status = harmonized ?? (config.status === void 0 || config.status === true ? DEFAULT_STATUS : config.status);
+  if (typeof status !== "object" || Array.isArray(status)) {
+    problems.push("status must be true, false, or an object.");
+    return statusRoles;
+  }
+  for (const [role, value] of Object.entries(status)) {
+    if (!validName(problems, "Status", role)) continue;
+    if (scales.some((s) => s.name === value)) statusRoles[role] = value;
+    else if (BUILT_IN_SCALES[value]) {
+      addBuiltIn(scales, value, interpolation);
+      statusRoles[role] = value;
+    } else {
+      const parsed = parseKeys(problems, role, value, interpolation);
+      if (!parsed) continue;
+      const scaleName = `status-${role}`;
+      if (scales.some((s) => s.name === scaleName)) problems.push(`status.${role} conflicts with a color named "${scaleName}".`);
+      else {
+        scales.push({ name: scaleName, ...parsed, builtIn: false });
+        statusRoles[role] = scaleName;
+      }
+    }
+  }
+  return statusRoles;
+}
+function normalizeSteps(problems, config, formula) {
+  const stepDefaults = formula === "apca" ? DEFAULT_APCA_STEPS : DEFAULT_WCAG_STEPS;
+  const maxContrast = formula === "apca" ? MAX_APCA : 21;
+  const minContrast = formula === "apca" ? 0 : 1;
+  const rawSteps = Array.isArray(config.steps) ? config.steps.map((value, i) => [String((i + 1) * 100), value]) : config.steps && typeof config.steps === "object" ? Object.entries(config.steps) : stepDefaults.map((value, i) => [String((i + 1) * 100), value]);
+  if (config.steps !== void 0 && config.steps !== true && (typeof config.steps !== "object" || config.steps === null))
+    problems.push("steps must be true (the default full scale), a list of contrasts, or named steps.");
+  else if (config.steps !== void 0 && rawSteps.length === 0) problems.push("steps needs at least one contrast value.");
+  const steps = [];
+  for (const [name, input] of rawSteps) {
+    const contrast2 = typeof input === "object" && input !== null ? input.contrast : input;
+    const opposite = typeof input === "object" && input !== null ? input.opposite : void 0;
+    validName(problems, "Step", name);
+    if (!isNumber(contrast2) || contrast2 < minContrast || contrast2 > maxContrast) {
+      problems.push(`steps.${name} must be a contrast from ${minContrast} to ${maxContrast} for ${formula} (got ${JSON.stringify(contrast2)}).`);
+      continue;
+    }
+    if (opposite !== void 0) {
+      if (formula === "apca") problems.push(`steps.${name}.opposite only applies to the wcag2 formula.`);
+      inRange(problems, `steps.${name}.opposite`, opposite, 1, 21);
+    }
+    steps.push({ name, contrast: contrast2, ...opposite !== void 0 && { opposite } });
+  }
+  return { steps, stepDefaults };
+}
+function normalizeSurfaces(problems, config, scales) {
+  const surfaces = [];
+  for (const [name, input] of Object.entries(config.surfaces ?? DEFAULT_SURFACES)) {
+    validName(problems, "Surface", name);
+    if (name === BASE_SURFACE) {
+      problems.push(`"${BASE_SURFACE}" is the base surface and is always included; pick another surface name.`);
+      continue;
+    }
+    if (!input || typeof input !== "object") {
+      problems.push(`surfaces.${name} must be an object like { "contrast": 1.1 }.`);
+      continue;
+    }
+    inRange(problems, `surfaces.${name}.contrast`, input.contrast, 1, 21);
+    if (input.contrast === void 0) problems.push(`surfaces.${name}.contrast is required.`);
+    if (input.reference !== void 0 && input.reference !== "base" && input.reference !== "parent")
+      problems.push(`surfaces.${name}.reference must be "base" or "parent".`);
+    if (input.color !== void 0 && !scales.some((s) => s.name === input.color))
+      problems.push(`surfaces.${name}.color "${input.color}" must be the name of one of your colors.`);
+    surfaces.push({ name, contrast: input.contrast, reference: input.reference ?? "parent", color: input.color });
+  }
+  return surfaces;
+}
+function normalizeModes(problems, config) {
+  const modeInput = config.modes ?? DEFAULT_MODES;
+  const modes = [];
+  if (typeof modeInput !== "object" || Object.keys(modeInput).length === 0) problems.push("modes needs at least one mode.");
+  const defaultMode = config.defaultMode ?? Object.keys(modeInput)[0];
+  if (config.defaultMode !== void 0 && !(config.defaultMode in modeInput))
+    problems.push(`defaultMode "${config.defaultMode}" is not one of your modes.`);
+  for (const [name, mode] of Object.entries(modeInput)) {
+    validName(problems, "Mode", name);
+    const m = mode ?? {};
+    inRange(problems, `modes.${name}.backgroundLightness`, m.backgroundLightness, 0, 1);
+    inRange(problems, `modes.${name}.contrastMultiplier`, m.contrastMultiplier, 0, MAX_CONTRAST_MULTIPLIER);
+    inRange(problems, `modes.${name}.polarityCompensation`, m.polarityCompensation, 0, 1);
+    if (m.media !== void 0 && m.media !== false && (typeof m.media !== "string" || !MEDIA.test(m.media) || /url\(/i.test(m.media)))
+      problems.push(`modes.${name}.media must be a CSS media query like "(prefers-color-scheme: dark)", or false.`);
+    const media = name === defaultMode ? void 0 : m.media === false ? void 0 : m.media ?? inferMedia(name);
+    modes.push({
+      name,
+      backgroundLightness: m.backgroundLightness ?? config.background?.lightness ?? 1,
+      contrastMultiplier: m.contrastMultiplier ?? 1,
+      polarityCompensation: m.polarityCompensation ?? config.polarityCompensation ?? DEFAULT_POLARITY,
+      ...media && { media }
+    });
+  }
+  return { modes, defaultMode };
+}
+function defaultRoles({ roleFirst, neutral, statusRoles, steps, stepDefaults }, accentScale) {
+  const defaults = {};
+  if (roleFirst) {
+    Object.assign(defaults, { text: {}, "text-subtle": {}, border: {} });
+    if (accentScale) Object.assign(defaults, { accent: { color: accentScale, states: ["hover", "active"] }, "text-on-accent": {} });
+    for (const [role, scale] of Object.entries(statusRoles)) {
+      defaults[role] = { kind: "feedback", color: scale };
+      defaults[`${role}-background`] = { kind: "tint", color: scale };
+    }
+  } else if (steps.length > 0 && neutral) {
+    const at = (index) => closestStep(steps, stepDefaults, index);
+    Object.assign(defaults, {
+      text: `${neutral}.${at(13)}`,
+      "text-subtle": `${neutral}.${at(9)}`,
+      "text-disabled": `${neutral}.${at(5)}`,
+      border: `${neutral}.${at(3)}`,
+      "border-strong": `${neutral}.${at(6)}`
+    });
+    if (accentScale)
+      Object.assign(defaults, {
+        accent: `${accentScale}.${at(8)}`,
+        "accent-hover": `${accentScale}.${at(9)}`,
+        "accent-active": `${accentScale}.${at(10)}`,
+        "text-on-accent": `surface.${BASE_SURFACE}`
+      });
+    for (const [role, scale] of Object.entries(statusRoles)) {
+      defaults[role] = `${scale}.${at(8)}`;
+      defaults[`${role}-background`] = `${scale}.${at(0)}`;
+      defaults[`${role}-border`] = `${scale}.${at(6)}`;
+    }
+  }
+  return defaults;
+}
+function normalizeRoles(problems, config, inputs) {
+  const { formula, scales, neutral, statusRoles, steps, surfaces } = inputs;
+  const statusScales = new Set(Object.values(statusRoles));
+  const accentScale = (scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name) && s.name !== neutral) ?? scales.find((s) => !s.builtIn && !isNeutral(s) && !statusScales.has(s.name)) ?? scales.find((s) => !s.builtIn && !isNeutral(s)))?.name;
+  const merged = defaultRoles(inputs, accentScale);
+  const userRoles = config.roles ?? {};
+  if (typeof userRoles !== "object" || Array.isArray(userRoles)) problems.push("roles must be an object.");
+  else
+    for (const [role, value] of Object.entries(userRoles)) {
+      validName(problems, "Role", role);
+      if (value === null) delete merged[role];
+      else merged[role] = value;
+    }
+  for (const role of Object.keys(merged)) {
+    const pair = pairOf(role);
+    if (typeof merged[role] !== "object" || isRef(merged[role]) || role in userRoles || !pair) continue;
+    if (!(pair in merged)) delete merged[role];
+    else if (isRef(merged[pair])) merged[role] = `surface.${BASE_SURFACE}`;
+  }
+  const scaleNames = new Set(scales.map((s) => s.name));
+  const stepNames = new Set(steps.map((s) => s.name));
+  const surfaceNames = /* @__PURE__ */ new Set([BASE_SURFACE, ...surfaces.map((s) => s.name)]);
+  const available = `Your scales are: ${scales.map((s) => s.name).join(", ") || "none"}.`;
+  const defaultScale = (kind) => kind === "accent" ? accentScale ?? neutral : kind === "feedback" ? void 0 : neutral;
+  const normalized = {};
+  const specs = {};
+  const referencedSteps = /* @__PURE__ */ new Set();
+  for (const [role, value] of Object.entries(merged)) {
+    if (isRef(value)) {
+      const ref = typeof value === "string" ? value : value.ref;
+      const kind = typeof value === "string" ? inferKind(role) : value.kind ?? inferKind(role);
+      if (typeof value === "object" && !ROLE_KINDS.includes(kind)) problems.push(`roles.${role}.kind must be one of ${ROLE_KINDS.join(", ")}.`);
+      const [group, item, extra] = typeof ref === "string" ? ref.split(".") : [];
+      const valid = extra === void 0 && (group === "surface" ? surfaceNames.has(item) : scaleNames.has(group) && stepNames.has(item));
+      if (!valid)
+        problems.push(`roles.${role} "${String(ref)}" must point to a color step like "${neutral ?? "gray"}.${steps.at(-3)?.name ?? "1400"}" or a surface like "surface.${BASE_SURFACE}". ${available}`);
+      else if (group !== "surface") referencedSteps.add(item);
+      const checked = role in userRoles && group !== "surface" && kind !== "on" && !/disabled/i.test(role);
+      normalized[role] = { name: role, kind, ref, floor: checked ? ROLE_FLOORS[formula]?.[kind] ?? 0 : 0 };
+    } else {
+      const result = normalizeRoleSpec(problems, role, value, formula, scaleNames, defaultScale);
+      if (result) {
+        normalized[role] = result;
+        specs[role] = value;
+      }
+    }
+  }
+  const roles = expandStates(normalized, specs);
+  for (const role of Object.values(roles))
+    if (role.pair && (!roles[role.pair] || roles[role.pair].kind === "on" || roles[role.pair].ref))
+      problems.push(`roles.${role.name} sits on "${role.pair}", which must be a generated role (not a reference or another on-color).`);
+  return { roles, referencedSteps };
+}
+function checkNameCollisions(problems, scales, roles) {
+  const used = /* @__PURE__ */ new Map();
+  const claim = (key, owner) => {
+    const previous = used.get(key);
+    if (previous) problems.push(`The name "${key}" is used by both ${previous} and ${owner}; rename one of them.`);
+    else used.set(key, owner);
+  };
+  claim("surface", "the surface group");
+  scales.forEach((s) => claim(s.name, `color "${s.name}"`));
+  Object.keys(roles).forEach((role) => claim(role, `role "${role}"`));
+}
+function normalizeConfig(config) {
+  const problems = [];
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    throw new ThemeConfigError(["The theme settings must be an object."]);
+  }
+  checkAllKeys(problems, config);
+  const formula = config.formula ?? "wcag2";
+  if (formula !== "wcag2" && formula !== "apca") problems.push(`formula must be "wcag2" or "apca".`);
+  const gamut = config.output?.gamut ?? "rec2020";
+  const format = config.output?.format ?? "oklch";
+  if (!GAMUTS.includes(gamut)) problems.push(`output.gamut must be one of ${GAMUTS.join(", ")}.`);
+  if (!FORMATS.includes(format)) problems.push(`output.format must be one of ${FORMATS.join(", ")}.`);
+  if ((format === "hex" || format === "hsl") && gamut !== "srgb")
+    problems.push(`output.format "${format}" only works with output.gamut "srgb". Use "oklch" or "rgb" for wide gamuts.`);
+  const interpolation = config.interpolation ?? "oklch";
+  if (interpolation !== "oklch" && interpolation !== "rgb") problems.push(`interpolation must be "oklch" or "rgb".`);
+  inRange(problems, "polarityCompensation", config.polarityCompensation, 0, 1);
+  const roleFirst = config.steps === void 0;
+  const scales = normalizeColors(problems, config, interpolation);
+  const backgroundScale = pickBackground(problems, config, scales, interpolation);
+  const statusRoles = normalizeStatus(problems, config, scales, backgroundScale, roleFirst, interpolation);
+  const { steps, stepDefaults } = normalizeSteps(problems, config, formula);
+  const surfaces = normalizeSurfaces(problems, config, scales);
+  const { modes, defaultMode } = normalizeModes(problems, config);
+  const { roles, referencedSteps } = normalizeRoles(problems, config, {
+    formula,
+    roleFirst,
+    scales,
+    neutral: backgroundScale,
+    statusRoles,
+    steps,
+    stepDefaults,
+    surfaces
+  });
+  if (config.spacing !== void 0 && config.spacing !== false && (!isNumber(config.spacing) || config.spacing < 0.01 || config.spacing > 0.2))
+    problems.push("spacing must be false or a lightness step from 0.01 to 0.2.");
+  checkNameCollisions(problems, scales, roles);
+  if (problems.length > 0) throw new ThemeConfigError(problems);
+  return {
+    formula,
+    gamut,
+    format,
+    scales,
+    backgroundScale,
+    steps,
+    surfaces,
+    roles,
+    modes,
+    defaultMode,
+    roleFirst,
+    outputSteps: roleFirst ? steps.map((s) => s.name).filter((name) => referencedSteps.has(name)) : steps.map((s) => s.name),
+    spacing: config.spacing
+  };
+}
+
+// src/theme/values.ts
+var SAFETY = 1.0002;
+var round = (value, places) => Number(value.toFixed(places));
+var floor4 = (value) => Math.floor(value * 1e4 + 1e-7) / 1e4;
+function hexOf(css) {
+  const srgb = new Color(css).toGamut({ space: "srgb", method: "css" }).to("srgb");
+  return `#${srgb.coords.map((c) => Math.round(Math.min(1, Math.max(0, Number(c) || 0)) * 255).toString(16).padStart(2, "0")).join("")}`;
+}
+function oklchOf(css) {
+  const [l, c, h] = new Color(css).to("oklch").coords.map(Number);
+  const chroma = Number.isFinite(c) ? c : 0;
+  return [round(l, 4), round(chroma, 4), chroma < 1e-4 || !Number.isFinite(h) ? 0 : round(h, 2)];
+}
+function colorValue(css, contrast2, target) {
+  const capped = contrast2 + 1e-6 < target;
+  return {
+    css,
+    hex: hexOf(css),
+    oklch: oklchOf(css),
+    contrast: floor4(contrast2),
+    target: round(target, 4),
+    ...capped && { capped: true }
+  };
+}
+function describeTarget(formula, value) {
+  return formula === "apca" ? `Lc ${round(value, 1)}` : `${round(value, 2)}:1`;
+}
+function strengthenHex(hex, against, minimum, measure) {
+  if (measure(hex, against) + 1e-6 >= minimum) return hex;
+  const [l, c, h] = new Color(hex).to("oklch").coords.map((v) => Number(v) || 0);
+  const darker = Number(new Color(against).to("oklch").coords[0]) > l;
+  for (let i = 1; i <= 200; i += 1) {
+    const lightness = darker ? l - i * 2e-3 : l + i * 2e-3;
+    if (lightness < 0 || lightness > 1) break;
+    const candidate = hexOf(new Color("oklch", [lightness, c, h]).toString());
+    if (measure(candidate, against) >= minimum * SAFETY) return candidate;
+  }
+  return void 0;
+}
+
+// src/theme/spacing.ts
+var DEFAULT_STEP = 0.05;
+var MIN_STEP = 0.035;
+var MAX_STEP = 0.07;
+function lightnessScale(background, gamut, formula, dark) {
+  const bgY = luminance(background, gamut);
+  const backgroundL = Math.cbrt(Math.max(0, bgY));
+  const bgApca = formula === "apca" ? apcaLuminanceOfLinear(background, gamut) : 0;
+  const maxDistance = dark ? backgroundL : 1 - backgroundL;
+  const contrastAt = (distance3) => {
+    const l = Math.min(1, Math.max(0, backgroundL + (dark ? -1 : 1) * Math.min(distance3, maxDistance)));
+    const y = l ** 3;
+    return formula === "apca" ? Math.abs(apcaFromLuminance(apcaLuminanceOfLinear([y, y, y], "srgb"), bgApca)) : contrastRatio(y, bgY);
+  };
+  const distanceFor = (target) => {
+    if (contrastAt(maxDistance) <= target) return maxDistance;
+    let low = 0;
+    let high = maxDistance;
+    for (let i = 0; i < 40; i++) {
+      const mid = (low + high) / 2;
+      if (contrastAt(mid) < target) low = mid;
+      else high = mid;
+    }
+    return high;
+  };
+  return { backgroundL, dark, maxDistance, contrastAt, distanceFor };
+}
+function snapWith(items, step, maxDistance) {
+  const sorted = [...items].sort((a, b2) => a.distance - b2.distance);
+  const distances = {};
+  let cost = 0;
+  let previous;
+  for (const item of sorted) {
+    let k = Math.max(1, Math.round(item.distance / step), Math.ceil(item.floor / step - 1e-9));
+    if (previous) k = Math.max(k, item.distance > previous.distance + 1e-6 ? previous.k + 1 : previous.k);
+    const distance3 = Math.min(k * step, maxDistance);
+    distances[item.id] = distance3;
+    cost += Math.abs(distance3 - item.distance);
+    previous = { k, distance: item.distance };
+  }
+  return { cost, distances };
+}
+function snapToSteps(items, maxDistance, fixedStep) {
+  const steps = [];
+  if (fixedStep !== void 0) steps.push(fixedStep);
+  else for (let s = MIN_STEP; s <= MAX_STEP + 1e-9; s += 25e-4) steps.push(Number(s.toFixed(4)));
+  let best = { step: steps[0], ...snapWith(items, steps[0], maxDistance) };
+  for (const step of steps.slice(1)) {
+    const result = snapWith(items, step, maxDistance);
+    if (result.cost <= best.cost + 1e-9) best = { step, ...result };
+  }
+  return { step: best.step, distances: best.distances };
+}
+
+// src/theme/roleGeneration.ts
+function roleTools(roles, ctx) {
+  const { formula, gamut } = ctx;
+  const max = formula === "apca" ? MAX_APCA : 21;
+  const dark = formula === "apca" ? ctx.apcaDark : luminance(ctx.background, gamut) > 0.1791;
+  const scale = lightnessScale(ctx.background, gamut, formula, dark);
+  const floorOf = (role) => Math.min(max, Math.max(role.floor, ctx.adjust(role.floor)));
+  const statesOf = (name) => roles.filter((r) => r.base === name).sort((a, b2) => (a.step ?? 0) - (b2.step ?? 0));
+  const onFloor = (pair) => {
+    const on = roles.find((r) => r.kind === "on" && r.pair === pair);
+    const floor = on?.floor ?? ROLE_FLOORS[formula].on;
+    return Math.min(max, Math.max(floor, ctx.adjust(floor)));
+  };
+  const cache = /* @__PURE__ */ new Map();
+  const gen = (scaleName, target) => {
+    const aim = Math.min(max, target * SAFETY);
+    const key = `${scaleName}|${aim}`;
+    let swatch = cache.get(key);
+    if (!swatch) {
+      const data = ctx.scaleData(scaleName);
+      if (formula === "apca") {
+        const g2 = generateApcaColor(data, ctx.background, ctx.backgroundCss, aim, ctx.output, ctx.apcaDark);
+        swatch = { css: g2.css, linear: g2.linear, contrast: g2.measuredContrast };
+      } else {
+        const g2 = generateColors(data, ctx.background, aim).opaque;
+        swatch = { css: g2.css, linear: g2.linear, contrast: g2.measuredContrast };
+      }
+      cache.set(key, swatch);
+    }
+    return swatch;
+  };
+  const onOptions = [
+    { css: ctx.backgroundCss, linear: ctx.background },
+    { css: outputColorCss([1, 1, 1], ctx.output), linear: [1, 1, 1] },
+    ctx.darkest
+  ];
+  const fast = (text, surface) => formula === "apca" ? Math.abs(apcaFromLuminance(apcaLuminanceOfLinear(text, gamut), apcaLuminanceOfLinear(surface, gamut))) : contrastRatio(luminance(text, gamut), luminance(surface, gamut));
+  const measure = (text, surface) => formula === "apca" ? Math.abs(apcaContrast(text, surface)) : measureOutputContrast(text, surface, gamut);
+  const pickOn = (surfaces, minimum) => {
+    const scored = onOptions.map((option) => ({
+      option,
+      min: Math.min(...surfaces.map((s) => fast(option.linear, s.linear)))
+    }));
+    const passes = (min) => min >= minimum * SAFETY;
+    if (passes(scored[0].min)) return { ...scored[0], passes: true };
+    const best = scored.slice(1).sort((a, b2) => b2.min - a.min)[0];
+    return { ...best, passes: passes(best.min) };
+  };
+  return { max, scale, floorOf, statesOf, onFloor, gen, fast, measure, pickOn };
+}
+function separateFeedbackRoles(generated, ctx, tools, step, painted) {
+  const { gamut } = ctx;
+  const { floorOf, fast, pickOn, onFloor, measure } = tools;
+  const { values, swatches, missed } = painted;
+  const feedbackRoles = generated.filter((r) => r.kind === "feedback" && !r.base && swatches[r.name]);
+  if (feedbackRoles.length < 2) return void 0;
+  const realize = ([l, c, h]) => gamutClamp(l, c, h, gamut);
+  const result = separateFeedback(
+    Object.fromEntries(feedbackRoles.map((r) => [r.name, [...linearToOklch(convertLinearGamut(swatches[r.name].linear, gamut, "srgb"))]])),
+    {
+      realize: (value) => convertLinearGamut(realize(value), gamut, "srgb"),
+      accepts: (name, value) => {
+        const role = feedbackRoles.find((r) => r.name === name);
+        const linear = realize(value);
+        if (fast(linear, ctx.background) < floorOf(role) * SAFETY) return false;
+        const hasOn = generated.some((r) => r.kind === "on" && r.pair === name);
+        return !hasOn || pickOn([{ css: "", linear, contrast: 0 }], onFloor(name)).passes;
+      },
+      lightnessStep: step
+    }
+  );
+  for (const name of result.changed) {
+    const role = feedbackRoles.find((r) => r.name === name);
+    const linear = realize(result.colors[name]);
+    const css = outputColorCss(linear, ctx.output);
+    const contrast2 = measure(css, ctx.backgroundCss);
+    swatches[name] = { css, linear, contrast: contrast2 };
+    const target = contrast2 >= values[name].target ? values[name].target : floorOf(role);
+    values[name] = { ...values[name], ...colorValue(css, contrast2, target) };
+    if (contrast2 >= target) delete values[name].capped;
+    if (contrast2 + 1e-6 < floorOf(role)) missed.push({ role: name, target: floorOf(role), contrast: contrast2 });
+  }
+  return { ...result.report, changed: result.changed };
+}
+function pickOnColors(generated, tools, painted) {
+  const { floorOf, statesOf, pickOn, measure } = tools;
+  const { values, swatches, missed } = painted;
+  for (const role of generated) {
+    if (role.kind !== "on") continue;
+    const surfaces = [role.pair, ...statesOf(role.pair).map((s) => s.name)].filter((name) => swatches[name]);
+    const minimum = floorOf(role);
+    const pick = pickOn(surfaces.map((name) => swatches[name]), minimum);
+    const measured = Math.min(...surfaces.map((name) => measure(pick.option.css, swatches[name].css)));
+    values[role.name] = { ...colorValue(pick.option.css, measured, minimum), minimum: round(minimum, 4), against: role.pair };
+    if (measured + 1e-6 < minimum) missed.push({ role: role.name, target: minimum, contrast: measured });
+  }
+}
+function generateRoles(roles, ctx) {
+  const tools = roleTools(roles, ctx);
+  const { max, scale, floorOf, statesOf, onFloor, gen, pickOn } = tools;
+  const generated = roles.filter((r) => !r.ref);
+  const requested = {};
+  for (const role of generated) {
+    if (role.base || role.kind === "on" || role.contrast === void 0) continue;
+    requested[role.name] = role.kind === "tint" ? Math.min(max, ctx.adjust(role.contrast)) : Math.min(max, Math.max(floorOf(role), ctx.adjust(role.contrast)));
+  }
+  const distances = {};
+  for (const [name, target] of Object.entries(requested)) distances[name] = scale.distanceFor(target);
+  const original = { ...distances };
+  const accents = generated.filter((r) => r.kind === "accent" && !r.base && r.contrast === void 0);
+  const searchAccent = (role, candidates, step2) => {
+    const brand = ctx.keyLightness(role.scale);
+    const states = statesOf(role.name);
+    const minimum = onFloor(role.name);
+    const floor = floorOf(role);
+    let best;
+    let fallback;
+    for (const distance3 of candidates) {
+      const base = gen(role.scale, Math.max(floor, scale.contrastAt(distance3)));
+      const surfaces = [base, ...states.map((s) => gen(s.scale, Math.max(floor, scale.contrastAt(distance3 + (s.step ?? 0) * step2))))];
+      const on = pickOn(surfaces, minimum);
+      const cost = Math.abs(oklchOf(base.css)[0] - brand);
+      if (on.passes && (!best || cost < best.cost)) best = { distance: distance3, cost };
+      if (!fallback || on.min > fallback.min) fallback = { distance: distance3, min: on.min };
+    }
+    return (best ?? fallback)?.distance ?? scale.distanceFor(floor);
+  };
+  const grid2 = (from, step2) => {
+    const list2 = [];
+    for (let d2 = from; d2 <= scale.maxDistance + 1e-9; d2 += step2) list2.push(d2);
+    return list2.length > 0 ? list2 : [scale.maxDistance];
+  };
+  let step = typeof ctx.spacing === "number" ? ctx.spacing : DEFAULT_STEP;
+  for (const accent of accents) {
+    distances[accent.name] = searchAccent(accent, grid2(scale.distanceFor(floorOf(accent)), 5e-3), step);
+    original[accent.name] = distances[accent.name];
+    requested[accent.name] = Math.max(floorOf(accent), scale.contrastAt(distances[accent.name]));
+  }
+  const spaced = generated.filter((r) => !r.base && r.kind !== "on" && r.kind !== "tint" && r.name in distances);
+  if (ctx.spacing !== false && spaced.length > 0) {
+    const result = snapToSteps(
+      spaced.map((r) => ({ id: r.name, distance: distances[r.name], floor: scale.distanceFor(floorOf(r)) })),
+      scale.maxDistance,
+      typeof ctx.spacing === "number" ? ctx.spacing : void 0
+    );
+    step = result.step;
+    Object.assign(distances, result.distances);
+    for (const accent of accents) {
+      const first = Math.ceil(scale.distanceFor(floorOf(accent)) / step - 1e-9) * step;
+      distances[accent.name] = searchAccent(accent, grid2(first, step), step);
+    }
+  }
+  const values = {};
+  const swatches = {};
+  const adjustments = [];
+  const missed = [];
+  for (const role of generated) {
+    if (role.kind === "on") continue;
+    const floor = floorOf(role);
+    let target;
+    if (role.base) target = Math.max(floor, scale.contrastAt(distances[role.base] + (role.step ?? 0) * step));
+    else if (Math.abs(distances[role.name] - original[role.name]) < 1e-9 && role.kind !== "accent") target = requested[role.name];
+    else target = role.kind === "tint" ? requested[role.name] : Math.max(floor, scale.contrastAt(distances[role.name]));
+    const swatch = gen(role.scale, target);
+    swatches[role.name] = swatch;
+    values[role.name] = {
+      ...colorValue(swatch.css, swatch.contrast, target),
+      scale: role.scale,
+      ...role.kind !== "tint" && { minimum: round(floor, 4) }
+    };
+    if (role.kind !== "tint" && swatch.contrast + 1e-6 < floor) missed.push({ role: role.name, target: floor, contrast: swatch.contrast });
+    if (!role.base && Math.abs(target - requested[role.name]) > 5e-3 * requested[role.name])
+      adjustments.push({ role: role.name, requested: round(requested[role.name], 2), used: round(target, 2) });
+  }
+  const painted = { values, swatches, missed };
+  const feedback = separateFeedbackRoles(generated, ctx, tools, step, painted);
+  pickOnColors(generated, tools, painted);
+  return { values, step, adjustments, missed, ...feedback && { feedback } };
+}
+
+// src/theme/generateTheme.ts
+function engineDocument(n2, mode, output, scales) {
+  const surfaces = [
+    { id: BASE_SURFACE, name: BASE_SURFACE, base: true },
+    ...n2.surfaces.map((s) => ({
+      id: s.name,
+      name: s.name,
+      reference: s.reference,
+      contrast: s.contrast,
+      ...s.color ? { sourceScaleId: s.color } : { source: "base" }
+    }))
+  ];
+  const document = {
+    backgroundScaleId: n2.backgroundScale,
+    backgroundLightness: mode.backgroundLightness,
+    scales,
+    contrasts: n2.formula === "wcag2" ? n2.steps.map((step) => ({
+      id: step.name,
+      value: step.contrast,
+      ...step.opposite !== void 0 && { oppositeValue: step.opposite }
+    })) : [],
+    surfaces,
+    settings: {
+      colorOutput: output,
+      contrastReference: "light",
+      polarityCompensation: mode.polarityCompensation,
+      contrastMultiplier: mode.contrastMultiplier
+    }
+  };
+  const context = polarityContext(document);
+  const adjust = n2.formula === "apca" ? (value) => Math.min(MAX_APCA, value * mode.contrastMultiplier) : (value) => multiplyContrast(effectiveContrast({ value }, context), mode.contrastMultiplier);
+  return { document: applyContrastMultiplier(applyPolarityCompensation(document)), adjust };
+}
+function generateTheme(config) {
+  const n2 = normalizeConfig(config);
+  const output = { authoringGamut: n2.gamut, outputFormat: n2.format, mapOutputsToSrgb: false };
+  const gamut = n2.gamut;
+  const scales = n2.scales.map((s) => ({
+    id: s.name,
+    name: s.name,
+    stops: s.stops,
+    interpolation: s.interpolation
+  }));
+  const warnings = [];
+  const notes = [];
+  const issues = [];
+  const report2 = (level, code, mode, colors, message) => {
+    (level === "warning" ? warnings : notes).push(message);
+    issues.push({ level, code, mode, colors, message });
+  };
+  const adjustments = [];
+  const modes = {};
+  const outputSteps = new Set(n2.outputSteps);
+  const generatedRoles = Object.values(n2.roles).filter((role) => !role.ref);
+  const keyLightness = (name) => n2.scales.find((s) => s.name === name)?.stops[0]?.lightness ?? 0.5;
+  const scaleData = (name) => buildScaleData(scales.find((s) => s.id === name), output);
+  let darkest;
+  for (const mode of n2.modes) {
+    const { document, adjust } = engineDocument(n2, mode, output, scales);
+    const backgroundCss = outputColorCss(resolvedBackgroundLinear(document), output);
+    const background = parsedOutputLinear(backgroundCss, gamut);
+    const apcaDark = n2.formula === "apca" ? apcaPrefersDark(background, gamut) : false;
+    const missed = [];
+    const missedNames = [];
+    let maxedOut = 0;
+    const scaleValues = {};
+    for (const scale of scales) {
+      const data = buildScaleData(scale, output);
+      const values = {};
+      n2.steps.forEach((step, index) => {
+        if (!outputSteps.has(step.name)) return;
+        let value;
+        if (n2.formula === "apca") {
+          const target = Math.min(MAX_APCA, step.contrast * mode.contrastMultiplier);
+          const generated2 = generateApcaColor(data, background, backgroundCss, Math.min(MAX_APCA, target * SAFETY), output, apcaDark);
+          value = colorValue(generated2.css, generated2.measuredContrast, target);
+        } else {
+          const target = document.contrasts[index].value;
+          const aim = Math.min(21, target * SAFETY);
+          const generated2 = generateColors(data, background, aim).opaque;
+          value = colorValue(generated2.css, generated2.measuredContrast, target);
+        }
+        const isEndpoint = value.oklch[1] === 0 && (value.oklch[0] >= 0.9999 || value.oklch[0] <= 1e-4);
+        if (value.capped && isEndpoint && mode.contrastMultiplier > 1) maxedOut += 1;
+        else if (value.capped) {
+          missedNames.push(`${scale.name}.${step.name}`);
+          missed.push(`${scale.name}.${step.name} (wanted ${describeTarget(n2.formula, value.target)}, got ${describeTarget(n2.formula, value.contrast)})`);
+        }
+        values[step.name] = value;
+      });
+      if (Object.keys(values).length > 0) scaleValues[scale.name] = values;
+    }
+    const surfaceValues = {};
+    let parent;
+    let parentCss = backgroundCss;
+    for (const surface of document.surfaces) {
+      const linear = surfaceLinear(surface, document, parent);
+      const css = outputColorCss(linear, output);
+      const referenceCss = surface.base ? css : surface.reference === "base" ? backgroundCss : parentCss;
+      const target = surface.contrast ?? 1;
+      const value = colorValue(css, measureOutputContrast(css, referenceCss, gamut), target);
+      if (value.capped) missed.push(`surface.${surface.name} (wanted ${round(target, 2)}:1, got ${value.contrast}:1)`);
+      surfaceValues[surface.name] = value;
+      parent = linear;
+      parentCss = css;
+    }
+    let generated;
+    if (generatedRoles.length > 0) {
+      if (!darkest) {
+        const g2 = generateColors(scaleData(n2.backgroundScale), [1, 1, 1], 21).opaque;
+        darkest = { css: g2.css, linear: g2.linear };
+      }
+      generated = generateRoles(generatedRoles, {
+        formula: n2.formula,
+        output,
+        gamut,
+        background,
+        backgroundCss,
+        apcaDark,
+        scaleData,
+        keyLightness,
+        adjust,
+        darkest,
+        spacing: n2.spacing
+      });
+      for (const item of generated.missed) {
+        missedNames.push(item.role);
+        missed.push(`${item.role} (needs at least ${describeTarget(n2.formula, item.target)}, got ${describeTarget(n2.formula, item.contrast)})`);
+      }
+      for (const item of generated.adjustments) adjustments.push({ mode: mode.name, ...item });
+      const cvd = generated.feedback;
+      if (cvd && !cvd.pass && cvd.worst)
+        report2(
+          "warning",
+          "feedback-too-similar",
+          mode.name,
+          [cvd.worst.a, cvd.worst.b],
+          `In "${mode.name}" mode, the feedback colors ${cvd.worst.a} and ${cvd.worst.b} are too similar${cvd.worst.vision === "normal" ? "" : ` for people with ${cvd.worst.vision} color vision`} (difference ${cvd.worst.deltaE}, needs ${cvd.required}). Try a different brand color, or set the feedback colors yourself in "status".`
+        );
+    }
+    const roles = {};
+    const maxContrast = n2.formula === "apca" ? MAX_APCA : 21;
+    const weakRefs = [];
+    const weakRefNames = /* @__PURE__ */ new Set();
+    for (const [name, role] of Object.entries(n2.roles)) {
+      if (!role.ref) {
+        roles[name] = generated.values[name];
+        continue;
+      }
+      const [group, item] = role.ref.split(".");
+      const source = group === "surface" ? surfaceValues[item] : scaleValues[group][item];
+      if (role.floor <= 0) {
+        roles[name] = { ...source, ref: role.ref };
+        continue;
+      }
+      const minimum = Math.min(maxContrast, Math.max(role.floor, adjust(role.floor)));
+      roles[name] = { ...source, ref: role.ref, minimum: round(minimum, 4) };
+      if (source.contrast + 1e-6 < minimum) {
+        weakRefNames.add(name);
+        weakRefs.push(`${name} \u2192 ${role.ref} (needs at least ${describeTarget(n2.formula, minimum)} for ${role.kind}, got ${describeTarget(n2.formula, source.contrast)})`);
+      }
+    }
+    if (weakRefs.length > 0)
+      report2(
+        "warning",
+        "reference-below-minimum",
+        mode.name,
+        [...weakRefNames],
+        `In "${mode.name}" mode, ${weakRefs.length} role${weakRefs.length === 1 ? " points" : "s point"} to a step below the minimum contrast for its kind: ${weakRefs.slice(0, 4).join("; ")}${weakRefs.length > 4 ? `; and ${weakRefs.length - 4} more` : ""}. Point it to a stronger step, or if it is decorative, write it as { "ref": "...", "kind": "tint" }.`
+      );
+    const measureHex = (hex, against) => n2.formula === "apca" ? Math.abs(apcaContrast(hex, against)) : measureOutputContrast(hex, against, "srgb");
+    const hexMissed = [];
+    const hexMissedNames = [];
+    const byPair = Object.entries(roles).sort(([, a], [, b2]) => Number(Boolean(a.against)) - Number(Boolean(b2.against)));
+    for (const [name, value] of byPair) {
+      if (value.minimum === void 0 || weakRefNames.has(name)) continue;
+      const against = value.against ? roles[value.against]?.hex : surfaceValues[BASE_SURFACE].hex;
+      if (!against) continue;
+      const fixed = value.ref ? void 0 : strengthenHex(value.hex, against, value.minimum, measureHex);
+      if (fixed) {
+        value.hex = fixed;
+        continue;
+      }
+      const pair = value.against ? roles[value.against] : void 0;
+      if (pair && !pair.ref && pair.minimum !== void 0) {
+        const moved = strengthenHex(pair.hex, value.hex, value.minimum, measureHex);
+        if (moved && measureHex(moved, surfaceValues[BASE_SURFACE].hex) + 1e-6 >= pair.minimum) {
+          pair.hex = moved;
+          continue;
+        }
+      }
+      const contrast2 = measureHex(value.hex, against);
+      if (contrast2 + 1e-6 < value.minimum) {
+        hexMissedNames.push(name);
+        hexMissed.push(`${name} (${value.hex}: ${describeTarget(n2.formula, Math.floor(contrast2 * 100) / 100)}, needs ${describeTarget(n2.formula, value.minimum)})`);
+      }
+    }
+    if (hexMissed.length > 0)
+      report2(
+        "warning",
+        "hex-below-minimum",
+        mode.name,
+        hexMissedNames,
+        `In "${mode.name}" mode, the sRGB hex fallback for ${hexMissed.length} role${hexMissed.length === 1 ? "" : "s"} falls below the minimum contrast: ${hexMissed.slice(0, 4).join("; ")}${hexMissed.length > 4 ? `; and ${hexMissed.length - 4} more` : ""}. Use the "css" values, or set "output.gamut" to "srgb" if you must ship hex.`
+      );
+    if (missed.length > 0) {
+      const shown = missed.slice(0, 4).join("; ");
+      const more = missed.length > 4 ? `; and ${missed.length - 4} more` : "";
+      report2(
+        "warning",
+        "target-missed",
+        mode.name,
+        missedNames,
+        `In "${mode.name}" mode, ${missed.length} color${missed.length === 1 ? "" : "s"} could not reach the contrast target, so the closest possible color was used: ${shown}${more}. To fix this, lower those targets or the contrast multiplier, or move the background lightness closer to white or black.`
+      );
+    }
+    if (maxedOut > 0) {
+      report2(
+        "note",
+        "maxed-out",
+        mode.name,
+        [],
+        `In "${mode.name}" mode, the contrast multiplier asked for more contrast than is possible on ${maxedOut} step${maxedOut === 1 ? "" : "s"}, so ${maxedOut === 1 ? "it uses" : "they use"} the strongest color available (pure black or white). This is expected for high-contrast modes.`
+      );
+    }
+    modes[mode.name] = {
+      name: mode.name,
+      settings: {
+        backgroundLightness: mode.backgroundLightness,
+        contrastMultiplier: mode.contrastMultiplier,
+        polarityCompensation: mode.polarityCompensation
+      },
+      ...mode.media && { media: mode.media },
+      background: surfaceValues[BASE_SURFACE],
+      scales: scaleValues,
+      surfaces: surfaceValues,
+      roles,
+      ...generated && { spacing: generated.step },
+      ...generated?.feedback && { feedback: generated.feedback }
+    };
+  }
+  return {
+    formula: n2.formula,
+    gamut,
+    format: n2.format,
+    defaultMode: n2.defaultMode,
+    steps: n2.outputSteps,
+    modes,
+    adjustments,
+    warnings,
+    notes,
+    issues
+  };
+}
+
+// src/output/css.ts
+function roleTarget(ref, prefix) {
+  const [group, item] = ref.split(".");
+  return group === "surface" ? `--${prefix}-surface-${item}` : `--${prefix}-${group}-${item}`;
+}
+function cssVariables(mode, prefix = "color") {
+  if (typeof prefix !== "string" || !/^[a-z][a-z0-9-]*$/i.test(prefix))
+    throw new Error(`The CSS variable prefix must start with a letter and use only letters, numbers, and dashes (got ${JSON.stringify(prefix)}).`);
+  const vars = {};
+  for (const [scale, steps] of Object.entries(mode.scales))
+    for (const [step, value] of Object.entries(steps)) vars[`--${prefix}-${scale}-${step}`] = value.css;
+  for (const [name, value] of Object.entries(mode.surfaces)) vars[`--${prefix}-surface-${name}`] = value.css;
+  for (const [role, value] of Object.entries(mode.roles))
+    vars[`--${prefix}-${role}`] = value.ref ? `var(${roleTarget(value.ref, prefix)})` : value.css;
+  return vars;
+}
+function declarations(mode, prefix, indent, colorScheme = true) {
+  const lines = colorScheme ? [`${indent}color-scheme: ${mode.settings.backgroundLightness < 0.5 ? "dark" : "light"};`] : [];
+  for (const [name, value] of Object.entries(cssVariables(mode, prefix))) lines.push(`${indent}${name}: ${value};`);
+  return lines.join("\n");
+}
+var block = (selector, body, indent = "") => `${indent}${selector} {
+${body}
+${indent}}`;
+var scheme = (mode) => mode.settings.backgroundLightness < 0.5 ? "dark" : "light";
+function contrastLevel(mode) {
+  if (mode.media?.includes("prefers-contrast: more")) return "more";
+  if (mode.media?.includes("prefers-contrast: less")) return "less";
+  const words = mode.name.toLowerCase().split(/[-_\s]+/);
+  if (!words.includes("contrast")) return void 0;
+  if (words.some((w) => ["high", "more", "increased", "max"].includes(w))) return "more";
+  if (words.some((w) => ["low", "less", "reduced", "min"].includes(w))) return "less";
+  return void 0;
+}
+function toCss(theme, options = {}) {
+  const prefix = options.prefix ?? "color";
+  const parts = [`/* Generated by chromagentic. Contrast formula: ${theme.formula}. Gamut: ${theme.gamut}. */`];
+  const defaultMode = theme.modes[theme.defaultMode];
+  if (options.tailwind) {
+    parts.push(block("@theme", declarations(defaultMode, prefix, "  ", false)));
+    parts.push(block(":root", `  color-scheme: ${scheme(defaultMode)};`));
+    parts.push(block(`[data-theme="${theme.defaultMode}"]`, declarations(defaultMode, prefix, "  ")));
+  } else {
+    parts.push(block(`:root, [data-theme="${theme.defaultMode}"]`, declarations(defaultMode, prefix, "  ")));
+  }
+  const modes = Object.values(theme.modes);
+  const others = modes.filter((mode) => mode.name !== theme.defaultMode);
+  const baseOf = (mode) => {
+    const candidates = modes.filter((m) => m !== mode && !contrastLevel(m) && scheme(m) === scheme(mode));
+    return candidates.find((m) => mode.name.startsWith(`${m.name}-`)) ?? candidates[0];
+  };
+  const variants = others.filter((mode) => contrastLevel(mode) && baseOf(mode));
+  const auto = (mode) => variants.includes(mode) ? ":root:not([data-theme]):not([data-contrast])" : ":root:not([data-theme])";
+  const withMedia = others.filter((mode) => mode.media).sort((a, b2) => a.media.split(" and ").length - b2.media.split(" and ").length);
+  for (const mode of withMedia)
+    parts.push(block(`@media ${mode.media}`, block(auto(mode), declarations(mode, prefix, "    "), "  ")));
+  for (const mode of others) {
+    const pair = variants.includes(mode) ? `, [data-theme="${baseOf(mode).name}"][data-contrast="${contrastLevel(mode)}"]` : "";
+    parts.push(block(`[data-theme="${mode.name}"]${pair}`, declarations(mode, prefix, "  ")));
+  }
+  for (const mode of [...variants].sort((a, b2) => Number(scheme(a) === "dark") - Number(scheme(b2) === "dark"))) {
+    const level = contrastLevel(mode);
+    const base = baseOf(mode);
+    const chosen = `:root:not([data-theme])[data-contrast="${level}"]`;
+    parts.push(
+      scheme(mode) === "dark" ? block("@media (prefers-color-scheme: dark)", block(chosen, declarations(mode, prefix, "    "), "  ")) : block(chosen, declarations(mode, prefix, "  "))
+    );
+    parts.push(block(`@media (prefers-contrast: ${level})`, block(`[data-theme="${base.name}"]:not([data-contrast])`, declarations(mode, prefix, "    "), "  ")));
+  }
+  return `${parts.join("\n\n")}
+`;
+}
+
+// src/output/dtcg.ts
+var SPACE = {
+  oklch: { colorjs: "oklch", dtcg: "oklch" },
+  srgb: { colorjs: "srgb", dtcg: "srgb" },
+  "display-p3": { colorjs: "p3", dtcg: "display-p3" },
+  rec2020: { colorjs: "rec2020", dtcg: "rec2020" }
+};
+function token(value, theme) {
+  const space = theme.format === "oklch" ? SPACE.oklch : SPACE[theme.gamut];
+  const components = new Color(value.css).to(space.colorjs).coords.map((c, i) => {
+    const n2 = Number(c);
+    if (!Number.isFinite(n2)) return 0;
+    return Number(n2.toFixed(i === 2 && space.dtcg === "oklch" ? 2 : 5));
+  });
+  return {
+    $type: "color",
+    $value: { colorSpace: space.dtcg, components, hex: value.hex },
+    $extensions: {
+      chromagentic: { contrast: value.contrast, target: value.target, formula: theme.formula, ...value.capped && { capped: true } }
+    }
+  };
+}
+function toDtcg(theme, modeName = theme.defaultMode) {
+  const mode = theme.modes[modeName];
+  if (!mode) throw new Error(`Mode "${modeName}" does not exist. Modes: ${Object.keys(theme.modes).join(", ")}.`);
+  const color = {};
+  for (const [scale, steps] of Object.entries(mode.scales)) {
+    const group = {};
+    for (const [step, value] of Object.entries(steps)) group[step] = token(value, theme);
+    color[scale] = group;
+  }
+  const surface = {};
+  for (const [name, value] of Object.entries(mode.surfaces)) surface[name] = token(value, theme);
+  color.surface = surface;
+  for (const [role, value] of Object.entries(mode.roles))
+    color[role] = value.ref ? { $type: "color", $value: `{color.${value.ref}}` } : token(value, theme);
+  return { $description: `chromagentic "${mode.name}" mode`, color };
+}
+function toDtcgModes(theme) {
+  return Object.fromEntries(Object.keys(theme.modes).map((name) => [name, toDtcg(theme, name)]));
+}
+
+// src/output/platform.ts
+var WIDE = "Modern browsers and design tokens support wide-gamut OKLCH, so colors keep their full range and older screens map them down automatically.";
+var P3 = "This platform is built around Display P3, so colors are limited to P3 and written as P3 red, green, and blue values.";
+var SRGB = "This technology only reliably supports sRGB, so colors are mapped into sRGB and written as hex.";
+var TABLE = {
+  web: { gamut: "rec2020", format: "oklch", reason: WIDE },
+  css: { gamut: "rec2020", format: "oklch", reason: WIDE },
+  tailwind: { gamut: "rec2020", format: "oklch", reason: WIDE },
+  dtcg: { gamut: "rec2020", format: "oklch", reason: WIDE },
+  ios: { gamut: "display-p3", format: "rgb", reason: P3 },
+  swiftui: { gamut: "display-p3", format: "rgb", reason: P3 },
+  uikit: { gamut: "display-p3", format: "rgb", reason: P3 },
+  macos: { gamut: "display-p3", format: "rgb", reason: P3 },
+  visionos: { gamut: "display-p3", format: "rgb", reason: P3 },
+  android: { gamut: "display-p3", format: "rgb", reason: P3 },
+  compose: { gamut: "display-p3", format: "rgb", reason: P3 },
+  flutter: { gamut: "srgb", format: "hex", reason: SRGB },
+  "react-native": { gamut: "srgb", format: "hex", reason: SRGB },
+  email: { gamut: "srgb", format: "hex", reason: SRGB },
+  legacy: { gamut: "srgb", format: "hex", reason: SRGB }
+};
+var PLATFORMS = Object.keys(TABLE);
+function platformOutput(platform) {
+  const entry = TABLE[platform];
+  if (!entry) throw new Error(`Unknown platform "${platform}". Choose one of: ${PLATFORMS.join(", ")}.`);
+  return { ...entry };
+}
+
+// src/describe/words.ts
+var f = (name, nouns, meanings, effects, usage, extra = {}) => ({
+  name,
+  nouns: nouns.split(", "),
+  meanings: meanings.split(", "),
+  effects: effects.split(", "),
+  usage: usage.split(", "),
+  ...extra
+});
+var FAMILIES = {
+  red: f("red", "red, cherry, ruby, tomato, scarlet", "passion, energy, love, urgency, courage, excitement, danger", "excite, energize, alert, stimulate", "sales, food, sports, alerts, action", { light: ["coral", "salmon"], dark: ["maroon", "wine", "burgundy"], earthy: true }),
+  orange: f("orange", "orange, tangerine, pumpkin, apricot, amber", "enthusiasm, warmth, creativity, friendliness, fun, adventure, playful, cozy, autumn", "energize, cheer, invite, excite", "food, kids, entertainment, sports, action", { light: ["peach"], dark: ["rust", "copper"], earthy: true }),
+  yellow: f("yellow", "yellow, gold, sunflower, lemon, sunshine", "happiness, optimism, joy, attention, caution, summer", "cheer, energize, uplift, attract", "highlights, kids, food, summer, caution", { light: ["butter", "cream"], dark: ["mustard"], earthy: true }),
+  green: f("green", "green, leaf, grass, emerald, fern", "nature, growth, health, freshness, balance, renewal, harmony, ecology", "calm, refresh, restore, reassure", "environment, health, finance, wellness, outdoors, organic", { light: ["mint", "lime"], dark: ["forest", "pine"], earthy: true }),
+  teal: f("teal", "teal, turquoise, aqua, cyan, lagoon", "clarity, calm, healing, balance, ocean, sophistication, modern", "calm, refresh, soothe", "health, wellness, technology, spa, travel", { light: ["seafoam"], dark: ["petrol"] }),
+  blue: f("blue", "blue, sky, ocean, sapphire, cobalt", "trust, calm, stability, dependability, intelligence, peace, professionalism, security, loyalty, modern", "calm, reassure, focus, cool", "finance, technology, healthcare, corporate, banking, links", { light: ["ice"], dark: ["navy", "midnight"] }),
+  purple: f("purple", "purple, violet, plum, amethyst, iris", "luxury, royalty, creativity, mystery, wisdom, spirituality, imagination", "inspire, intrigue, soothe", "beauty, luxury, creative, wellness, premium", { light: ["lavender", "lilac"], dark: ["eggplant", "aubergine"] }),
+  pink: f("pink", "pink, rose, magenta, fuchsia, raspberry", "romance, playfulness, tenderness, sweetness, fun, compassion, youth, playful", "soothe, delight, charm, excite", "beauty, fashion, kids, sweets, cosmetics", { light: ["blush", "petal"], dark: ["berry"] }),
+  brown: f("brown", "brown, chocolate, coffee, wood, earth, clay, chestnut, terracotta", "earth, nature, stability, comfort, reliability, warmth, rustic, grounded, cozy, autumn", "ground, comfort, reassure", "coffee, food, outdoors, furniture, bakery, organic", { earthy: true }),
+  olive: f("olive", "olive, khaki, moss, sage, earth", "nature, peace, earth, tradition, grounded, autumn", "ground, calm", "outdoors, organic, food, fashion", { earthy: true }),
+  tan: f("tan", "tan, sand, beige, oat, wheat, latte, earth", "simplicity, warmth, comfort, earth, natural, softness, cozy", "calm, ground, soften", "backgrounds, interiors, fashion, organic, bakery", { earthy: true }),
+  black: f("black", "black, ink, charcoal, coal, night", "power, elegance, sophistication, formality, mystery, luxury, authority", "contrast, focus, intimidate", "luxury, fashion, typography, technology"),
+  grey: f("grey", "grey, gray, stone, slate, ash, silver, concrete, fog", "neutrality, balance, professionalism, restraint, calm, modern, minimal", "neutralize, balance, recede", "backgrounds, interfaces, typography, corporate"),
+  white: f("white", "white, snow, cloud, paper, porcelain", "purity, simplicity, cleanliness, clarity, peace, minimalism", "open, refresh, clarify", "backgrounds, healthcare, minimal, weddings")
+};
+var inHue = (h, from, to2) => from <= to2 ? h >= from && h < to2 : h >= from || h < to2;
+function familyOf(l, c, h) {
+  if (c < 0.025) return l < 0.3 ? FAMILIES.black : l > 0.93 ? FAMILIES.white : FAMILIES.grey;
+  if (inHue(h, 15, 38)) return l < 0.6 && c < 0.13 ? FAMILIES.brown : l >= 0.8 ? FAMILIES.pink : FAMILIES.red;
+  if (inHue(h, 38, 75)) return l < 0.6 ? FAMILIES.brown : l >= 0.75 && c < 0.08 ? FAMILIES.tan : FAMILIES.orange;
+  if (inHue(h, 75, 115)) return l < 0.65 ? FAMILIES.olive : l >= 0.75 && c < 0.08 ? FAMILIES.tan : FAMILIES.yellow;
+  if (inHue(h, 115, 170)) return FAMILIES.green;
+  if (inHue(h, 170, 220)) return FAMILIES.teal;
+  if (inHue(h, 220, 285)) return FAMILIES.blue;
+  if (inHue(h, 285, 335)) return FAMILIES.purple;
+  return FAMILIES.pink;
+}
+function temperatureOf(c, h) {
+  if (c < 0.025) return "neutral";
+  if (inHue(h, 330, 105)) return "warm";
+  if (inHue(h, 150, 290)) return "cool";
+  return "neutral";
+}
+var ADJECTIVES = [
+  ["bright", (l, c) => l >= 0.6 && c >= 0.12],
+  ["vivid", (_, c) => c >= 0.15],
+  ["brilliant", (l, c) => l >= 0.6 && c >= 0.18],
+  ["saturated", (_, c) => c >= 0.18],
+  ["rich", (l, c) => c >= 0.1 && l >= 0.35 && l < 0.7],
+  ["deep", (l, c) => l < 0.45 && c >= 0.06],
+  ["dark", (l) => l < 0.45],
+  ["light", (l) => l >= 0.75],
+  ["pale", (l, c) => l >= 0.82 && c <= 0.1],
+  ["pastel", (l, c) => l >= 0.78 && c >= 0.04 && c < 0.14],
+  ["soft", (l, c) => l >= 0.65 && c >= 0.025 && c < 0.12],
+  ["muted", (l, c) => l < 0.82 && c >= 0.025 && c < 0.09],
+  ["dusty", (l, c) => l >= 0.5 && l < 0.8 && c >= 0.03 && c < 0.08],
+  ["mellow", (l, c, _, t) => t === "warm" && l >= 0.55 && l < 0.85 && c >= 0.04 && c < 0.12],
+  ["earthy", (l, c, family) => !!family.earthy && l >= 0.35 && l < 0.75 && c >= 0.03 && c < 0.14],
+  ["calm", (l, c, family) => ["green", "teal", "blue", "olive"].includes(family.name) && c < 0.13 || l >= 0.6 && c < 0.08],
+  ["fresh", (l, c, family) => ["green", "teal"].includes(family.name) && l >= 0.65 && c >= 0.08],
+  ["energetic", (_, c, __, t) => t === "warm" && c >= 0.15],
+  ["playful", (l, c, family) => ["red", "orange", "yellow", "pink", "purple", "green"].includes(family.name) && l >= 0.6 && c >= 0.12],
+  ["cozy", (l, c, _, t) => t === "warm" && l >= 0.35 && l < 0.7 && c >= 0.04 && c < 0.14],
+  ["moody", (l, c) => l < 0.4 && c < 0.1],
+  ["neutral", (_, c) => c < 0.025]
+];
+function adjectivesOf(l, c, family, temperature) {
+  return ADJECTIVES.filter(([, test]) => test(l, c, family, temperature)).map(([word]) => word);
+}
+
+// src/describe/describe.ts
+var STOPWORDS = new Set(
+  "a an and are as at be but by colors colour colours color feel feeling for from give has have i in into is it its like look looks make me more most my of on or our please so some that the theme this to very want we website site app with".split(
+    " "
+  )
+);
+var SUFFIXES = ["iness", "ness", "ing", "ful", "ous", "ish", "ity", "ly", "ed", "es", "s", "y"];
+function stem(word) {
+  for (const suffix of SUFFIXES)
+    if (word.endsWith(suffix) && word.length - suffix.length >= 3) return word.slice(0, -suffix.length);
+  return word;
+}
+function wordsMatch(a, b2) {
+  if (a === b2) return true;
+  const sa = stem(a);
+  const sb = stem(b2);
+  return sa === sb || sa.length >= 5 && sb.length >= 5 && sa.slice(0, 5) === sb.slice(0, 5);
+}
+function promptWords(prompt) {
+  const seen = /* @__PURE__ */ new Set();
+  for (const word of prompt.toLowerCase().split(/[^a-z]+/))
+    if (word.length > 1 && !STOPWORDS.has(word)) seen.add(word);
+  return [...seen];
+}
+var tokens = (phrase) => phrase.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+function list(words) {
+  return words.length < 2 ? words[0] ?? "" : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
+}
+function wordsFor(l, c, h) {
+  const family = familyOf(l, c, h);
+  const temperature = temperatureOf(c, h);
+  const nouns = [...l >= 0.78 && family.light || l < 0.45 && family.dark || [], ...family.nouns];
+  const words = adjectivesOf(l, c, family, temperature);
+  if (words.length === 0) words.push(family.name);
+  return {
+    summary: list(words.slice(0, 3)),
+    words,
+    nouns,
+    meanings: family.meanings,
+    effects: family.effects,
+    usage: family.usage,
+    temperature: [temperature]
+  };
+}
+function describeColor(color) {
+  const [l, c, h] = new Color(color).toGamut({ space: "srgb", method: "css" }).to("oklch").coords.map((v) => Number(v) || 0);
+  return wordsFor(l, c, h);
+}
+var grid;
+function colorGrid() {
+  if (grid) return grid;
+  grid = [];
+  for (let l = 0.35; l <= 0.9001; l += 0.05)
+    for (let c = 0.03; c <= 0.2701; c += 0.03)
+      for (let h = 0; h < 360; h += 15) {
+        const color = new Color("oklch", [l, c, h]);
+        if (!color.inGamut("srgb")) continue;
+        const css = `oklch(${round(l * 100, 2)}% ${round(c, 3)} ${h})`;
+        const d2 = wordsFor(l, c, h);
+        const words = (items) => new Set(items.flatMap(tokens));
+        const lab = color.to("oklab").coords.map(Number);
+        grid.push({
+          css,
+          oklch: [round(l, 4), round(c, 4), h],
+          lab,
+          categories: [
+            { weight: 1, tokens: words(d2.words.slice(0, 3)) },
+            { weight: 3, tokens: words(d2.words) },
+            { weight: 3, tokens: words(d2.nouns) },
+            { weight: 2, tokens: words([...d2.meanings, ...d2.effects, ...d2.usage, ...d2.temperature]) }
+          ],
+          summary: d2.summary
+        });
+      }
+  return grid;
+}
+function scoreWord(entry, word) {
+  let total = 0;
+  for (const category of entry.categories) {
+    for (const token2 of category.tokens)
+      if (wordsMatch(word, token2)) {
+        total += category.weight;
+        break;
+      }
+  }
+  return total;
+}
+var median = (values) => {
+  const sorted = [...values].sort((a, b2) => a - b2);
+  return sorted[Math.floor(sorted.length / 2)];
+};
+function sortTiesByTypicality(items) {
+  let start = 0;
+  while (start < items.length) {
+    let end = start;
+    while (end < items.length && items[end].score === items[start].score && items[end].matched.length === items[start].matched.length)
+      end += 1;
+    const group = items.slice(start, end);
+    const l = median(group.map((item) => item.entry.oklch[0]));
+    const c = median(group.map((item) => item.entry.oklch[1]));
+    const away = (entry) => Math.hypot(entry.oklch[0] - l, (entry.oklch[1] - c) * 2);
+    group.sort((a, b2) => away(a.entry) - away(b2.entry));
+    items.splice(start, group.length, ...group);
+    start = end;
+  }
+}
+var distance2 = (a, b2) => Math.hypot(a.lab[0] - b2.lab[0], a.lab[1] - b2.lab[1], a.lab[2] - b2.lab[2]);
+function suggestColors(prompt, options = {}) {
+  const count = Math.max(1, Math.floor(options.count ?? 6));
+  const words = promptWords(prompt);
+  const matchedWords = /* @__PURE__ */ new Set();
+  const entries = colorGrid();
+  const scored = entries.map((entry) => {
+    const matched = [];
+    let score = 0;
+    for (const word of words) {
+      const value = scoreWord(entry, word);
+      if (value > 0) {
+        matched.push(word);
+        matchedWords.add(word);
+        score += value;
+      }
+    }
+    return { entry, matched, score };
+  }).filter((item) => item.score > 0).sort((a, b2) => b2.matched.length - a.matched.length || b2.score - a.score);
+  sortTiesByTypicality(scored);
+  const picks = [];
+  for (const item of scored) {
+    if (picks.length >= count) break;
+    if (picks.every((pick) => distance2(pick.entry, item.entry) > 0.06)) picks.push(item);
+  }
+  return {
+    colors: picks.map(({ entry, matched, score }) => ({
+      css: entry.css,
+      hex: new Color(entry.css).to("srgb").toString({ format: "hex", collapse: false }),
+      oklch: entry.oklch,
+      score,
+      matched,
+      summary: entry.summary
+    })),
+    matchedWords: words.filter((word) => matchedWords.has(word)),
+    unmatchedWords: words.filter((word) => !matchedWords.has(word))
+  };
+}
+
+// src/math/contrast.ts
+function linearSrgb(color) {
+  const coords = new Color(color).to("srgb-linear").coords.map((value) => Number(value) || 0);
+  return [coords[0], coords[1], coords[2]];
+}
+function wcagContrast(first, second) {
+  return contrastRatio(luminance(linearSrgb(first)), luminance(linearSrgb(second)));
+}
+function contrast(foreground, background, formula = "wcag2") {
+  return formula === "apca" ? Math.abs(apcaContrast(foreground, background)) : wcagContrast(foreground, background);
+}
+
+// src/theme/feedbackColors.ts
+function feedbackColors(brand, options = {}) {
+  const theme = generateTheme({ ...options, colors: { brand }, status: true, roles: { accent: null } });
+  const modes = {};
+  for (const [name, mode] of Object.entries(theme.modes)) {
+    const colors = {};
+    for (const role of FEEDBACK_NAMES) {
+      const { css, hex, oklch, contrast: contrast2, target, capped } = mode.roles[role];
+      colors[role] = { css, hex, oklch, contrast: contrast2, target, ...capped && { capped } };
+    }
+    modes[name] = { colors, ...mode.feedback && { check: mode.feedback } };
+  }
+  return { modes, warnings: theme.warnings, issues: theme.issues };
+}
+
+// src/cli/run.ts
+var EXIT = { ok: 0, input: 2, failed: 3 };
+var HELP = `chromagentic: accessible, perceptual UI color for AI agents
 
 Usage:
-  chromagentic generate <theme.json> [--format css|tailwind|dtcg|json] [--platform <name>] [--out <path>] [--strict]
-      Generate colors for every mode from a settings file. Prints to the screen unless --out is given.
+  chromagentic generate <theme.json | -> [--format css|tailwind|dtcg|json] [--platform <name>] [--out <path>] [--strict]
+      Generate colors for every mode from a settings file ("-" reads it from standard input).
+      Prints to the screen unless --out is given.
       --format    css (default), tailwind (Tailwind v4 @theme), dtcg (design tokens), or json (everything)
-      --platform  pick the gamut and format for a platform: ${_t.join(", ")}
+      --platform  pick the gamut and format for a platform: ${PLATFORMS.join(", ")}
       --out       file to write; for dtcg, a folder that gets one <mode>.tokens.json per mode
-      --strict    fail if any color misses its contrast target
+      --strict    fail if there are any warnings: missed targets or minimums. Notes never fail.
 
+  chromagentic validate <theme.json | -> [--strict]   Check a settings file and list warnings, without printing colors
   chromagentic suggest "<words>" [--count 6]     Candidate key colors for words like "calm and earthy"
   chromagentic describe <color>                  Describe a color in plain words
   chromagentic contrast <text> <background> [--formula wcag2|apca]   Measure contrast
@@ -28,32 +5606,307 @@ Usage:
       checked so each pair stays distinct for color-blind users (protan, deutan, tritan)
   chromagentic check-cvd <name=color>... [--min 11]
       Check that colors stay distinct (CIEDE2000) in typical vision and each color-blind simulation.
-      Exits with 1 if any pair is too close.
+
+  Add --json to any command to get one JSON object on standard output:
+      { ok, engineVersion, errors, warnings, notes, output }
+  Exit codes: 0 success, 2 bad input or settings, 3 a check failed (--strict or check-cvd).
 
   chromagentic --help | --version
-`,te=class extends Error{};async function ah(e){let t;try{t=await rh(e,"utf8")}catch{throw new te(`Can't read the settings file "${e}". Check the path and try again.`)}try{return JSON.parse(t)}catch(r){throw new te(`The settings file "${e}" is not valid JSON: ${r.message}`)}}async function sh(e,t){let{values:r,positionals:n}=Ht({args:e,allowPositionals:!0,options:{format:{type:"string",default:"css"},platform:{type:"string"},out:{type:"string"},strict:{type:"boolean",default:!1}}});if(n.length!==1)throw new te("Give one settings file, for example: chromagentic generate theme.json");let o=r.format;if(!["css","tailwind","dtcg","json"].includes(o))throw new te(`--format must be css, tailwind, dtcg, or json (got "${o}").`);let a=ii(t.cwd,n[0]),s=await ah(a);if(r.platform){if(!_t.includes(r.platform))throw new te(`Unknown platform "${r.platform}". Choose one of: ${_t.join(", ")}.`);let{gamut:d,format:c}=Ms(r.platform);s.output={...s.output,gamut:d,format:c}}let i=Rr(s);for(let d of i.warnings)t.stderr(`Warning: ${d}
-`);let l=new Map;for(let d of i.adjustments)l.set(d.role,[...l.get(d.role)??[],`${d.mode} ${d.requested}\u2192${d.used}`]);l.size>0&&t.stderr(`Note: to keep contrast steps even, these targets moved: ${[...l].map(([d,c])=>`${d} (${c.join(", ")})`).join("; ")}.
-`);let u=r.out?ii(t.cwd,r.out):void 0;if(o==="dtcg"){let d=ws(i);if(u){await ai(u,{recursive:!0});for(let[c,h]of Object.entries(d))await si(oh(u,`${c}.tokens.json`),`${JSON.stringify(h,null,2)}
-`);t.stderr(`Wrote ${Object.keys(d).length} token files to ${r.out}
-`)}else t.stdout(`${JSON.stringify(d,null,2)}
-`)}else{let d=o==="json"?`${JSON.stringify(i,null,2)}
-`:ys(i,{tailwind:o==="tailwind"});u?(await ai(nh(u),{recursive:!0}),await si(u,d),t.stderr(`Wrote ${r.out}
-`)):t.stdout(d)}return r.strict&&i.warnings.length>0?(t.stderr(`Some colors missed their contrast targets (--strict).
-`),1):0}function ih(e,t){let{values:r,positionals:n}=Ht({args:e,allowPositionals:!0,options:{count:{type:"string"}}});if(n.length===0)throw new te('Give some words, for example: chromagentic suggest "calm and earthy"');let o=r.count===void 0?void 0:Number(r.count);if(o!==void 0&&!(o>=1))throw new te("--count must be a number of 1 or more.");let a=ti(n.join(" "),{count:o});return t.stdout(`${JSON.stringify(a,null,2)}
-`),a.colors.length===0&&t.stderr(`No colors matched those words. Try more common descriptive words such as bright, calm, warm, or elegant.
-`),0}function Fr(e){try{return e()}catch(t){throw t instanceof te?t:new te(`That doesn't look like a CSS color. ${t.message}`)}}function lh(e,t){if(e.length===0)throw new te("Give a color, for example: chromagentic describe #ff5a00");return t.stdout(`${JSON.stringify(Fr(()=>ei(e.join(" "))),null,2)}
-`),0}function ch(e,t){let{values:r,positionals:n}=Ht({args:e,allowPositionals:!0,options:{formula:{type:"string",default:"wcag2"}}});if(n.length!==2)throw new te("Give two colors, for example: chromagentic contrast #333 #fff");let o=r.formula;if(o!=="wcag2"&&o!=="apca")throw new te(`--formula must be wcag2 or apca (got "${o}").`);let a=Fr(()=>ni(n[0],n[1],o));return t.stdout(o==="apca"?`Lc ${a.toFixed(1)}
-`:`${(Math.floor(a*100)/100).toFixed(2)}:1
-`),0}function uh(e,t){let{values:r,positionals:n}=Ht({args:e,allowPositionals:!0,options:{formula:{type:"string",default:"wcag2"}}});if(n.length!==1)throw new te("Give one brand color, for example: chromagentic feedback #0066ff");let o=r.formula;if(o!=="wcag2"&&o!=="apca")throw new te(`--formula must be wcag2 or apca (got "${o}").`);let a=Fr(()=>oi(n[0],{formula:o}));for(let s of a.warnings)t.stderr(`Warning: ${s}
-`);return t.stdout(`${JSON.stringify(a.modes,null,2)}
-`),0}function dh(e,t){let{values:r,positionals:n}=Ht({args:e,allowPositionals:!0,options:{min:{type:"string"}}});if(n.length<2)throw new te("Give two or more colors, for example: chromagentic check-cvd error=#d32f2f success=#2e7d32");let o=r.min===void 0?xr:Number(r.min);if(!(o>0))throw new te("--min must be a number above 0.");let a={};n.forEach((i,l)=>{let u=i.indexOf("=");a[u>0?i.slice(0,u):`color${l+1}`]=u>0?i.slice(u+1):i});let s=Fr(()=>ts(a,o));return t.stdout(`${JSON.stringify(s,null,2)}
-`),s.pass||t.stderr(`${s.failing.length} pair${s.failing.length===1?" is":"s are"} too similar (needs a difference of ${o}).
-`),s.pass?0:1}async function ci(e,t){let[r,...n]=e;try{switch(r){case"generate":return await sh(n,t);case"suggest":return ih(n,t);case"describe":return lh(n,t);case"contrast":return ch(n,t);case"feedback":return uh(n,t);case"check-cvd":return dh(n,t);case"--version":case"-v":return t.stdout(`${t.version??"unknown"}
-`),0;case void 0:case"help":case"--help":case"-h":return t.stdout(li),0;default:return t.stderr(`Unknown command "${r}".
+`;
+var CliError = class extends Error {
+};
+var Output = class {
+  constructor(io, json) {
+    this.io = io;
+    this.json = json;
+  }
+  io;
+  json;
+  result;
+  warnings = [];
+  notes = [];
+  files = [];
+  failure;
+  data(value, text = `${JSON.stringify(value, null, 2)}
+`) {
+    this.result = value;
+    if (!this.json) this.io.stdout(text);
+  }
+  warn(item) {
+    this.warnings.push(item);
+    if (!this.json) this.io.stderr(`Warning: ${item.message}
+`);
+  }
+  note(item) {
+    this.notes.push(item);
+    if (!this.json) this.io.stderr(`Note: ${item.message}
+`);
+  }
+  wrote(path, message) {
+    this.files.push(path);
+    if (!this.json) this.io.stderr(message);
+  }
+  info(message) {
+    if (!this.json) this.io.stderr(message);
+  }
+  fail(message) {
+    this.failure = message;
+    if (!this.json) this.io.stderr(message);
+  }
+};
+var toMessage = ({ code, mode, colors, message }) => ({ code, mode, colors, message });
+async function readConfig(path, io) {
+  let text;
+  const label = path === "-" ? "standard input" : `"${path}"`;
+  try {
+    if (path === "-") {
+      if (!io.stdin) throw new Error();
+      text = await io.stdin();
+    } else text = await readFile(resolve(io.cwd, path), "utf8");
+  } catch {
+    throw new CliError(`Can't read the settings file ${label}. Check the path and try again.`);
+  }
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    throw new CliError(`The settings file ${label} is not valid JSON: ${error.message}`);
+  }
+}
+function reportTheme(theme, out, strict) {
+  for (const issue of theme.issues) (issue.level === "warning" ? out.warn : out.note).call(out, toMessage(issue));
+  const moved = /* @__PURE__ */ new Map();
+  for (const a of theme.adjustments) moved.set(a.role, [...moved.get(a.role) ?? [], `${a.mode} ${a.requested}\u2192${a.used}`]);
+  if (moved.size > 0)
+    out.note({
+      code: "targets-moved",
+      message: `To keep contrast steps even, these targets moved: ${[...moved].map(([role, list2]) => `${role} (${list2.join(", ")})`).join("; ")}.`
+    });
+  if (strict && theme.warnings.length > 0)
+    out.fail(`Failed --strict: ${theme.warnings.length} warning${theme.warnings.length === 1 ? "" : "s"} above.
+`);
+}
+async function generate(args, io, out) {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      format: { type: "string", default: "css" },
+      platform: { type: "string" },
+      out: { type: "string" },
+      strict: { type: "boolean", default: false }
+    }
+  });
+  if (positionals.length !== 1) throw new CliError("Give one settings file, for example: chromagentic generate theme.json");
+  const format = values.format;
+  if (!["css", "tailwind", "dtcg", "json"].includes(format))
+    throw new CliError(`--format must be css, tailwind, dtcg, or json (got "${format}").`);
+  const config = await readConfig(positionals[0], io);
+  if (values.platform) {
+    if (!PLATFORMS.includes(values.platform))
+      throw new CliError(`Unknown platform "${values.platform}". Choose one of: ${PLATFORMS.join(", ")}.`);
+    const { gamut, format: colorFormat } = platformOutput(values.platform);
+    const chosen = { gamut, format: colorFormat };
+    const replaced = ["gamut", "format"].filter((key) => config.output?.[key] !== void 0 && config.output[key] !== chosen[key]);
+    if (replaced.length > 0)
+      out.note({
+        code: "platform-override",
+        message: `--platform ${values.platform} replaces ${replaced.map((key) => `output.${key} "${config.output[key]}"`).join(" and ")} from the settings file with gamut "${gamut}" and format "${colorFormat}".`
+      });
+    config.output = { ...config.output, gamut, format: colorFormat };
+  }
+  const theme = generateTheme(config);
+  reportTheme(theme, out, values.strict);
+  const outPath = values.out ? resolve(io.cwd, values.out) : void 0;
+  if (format === "dtcg") {
+    const documents = toDtcgModes(theme);
+    if (outPath) {
+      await mkdir(outPath, { recursive: true });
+      for (const [mode, document] of Object.entries(documents)) {
+        const file = join(outPath, `${mode}.tokens.json`);
+        await writeFile(file, `${JSON.stringify(document, null, 2)}
+`);
+        out.files.push(file);
+      }
+      out.info(`Wrote ${Object.keys(documents).length} token files to ${values.out}
+`);
+    } else out.data(documents);
+  } else {
+    const result = format === "json" ? { engineVersion: io.version, ...theme } : toCss(theme, { tailwind: format === "tailwind" });
+    const text = typeof result === "string" ? result : `${JSON.stringify(result, null, 2)}
+`;
+    if (outPath) {
+      await mkdir(dirname(outPath), { recursive: true });
+      await writeFile(outPath, text);
+      out.wrote(outPath, `Wrote ${values.out}
+`);
+    } else out.data(result, text);
+  }
+}
+async function validate(args, io, out) {
+  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { strict: { type: "boolean", default: false } } });
+  if (positionals.length !== 1) throw new CliError("Give one settings file, for example: chromagentic validate theme.json");
+  const theme = generateTheme(await readConfig(positionals[0], io));
+  reportTheme(theme, out, values.strict);
+  const modes = Object.keys(theme.modes);
+  const roles = Object.keys(theme.modes[theme.defaultMode].roles);
+  out.data(
+    { modes, roles, warnings: theme.warnings.length },
+    `The settings are valid: ${modes.length} mode${modes.length === 1 ? "" : "s"} (${modes.join(", ")}) and ${roles.length} role${roles.length === 1 ? "" : "s"}${theme.warnings.length > 0 ? `, with ${theme.warnings.length} warning${theme.warnings.length === 1 ? "" : "s"}` : ""}.
+`
+  );
+}
+function suggest(args, out) {
+  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { count: { type: "string" } } });
+  if (positionals.length === 0) throw new CliError('Give some words, for example: chromagentic suggest "calm and earthy"');
+  const count = values.count === void 0 ? void 0 : Number(values.count);
+  if (count !== void 0 && !(count >= 1)) throw new CliError("--count must be a number of 1 or more.");
+  const result = suggestColors(positionals.join(" "), { count });
+  out.data(result);
+  if (result.colors.length === 0)
+    out.note({ code: "no-match", message: "No colors matched those words. Try more common descriptive words such as bright, calm, warm, or elegant." });
+}
+function parseColorArgs(fn) {
+  try {
+    return fn();
+  } catch (error) {
+    if (error instanceof CliError) throw error;
+    throw new CliError(`That doesn't look like a CSS color. ${error.message}`);
+  }
+}
+function describeCommand(args, out) {
+  if (args.length === 0) throw new CliError("Give a color, for example: chromagentic describe #ff5a00");
+  out.data(parseColorArgs(() => describeColor(args.join(" "))));
+}
+function parseFormula(value) {
+  if (value !== "wcag2" && value !== "apca") throw new CliError(`--formula must be wcag2 or apca (got "${value}").`);
+  return value;
+}
+function contrastCommand(args, out) {
+  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { formula: { type: "string", default: "wcag2" } } });
+  if (positionals.length !== 2) throw new CliError("Give two colors, for example: chromagentic contrast #333 #fff");
+  const formula = parseFormula(values.formula);
+  const value = parseColorArgs(() => contrast(positionals[0], positionals[1], formula));
+  const rounded = formula === "apca" ? Number(value.toFixed(1)) : Math.floor(value * 100) / 100;
+  const text = formula === "apca" ? `Lc ${rounded.toFixed(1)}` : `${rounded.toFixed(2)}:1`;
+  out.data({ formula, contrast: rounded, text }, `${text}
+`);
+}
+function feedbackCommand(args, out) {
+  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { formula: { type: "string", default: "wcag2" } } });
+  if (positionals.length !== 1) throw new CliError("Give one brand color, for example: chromagentic feedback #0066ff");
+  const formula = parseFormula(values.formula);
+  const result = parseColorArgs(() => feedbackColors(positionals[0], { formula }));
+  for (const issue of result.issues) (issue.level === "warning" ? out.warn : out.note).call(out, toMessage(issue));
+  out.data(result.modes);
+}
+function checkCvdCommand(args, out) {
+  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { min: { type: "string" } } });
+  if (positionals.length < 2) throw new CliError("Give two or more colors, for example: chromagentic check-cvd error=#d32f2f success=#2e7d32");
+  const required = values.min === void 0 ? MIN_FEEDBACK_DELTA_E : Number(values.min);
+  if (!(required > 0)) throw new CliError("--min must be a number above 0.");
+  const colors = {};
+  positionals.forEach((item, index) => {
+    const at = item.indexOf("=");
+    colors[at > 0 ? item.slice(0, at) : `color${index + 1}`] = at > 0 ? item.slice(at + 1) : item;
+  });
+  const result = parseColorArgs(() => checkCvd(colors, required));
+  out.data(result);
+  if (!result.pass) out.fail(`${result.failing.length} pair${result.failing.length === 1 ? " is" : "s are"} too similar (needs a difference of ${required}).
+`);
+}
+function inputError(error) {
+  if (error instanceof ThemeConfigError) return [error.message];
+  if (error instanceof CliError) return [error.message];
+  if (error instanceof TypeError && "code" in error && String(error.code).startsWith("ERR_PARSE_ARGS"))
+    return [`${error.message}
+Run "chromagentic --help" for usage.`];
+  return void 0;
+}
+async function run(argv, io) {
+  const json = argv.includes("--json");
+  const [command, ...rest] = argv.filter((arg) => arg !== "--json");
+  const out = new Output(io, json);
+  let errors = [];
+  try {
+    switch (command) {
+      case "generate":
+        await generate(rest, io, out);
+        break;
+      case "validate":
+        await validate(rest, io, out);
+        break;
+      case "suggest":
+        suggest(rest, out);
+        break;
+      case "describe":
+        describeCommand(rest, out);
+        break;
+      case "contrast":
+        contrastCommand(rest, out);
+        break;
+      case "feedback":
+        feedbackCommand(rest, out);
+        break;
+      case "check-cvd":
+        checkCvdCommand(rest, out);
+        break;
+      case "--version":
+      case "-v":
+        out.data({ version: io.version ?? "unknown" }, `${io.version ?? "unknown"}
+`);
+        break;
+      case void 0:
+      case "help":
+      case "--help":
+      case "-h":
+        out.data({ help: HELP }, HELP);
+        break;
+      default:
+        throw new CliError(`Unknown command "${command}". Run "chromagentic --help" for the list of commands.`);
+    }
+  } catch (error) {
+    const problems = inputError(error);
+    if (!problems) throw error;
+    errors = error instanceof ThemeConfigError ? error.problems : problems;
+    if (!json) io.stderr(`${problems[0]}
+`);
+  }
+  const code = errors.length > 0 ? EXIT.input : out.failure ? EXIT.failed : EXIT.ok;
+  if (json) {
+    const report2 = {
+      ok: code === EXIT.ok,
+      engineVersion: io.version ?? "unknown",
+      errors: errors.map((message) => ({ message })),
+      ...out.failure && { failed: out.failure.trim() },
+      warnings: out.warnings,
+      notes: out.notes,
+      ...out.files.length > 0 && { files: out.files },
+      ...out.result !== void 0 && { output: out.result }
+    };
+    io.stdout(`${JSON.stringify(report2, null, 2)}
+`);
+  }
+  return code;
+}
 
-${li}`),1}}catch(o){if(o instanceof bt)t.stderr(`${o.message}
-`);else if(o instanceof te)t.stderr(`${o.message}
-`);else if(o instanceof TypeError&&"code"in o&&String(o.code).startsWith("ERR_PARSE_ARGS"))t.stderr(`${o.message}
-Run "chromagentic --help" for usage.
-`);else throw o;return 1}}ci(process.argv.slice(2),{stdout:e=>process.stdout.write(e),stderr:e=>process.stderr.write(e),cwd:process.cwd(),version:"0.3.0"}).then(e=>{process.exitCode=e},e=>{process.stderr.write(`Something went wrong: ${e instanceof Error?e.stack:String(e)}
-`),process.exitCode=1});
+// src/cli/index.ts
+run(process.argv.slice(2), {
+  stdout: (text) => process.stdout.write(text),
+  stderr: (text) => process.stderr.write(text),
+  cwd: process.cwd(),
+  version: "0.3.0",
+  stdin: async () => {
+    const chunks = [];
+    for await (const chunk of process.stdin) chunks.push(chunk);
+    return Buffer.concat(chunks).toString("utf8");
+  }
+}).then(
+  (code) => {
+    process.exitCode = code;
+  },
+  (error) => {
+    process.stderr.write(`Something went wrong: ${error instanceof Error ? error.stack : String(error)}
+`);
+    process.exitCode = 1;
+  }
+);

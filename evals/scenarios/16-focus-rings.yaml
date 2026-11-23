@@ -1,0 +1,6 @@
+id: focus-rings
+fixture: css
+prompt: Keyboard users can't see where they are on this page. Add clear focus indicators to the link and the button.
+expectReferences: [semantic-roles.md]
+scores: [focus]
+rubric: Focus indicators need 3:1 contrast against the colors around them (WCAG 2.2 SC 1.4.11 and 2.4.7). The button sits on a light gray card, and the link on the white page.

@@ -48,7 +48,7 @@ A role can also point at a fixed step or surface (`"gray.1400"`, `"surface.raise
 
 Defaults when `roles` is left out: `text`, `text-subtle`, `border`, `accent` with `hover` and `active`, and `text-on-accent`. With `"status": true`, also `error`, `success`, `warning`, `info`, and a tinted `<name>-background` for each.
 
-Floors (hard minimums, WCAG 2): text and feedback 4.5:1, icons, borders, and accents 3:1, on-colors 4.5:1 against what they sit on. APCA floors: body text Lc 60, icons and accents Lc 45, borders Lc 30.
+Floors (hard minimums, WCAG 2): text and feedback 4.5:1, icons, borders, and accents 3:1, on-colors 4.5:1 against what they sit on. APCA floors: any text Lc 60, icons, accents, and borders Lc 45. For long body text, use the `strong` tier (Lc 75) or above.
 
 ## Text hierarchy
 
@@ -68,7 +68,7 @@ Three tiers. Choose how many based on the information architecture, the app's co
 
 ## Borders and icons
 
-Borders that people need to see to use a control (input outlines, focus rings, toggles) need 3:1 against the background (WCAG 1.4.11). Purely decorative dividers can be softer: `"divider": { "kind": "tint", "contrast": 1.3 }`. Icons that carry meaning also need 3:1 (`icon-*` roles).
+Borders that people need to see to use a control (input outlines, focus rings, toggles) need 3:1 against the background (WCAG 1.4.11). Purely decorative dividers can be softer: `"divider": { "kind": "tint", "contrast": 1.3 }`, or `"divider": { "ref": "gray.200", "kind": "tint" }` to point to a scale step. A role that points to a step without a `kind` is checked as a border (3:1). Icons that carry meaning also need 3:1 (`icon-*` roles).
 
 ## Brand or accent colors
 
@@ -98,7 +98,7 @@ States come from small, even contrast steps away from the background, each a lit
 
 When several roles and states each have their own contrast, the result can be lumpy: two colors nearly the same and then a big jump. Chromagentic spreads all the targets of a mode into equal steps of OKLCH lightness (perceptual lightness). The colors then fill in like a consistent scale, with even, perceptible differences between them.
 
-- Spacing can raise a target, but never lower it below its floor.
+- Spacing can raise or lower a target, but never below its floor.
 - Every moved target is listed in a note (for example `text-subtle light 4.5→4.85`). Mention these to the user.
 - `"spacing": 0.06` fixes the step size. `"spacing": false` turns it off, for example to match an existing design exactly.
 

@@ -12,18 +12,23 @@
   "homepage": "https://github.com/NateBaldwinDesign/Chromagentic#readme",
   "keywords": [
     "color",
+    "accessibility",
     "contrast",
     "wcag",
     "apca",
     "oklch",
+    "color-blindness",
     "design-tokens",
     "dark-mode",
+    "high-contrast",
+    "agent-skills",
+    "claude-code-plugin",
+    "copilot-plugin",
     "ai",
-    "agent",
-    "skill"
+    "agent"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "bin": {
     "chromagentic": "dist/cli/index.js"
@@ -57,10 +62,10 @@
     "test:coverage": "vitest run --coverage",
     "eval": "node --import tsx evals/run.ts",
     "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build",
-    "gallery": "node --import tsx evals/gallery.ts"
+    "gallery": "node --import tsx evals/gallery.ts",
+    "version": "node scripts/sync-version.mjs && npm run build && git add .claude-plugin/plugin.json skills/chromagentic README.md"
   },
   "dependencies": {
-    "color-description": "^0.23.0",
     "colorjs.io": "^0.5.2"
   },
   "devDependencies": {
@@ -68,6 +73,7 @@
     "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^5.1.1",
     "ajv": "^8.20.0",
+    "color-description": "^0.23.0",
     "eslint": "^10.15.0",
     "fast-check": "^4.10.3",
     "tsup": "^9.0.0",

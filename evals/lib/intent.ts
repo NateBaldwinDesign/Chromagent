@@ -4,17 +4,17 @@
  * Each score runs from 0 to 1 and grades runs with and without the skill the same way.
  */
 import Color from "colorjs.io";
-import { checkCvd } from "../../src/index";
+import { cvdFailures } from "./cvd";
 import type { CheckContext } from "./checks";
 import type { ModePairs } from "./outcome";
-import { MODES, paints, readSite, resolveVar, type Pair, type Site } from "./render";
+import { contrastRatio, FOCUSABLE, MODES, paints, readSite, resolveVar, type Pair, type Site } from "./render";
 import type { Metrics } from "./types";
 
 const L = (c: Color) => c.to("oklch").coords[0] ?? 0;
 const C = (c: Color) => c.to("oklch").coords[1] ?? 0;
 const H = (c: Color) => c.to("oklch").coords[2] ?? 0;
 const hex = (c: Color) => c.to("srgb").toString({ format: "hex", inGamut: true });
-const ratio = (p: Pair) => Color.contrast(p.fg.color, p.bg.color, "WCAG21");
+const ratio = contrastRatio;
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
 const isWeb = (ctx: CheckContext) => ctx.fixture.build === "css" || ctx.fixture.build === "tailwind";
@@ -42,7 +42,7 @@ export function textTiers(list: Pair[]): number {
   return mean([tiers >= 2 && tiers <= 4 ? 1 : 0, strongest >= 7 ? 1 : 0]);
 }
 
-export function roleScores(ctx: CheckContext, found: ModePairs): Metrics {
+function roleScores(ctx: CheckContext, found: ModePairs): Metrics {
   return {
     "no-full-scale": hasFullScale(ctx.changed) ? 0 : 1,
     "text-tiers": textTiers(found.modes.get("light") ?? found.modes.values().next().value ?? []),
@@ -123,9 +123,8 @@ export function feedbackScores(ctx: CheckContext, found: ModePairs): Metrics {
     const colors = statusColors(site, name);
     const names = Object.keys(colors);
     if (names.length < 2) return 0;
-    const report = checkCvd(Object.fromEntries(names.map((n) => [n, colors[n].toString()])));
-    const total = ((names.length * (names.length - 1)) / 2) * 4;
-    return (1 - report.failing.length / total) * (names.length / STATUS.length);
+    const { failing, total } = cvdFailures(names.map((n) => colors[n]));
+    return (1 - failing / total) * (names.length / STATUS.length);
   });
   const brand = brandColor(site);
   const light = Object.values(statusColors(site, found.modes.has("light") ? "light" : [...found.modes.keys()][0] ?? "light"));
@@ -157,7 +156,36 @@ export function schemeScores(ctx: CheckContext): Metrics {
   };
 }
 
-export const INTENT_KEYS = ["no-full-scale", "text-tiers", "cvd", "harmony", "personal", "switch-wired", "asked"];
+/** Keyboard focus: the share of focusable elements, in every mode, whose focus ring stands out 3:1 from what's around it. */
+export function focusScores(ctx: CheckContext, found: ModePairs): Metrics {
+  if (!isWeb(ctx)) return { focus: null };
+  const site = readSite(ctx.files);
+  const focusable = site.elements.filter((e) => FOCUSABLE.has(e.tag)).length;
+  if (!focusable) return { focus: null };
+  const perMode = [...found.modes.values()].map((list) => list.filter((p) => p.kind === "focus" && ratio(p) >= p.target - 0.005).length / focusable);
+  return { focus: mean(perMode) };
+}
+
+/** Fixing a palette: colors that were colorful keep their hue (within 15°) and don't swing far (OKLab distance ≤ 0.15). */
+export function repairScores(ctx: CheckContext): Metrics {
+  if (!isWeb(ctx)) return { "look-kept": null };
+  const before = paints(readSite(ctx.original), MODES[0]);
+  const after = paints(readSite(ctx.files), MODES[0]);
+  const colorful = [...before].filter(([, p]) => C(p.color) >= 0.05);
+  if (!colorful.length) return { "look-kept": null };
+  const kept = colorful.filter(([key, p]) => {
+    const n = after.get(key);
+    if (!n || C(n.color) < 0.03) return false;
+    const d = Math.abs(H(p.color) - H(n.color)) % 360;
+    return Math.min(d, 360 - d) <= 15 && p.color.deltaE(n.color, "OK") <= 0.15;
+  });
+  return { "look-kept": kept.length / colorful.length };
+}
+
+/** Outcomes the user would notice. */
+export const CORE_INTENT_KEYS = ["cvd", "personal", "switch-wired", "focus", "look-kept"];
+/** Choices the skill recommends, which a good answer may make differently. */
+export const ADHERENCE_INTENT_KEYS = ["no-full-scale", "text-tiers", "harmony", "asked"];
 
 export function intentScores(ctx: CheckContext, found: ModePairs): Metrics {
   const wanted = ctx.scenario.scores ?? [];
@@ -166,5 +194,7 @@ export function intentScores(ctx: CheckContext, found: ModePairs): Metrics {
     ...(wanted.includes("feedback") && feedbackScores(ctx, found)),
     ...(wanted.includes("personal") && personalScores(ctx, found)),
     ...(wanted.includes("schemes") && schemeScores(ctx)),
+    ...(wanted.includes("focus") && focusScores(ctx, found)),
+    ...(wanted.includes("repair") && repairScores(ctx)),
   };
 }

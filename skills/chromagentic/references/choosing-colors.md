@@ -106,10 +106,10 @@ It returns candidate key colors whose descriptive words, names, meanings, effect
 ```js
 describeColor("#e0b830")
 // { summary, words, nouns, meanings, effects, usage, temperature }
-// summary: "rich, golden and warm"
+// summary: "bright, light and playful"
 ```
 
-It describes a color in plain words. Use it to check a choice and to explain it.
+It describes a color in plain words. Use it to check a choice and to explain it. The words come from a small built-in table of common English (mostly Western) associations, so treat them as a starting point.
 
 ### Workflow
 

@@ -1,4 +1,4 @@
-import Color from "colorjs.io";
+import Color from "./color";
 import { contrastRatio, luminance } from "./colorMath";
 import { apcaContrast } from "./apca";
 
